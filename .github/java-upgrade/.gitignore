@@ -1,0 +1,7 @@
+
+# Logs directory
+**/logs/
+
+# Allow markdown files
+!*.md
+
