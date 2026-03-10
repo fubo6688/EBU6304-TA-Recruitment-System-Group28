@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 package com.bupt.utils;
 
 import com.bupt.model.Application;
@@ -110,4 +111,33 @@ public class FileStorageUtil {
         } catch (IOException e) { }
         return workload;
     }
+=======
+package com.bupt.utils;
+
+import com.bupt.model.Job;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+public class FileStorageUtil {
+    // 定义数据文件的存储路径。
+    // 提示：在实际运行中，建议将其放在项目的某个固定目录下，或者使用绝对路径。
+    private static final String FILE_PATH = "jobs_data.csv"; 
+
+    public static synchronized void saveJob(Job job) {
+        // FileWriter 的第二个参数 true 表示以“追加”模式写入，不会覆盖原有数据
+        try (FileWriter fw = new FileWriter(FILE_PATH, true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
+            
+            // 将 CSV 字符串写入文件并换行
+            out.println(job.toCSV());
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+            // 实际项目中这里应该抛出自定义异常或记录日志
+        }
+    }
+>>>>>>> 672021a (Initial commit - Java 11 baseline)
 }
