@@ -1,0 +1,11 @@
+com\bupt\model\Job.class
+com\bupt\controller\AdminDashboardServlet.class
+com\bupt\controller\ProfileServlet.class
+com\bupt\controller\AuthFilter.class
+com\bupt\controller\ApplyServlet.class
+com\bupt\controller\JobServlet.class
+com\bupt\controller\JobListServlet.class
+com\bupt\model\Application.class
+com\bupt\utils\FileStorageUtil.class
+com\bupt\controller\LoginServlet.class
+com\bupt\controller\ProcessApplicationServlet.class
