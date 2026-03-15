@@ -5,7 +5,7 @@ A web-based Teaching Assistant (TA) recruitment management system built with Jak
 ## 📋 Group Name-list
 
 - Norman-Ou: 190898878 (Support TA)
-- github user name：QMID（Lead/Member）
+- Bo Fu：231220965（Lead）
 
 ---
 
