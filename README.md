@@ -10,7 +10,7 @@ A web-based Teaching Assistant (TA) recruitment management system built with Jak
 - Junyi Yan: 231222936 (Member)
 - Weize Hu: 231221766 (Member)
 - Yihua Zeng: 231222626(Member)
----
+- Liyuan Tian : 231220943 (Member) 
 
 ## Quick Start
 
