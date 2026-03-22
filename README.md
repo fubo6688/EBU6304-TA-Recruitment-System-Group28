@@ -2,7 +2,15 @@
 
 A web-based Teaching Assistant (TA) recruitment management system built with Jakarta Servlet and JSP. The system supports three user roles: **Module Owner (MO)**, **Teaching Assistant (TA)**, and **Administrator (ADMIN)**, each with distinct functionalities.
 
----
+## 📋 Group Name-list
+
+- Norman-Ou: 190898878 (Support TA)
+- Bo Fu：231220965（Lead）
+- Yutong Zhang: 231223014 (Member)
+- Junyi Yan: 231222936 (Member)
+- Weize Hu: 231221766 (Member)
+- Yihua Zeng: 231222626(Member)
+- Liyuan Tian : 231220943 (Member) 
 
 ## Quick Start
 
