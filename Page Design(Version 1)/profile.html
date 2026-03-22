@@ -1,0 +1,775 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .main-sidebar {
+      width: 300px;
+      background-color: var(--gray-100);
+      padding: 30px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-avatar {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .avatar-upload {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 16px;
+      cursor: pointer;
+    }
+
+    .avatar-upload input[type="file"] {
+      display: none;
+    }
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      background-color: var(--primary-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-size: 48px;
+      transition: all 0.2s;
+    }
+
+    .avatar-upload:hover .avatar-img {
+      filter: brightness(0.8);
+    }
+
+    .avatar-change {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 32px;
+      height: 32px;
+      background-color: var(--primary-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      border: 2px solid var(--white);
+      font-size: 16px;
+    }
+
+    .profile-info {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 0 16px 20px;
+    }
+
+    .profile-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-200);
+      font-size: 13px;
+    }
+
+    .profile-info-row:last-child {
+      border-bottom: none;
+    }
+
+    .profile-info-label {
+      color: var(--gray-500);
+      font-weight: 500;
+    }
+
+    .profile-info-value {
+      color: #333;
+      font-weight: 600;
+    }
+
+    .profile-status {
+      background-color: var(--gray-100);
+      padding: 12px 16px;
+      margin: 0 16px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--success-color);
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .tabs-container {
+      margin-bottom: 30px;
+    }
+
+    .tabs {
+      margin-bottom: 0;
+    }
+
+    .tab-content {
+      display: none;
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .form-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .form-two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .notification-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 16px;
+      border-bottom: 1px solid var(--gray-200);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .notification-item:hover {
+      background-color: #fafafa;
+    }
+
+    .notification-content {
+      flex: 1;
+    }
+
+    .notification-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .notification-text {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-bottom: 4px;
+    }
+
+    .notification-time {
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+
+    .notification-badge {
+      width: 12px;
+      height: 12px;
+      background-color: var(--primary-color);
+      border-radius: 50%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .notification-toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--gray-200);
+      padding-bottom: 12px;
+    }
+
+    .notification-filter {
+      background: none;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      color: var(--gray-500);
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .notification-filter.active {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--primary-color);
+    }
+
+    .notification-filter:hover {
+      color: var(--primary-color);
+    }
+
+    .password-strength {
+      font-size: 12px;
+      margin-top: 4px;
+      padding: 8px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .password-strength.weak {
+      background-color: #ffe6e6;
+      color: var(--danger-color);
+    }
+
+    .password-strength.medium {
+      background-color: #fff3cd;
+      color: #ff9800;
+    }
+
+    .password-strength.strong {
+      background-color: #e6f7e6;
+      color: var(--success-color);
+    }
+
+    .notification-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .password-requirement {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 8px;
+      padding: 8px;
+      background-color: var(--gray-50);
+      border-radius: 4px;
+      line-height: 1.6;
+    }
+
+    .password-requirement .requirement-item {
+      display: flex;
+      align-items: center;
+      margin: 4px 0;
+    }
+
+    .requirement-icon {
+      margin-right: 6px;
+      width: 16px;
+      text-align: center;
+    }
+
+    .requirement-icon.met {
+      color: var(--success-color);
+    }
+
+    .requirement-icon.unmet {
+      color: var(--gray-400);
+    }
+  </style>
+</head>
+<body>
+  <!-- TopNavbar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">📋</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a href="#" onclick="goBackToHome(); return false;" style="cursor: pointer;">Back</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- left column -->
+    <div class="main-sidebar">
+      <!-- Avatar Area -->
+      <div class="sidebar-avatar">
+        <div class="avatar-upload" onclick="document.getElementById('avatarInput').click()">
+          <div class="avatar-img" id="avatarDisplay">👤</div>
+          <div class="avatar-change">📸</div>
+          <input type="file" id="avatarInput" accept="image/*">
+        </div>
+        <p style="margin: 0; font-size: 14px; font-weight: 600;" id="userName">Zhang San</p>
+        <p style="margin: 4px 0 0; font-size: 12px; color: var(--gray-500);" id="userRole">TA</p>
+      </div>
+
+      <!-- Basic Info Card -->
+      <div class="profile-info">
+        <div class="profile-info-row">
+          <span class="profile-info-label">Role</span>
+          <span class="profile-info-value" id="roleInfo">TA</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">QM ID</span>
+          <span class="profile-info-value" id="idInfo">20210001</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Name</span>
+          <span class="profile-info-value" id="nameInfo">Zhang San</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Mail</span>
+          <span class="profile-info-value" style="font-size: 11px; overflow: hidden; text-overflow: ellipsis;" id="emailInfo">zhangsan@example.com</span>
+        </div>
+      </div>
+
+      <!-- Profile Status -->
+      <div class="profile-status" id="profileStatus">
+        ✓ The file has been completed
+      </div>
+    </div>
+
+    <!-- Right mainContent -->
+    <div class="main-content">
+      <div class="tabs-container">
+        <div class="tabs">
+          <button class="tab-button active" data-tab="personal">personal information</button>
+          <button class="tab-button" data-tab="password">PasswordRevise</button>
+          <button class="tab-button" data-tab="notifications">Notifications</button>
+        </div>
+
+        <!-- tab page1：personal information -->
+        <div class="tab-content active" data-tab="personal">
+          <form id="personalForm">
+            <div class="form-two-col">
+              <div class="form-group">
+                <label class="form-label required">Name</label>
+                <input type="text" class="form-control" value="Zhang San" placeholder="Please enterName">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Mail</label>
+                <input type="email" class="form-control" value="zhangsan@example.com" placeholder="Enter email">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">QM ID</label>
+                <input type="text" class="form-control" value="20210001" placeholder="QM ID" disabled>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Role</label>
+                <input type="text" class="form-control" value="TA" placeholder="Role" disabled>
+              </div>
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- tab page2：PasswordRevise -->
+        <div class="tab-content" data-tab="password">
+          <form id="passwordForm" style="max-width: 500px;">
+            <div class="form-group">
+              <label class="form-label required">OriginalPassword</label>
+              <input type="password" class="form-control" id="oldPassword" placeholder="Please enter the originalPassword" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">newPassword</label>
+              <input type="password" class="form-control" id="newPassword" placeholder="Please enter newPassword（tofew8Bit，Contains uppercase and lowercase letters、number）" required>
+              <div id="passwordStrength"></div>
+              <div class="password-requirement">
+                <div class="requirement-item">
+                  <span class="requirement-icon unmet" id="req-length">✓</span>
+                  <span>At least 8 characters</span>
+                </div>
+                <div class="requirement-item">
+                  <span class="requirement-icon unmet" id="req-upper">✓</span>
+                  <span>Contains uppercase letters (A-Z)</span>
+                </div>
+                <div class="requirement-item">
+                  <span class="requirement-icon unmet" id="req-lower">✓</span>
+                  <span>Contains lowercase letters (a-z)</span>
+                </div>
+                <div class="requirement-item">
+                  <span class="requirement-icon unmet" id="req-number">✓</span>
+                  <span>Contains numbers (0-9)</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">confirm newPassword</label>
+              <input type="password" class="form-control" id="confirmPassword" placeholder="Please enter newPassword" required>
+            </div>
+            <div style="text-align: right;">
+              <button type="submit" class="btn btn-primary">savePassword</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- tab page3：Notifications -->
+        <div class="tab-content" data-tab="notifications">
+          <div class="notification-toolbar">
+            <button class="notification-filter active" data-filter="all">All</button>
+            <button class="notification-filter" data-filter="apply">ApplyStatus</button>
+            <button class="notification-filter" data-filter="position">Position Updates</button>
+            <button class="notification-filter" data-filter="system">System Notifications</button>
+            <div style="flex: 1;"></div>
+            <button class="btn btn-sm btn-secondary" id="clearReadBtn">Clear Read</button>
+            <button class="btn btn-sm btn-secondary" id="deleteSelectedBtn">Delete Selected</button>
+          </div>
+
+          <div id="notificationList">
+            <!-- Notification items will be JavaScript Dynamically generated -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script>
+    // BackHome page
+    function goBackToHome() {
+      const userRole = localStorage.getItem('userRole') || 'TA';
+      const rolePageMap = {
+        'TA': 'ta-profile.html',
+        'MO': 'mo-positions.html',
+        'Admin': 'admin-analytics.html'
+      };
+      window.location.href = rolePageMap[userRole] || 'ta-profile.html';
+    }
+    // Notification data management
+    const notificationData = [
+      {
+        id: 1,
+        title: 'Job application has beenApprove',
+        text: 'Congratulations，you applied for"Data Structures TA"Position alreadyApprovereview',
+        time: '2hours ago',
+        type: 'apply',
+        unread: true
+      },
+      {
+        id: 2,
+        title: 'New Position Postednotify',
+        text: 'New jobs matching your job skills have been posted：\"Algorithm Design TA\"',
+        time: '1days ago',
+        type: 'position',
+        unread: false
+      },
+      {
+        id: 3,
+        title: 'System Maintenance Notice',
+        text: 'The system will2025-03-20Perform regular maintenance，Estimated maintenance time2Hour',
+        time: '3days ago',
+        type: 'system',
+        unread: false
+      },
+      {
+        id: 4,
+        title: 'Job application rejected',
+        text: 'you applied for"Software EngineeringTeaching assistant"Job has been rejected，reason：Skills mismatch',
+        time: '5days ago',
+        type: 'apply',
+        unread: false
+      }
+    ];
+
+    // PasswordStrength check
+    function checkPasswordStrength(password) {
+      const requirements = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        lowercase: /[a-z]/.test(password),
+        number: /[0-9]/.test(password)
+      };
+
+      const requirementsList = document.querySelectorAll('.requirement-item .requirement-icon');
+      const icons = ['length', 'uppercase', 'lowercase', 'number'];
+      
+      let metCount = 0;
+      icons.forEach((key, index) => {
+        const icon = requirementsList[index];
+        if (requirements[key]) {
+          icon.classList.remove('unmet');
+          icon.classList.add('met');
+          metCount++;
+        } else {
+          icon.classList.remove('met');
+          icon.classList.add('unmet');
+        }
+      });
+
+      const strengthDiv = document.getElementById('passwordStrength');
+      if (password.length === 0) {
+        strengthDiv.innerHTML = '';
+      } else if (metCount === 4) {
+        strengthDiv.innerHTML = '<div class="password-strength strong">Passwordstrength：powerful ✓</div>';
+      } else if (metCount >= 2) {
+        strengthDiv.innerHTML = '<div class="password-strength medium">Passwordstrength：middle</div>';
+      } else {
+        strengthDiv.innerHTML = '<div class="password-strength weak">Passwordstrength：weak</div>';
+      }
+
+      return requirements;
+    }
+
+    // PasswordValidationfunction
+    function validatePassword(password) {
+      if (password.length < 8) {
+        return { valid: false, message: 'Passwordlengthtofew8Bit' };
+      }
+      if (!/[A-Z]/.test(password)) {
+        return { valid: false, message: 'PasswordMust contain uppercase letters' };
+      }
+      if (!/[a-z]/.test(password)) {
+        return { valid: false, message: 'PasswordMust contain lowercase letters' };
+      }
+      if (!/[0-9]/.test(password)) {
+        return { valid: false, message: 'Passwordmust contain numbers' };
+      }
+      return { valid: true, message: 'PasswordMeet the requirements' };
+    }
+
+    // renderingNotification List
+    function renderNotifications(filter = 'all') {
+      const notificationList = document.getElementById('notificationList');
+      notificationList.innerHTML = '';
+
+      const filteredData = filter === 'all' 
+        ? notificationData 
+        : notificationData.filter(n => n.type === filter);
+
+      if (filteredData.length === 0) {
+        notificationList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--gray-500);">No notifications</div>';
+        return;
+      }
+
+      filteredData.forEach(notification => {
+        const item = document.createElement('div');
+        item.className = 'notification-item';
+        item.id = `notification-${notification.id}`;
+        item.style.opacity = notification.unread ? '1' : '0.6';
+        
+        const badge = notification.unread 
+          ? '<div class="notification-badge"></div>' 
+          : '<div style="width: 12px; margin-top: 6px; flex-shrink: 0;"></div>';
+        
+        item.innerHTML = `
+          <input type="checkbox" class="notification-checkbox" data-id="${notification.id}">
+          <div class="notification-content" style="flex: 1; margin-left: 12px;">
+            <div class="notification-title">${notification.title}</div>
+            <div class="notification-text">${notification.text}</div>
+            <div class="notification-time">${notification.time}</div>
+          </div>
+          ${badge}
+          <div style="margin-left: 12px; display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-outline" onclick="markAsRead(${notification.id}, event)" style="padding: 4px 8px; font-size: 12px;">Read</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteNotification(${notification.id}, event)" style="padding: 4px 8px; font-size: 12px;">Delete</button>
+          </div>
+        `;
+        notificationList.appendChild(item);
+      });
+    }
+
+    // marked asRead
+    function markAsRead(id, event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const notification = notificationData.find(n => n.id === id);
+      if (notification) {
+        notification.unread = false;
+        const currentFilter = document.querySelector('.notification-filter.active')?.getAttribute('data-filter') || 'all';
+        renderNotifications(currentFilter);
+        taSystem.showMessage('taggedRead', 'success');
+      }
+    }
+
+    // Deletenotify
+    function deleteNotification(id, event) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (confirm('ConfirmwantDeleteIs this notice?？')) {
+        const index = notificationData.findIndex(n => n.id === id);
+        if (index !== -1) {
+          notificationData.splice(index, 1);
+          const currentFilter = document.querySelector('.notification-filter.active')?.getAttribute('data-filter') || 'all';
+          renderNotifications(currentFilter);
+          taSystem.showMessage('Notification has beenDelete', 'success');
+        }
+      }
+    }
+
+    // Initialize user information
+    document.addEventListener('DOMContentLoaded', () => {
+      const userRole = localStorage.getItem('userRole') || 'TA';
+      const userId = localStorage.getItem('userId') || '20210001';
+      const userName = localStorage.getItem('userName') || 'Zhang San';
+
+      document.getElementById('userName').textContent = userName;
+      document.getElementById('userRole').textContent = userRole;
+      document.getElementById('roleInfo').textContent = userRole;
+      document.getElementById('idInfo').textContent = userId;
+      document.getElementById('nameInfo').textContent = userName;
+
+      // Tab switching
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const tabName = button.getAttribute('data-tab');
+          
+          // Remove all active kind
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+          
+          // Add to active Class to clickbuttonand correspondingContent
+          button.classList.add('active');
+          document.querySelector(`.tab-content[data-tab="${tabName}"]`)?.classList.add('active');
+        });
+      });
+
+      // initializationNotification List
+      renderNotifications('all');
+
+      // Notification Filtering
+      document.querySelectorAll('.notification-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.notification-filter').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const filter = btn.getAttribute('data-filter');
+          renderNotifications(filter);
+        });
+      });
+
+      // Clear Read
+      document.getElementById('clearReadBtn').addEventListener('click', () => {
+        const hasRead = notificationData.some(n => !n.unread);
+        if (!hasRead) {
+          taSystem.showMessage('NoReadnotify', 'warning');
+          return;
+        }
+        if (confirm('ConfirmTo clear allReadNotice?？')) {
+          notificationData.forEach(n => {
+            if (!n.unread) {
+              const index = notificationData.indexOf(n);
+              notificationData.splice(index, 1);
+            }
+          });
+          const currentFilter = document.querySelector('.notification-filter.active')?.getAttribute('data-filter') || 'all';
+          renderNotifications(currentFilter);
+          taSystem.showMessage('alreadyClear Readnotify', 'success');
+        }
+      });
+
+      // Delete Selected
+      document.getElementById('deleteSelectedBtn').addEventListener('click', () => {
+        const checked = document.querySelectorAll('.notification-checkbox:checked');
+        if (checked.length === 0) {
+          taSystem.showMessage('Please select firstDeletenotification', 'warning');
+          return;
+        }
+        if (confirm(`ConfirmwantDelete${checked.length}Notice?？`)) {
+          const idsToDelete = Array.from(checked).map(cb => parseInt(cb.getAttribute('data-id')));
+          idsToDelete.forEach(id => {
+            const index = notificationData.findIndex(n => n.id === id);
+            if (index !== -1) {
+              notificationData.splice(index, 1);
+            }
+          });
+          const currentFilter = document.querySelector('.notification-filter.active')?.getAttribute('data-filter') || 'all';
+          renderNotifications(currentFilter);
+          taSystem.showMessage(`alreadyDelete${idsToDelete.length}notification`, 'success');
+        }
+      });
+
+      // personal informationForm Submission
+      document.getElementById('personalForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        taSystem.showMessage('Personal information saved', 'success');
+      });
+
+      // newPasswordCheck strength in real time as you type
+      document.getElementById('newPassword').addEventListener('input', (e) => {
+        checkPasswordStrength(e.target.value);
+      });
+
+      // PasswordReviseForm Submission
+      document.getElementById('passwordForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const oldPassword = document.getElementById('oldPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // ValidationOriginalPassword
+        if (oldPassword.length === 0) {
+          taSystem.showMessage('Please enter the originalPassword', 'danger');
+          return;
+        }
+
+        // ValidationnewPasswordstrength
+        const validation = validatePassword(newPassword);
+        if (!validation.valid) {
+          taSystem.showMessage(validation.message, 'danger');
+          return;
+        }
+
+        // Validationtwice newPasswordconsistent
+        if (newPassword !== confirmPassword) {
+          taSystem.showMessage('Entered twicePasswordinconsistent', 'danger');
+          return;
+        }
+
+        // Validationold and newPassworddifferent
+        if (oldPassword === newPassword) {
+          taSystem.showMessage('newPasswordcannot be compared with the originalPasswordsame', 'warning');
+          return;
+        }
+
+        taSystem.showMessage('PasswordModifiedSuccess，Please try againLogin', 'success');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+      });
+
+      // Avatar upload
+      document.getElementById('avatarInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          // Validationfile size（no more than5MB）
+          if (file.size > 5 * 1024 * 1024) {
+            taSystem.showMessage('Image size cannot exceed5MB', 'danger');
+            return;
+          }
+          
+          // ValidationFile type
+          if (!file.type.startsWith('image/')) {
+            taSystem.showMessage('Only image files can be uploaded', 'danger');
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            document.getElementById('avatarDisplay').innerHTML = `<img src="${event.target.result}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            taSystem.showMessage('Avatar updated', 'success');
+          };
+          reader.onerror = () => {
+            taSystem.showMessage('Image loadingFailed，Please try again', 'danger');
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // LogoutLogin
+      document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (confirm('ConfirmwantLogoutLogin?？')) {
+          localStorage.clear();
+          window.location.href = 'login.html';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+
