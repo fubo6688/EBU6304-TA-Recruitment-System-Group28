@@ -52,7 +52,7 @@
                     </container>
                     <configuration>
                         <properties>
-                            <cargo.servlet.port>8080</cargo.servlet.port>
+                            <cargo.servlet.port>9091</cargo.servlet.port>
                         </properties>
                     </configuration>
                 </configuration>

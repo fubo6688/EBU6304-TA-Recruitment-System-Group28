@@ -1,13 +1,13 @@
 package com.bupt.model;
 
-public class User {
+public abstract class User {
     private String userId;
     private String username;
     private String password;
     private String email;
 
     // 构造函数
-    public User(String userId, String username, String password, String email) {
+    protected User(String userId, String username, String password, String email) {
         this.userId = userId;
         this.username = username;
         this.password = password;
@@ -28,7 +28,7 @@ public class User {
         // 这里可以添加一些清理用户会话的逻辑
     }
 
-    public String modufyPassword(String newPassword) {
+    public String modifyPassword(String newPassword) {
         this.password = newPassword;
         return "Password updated successfully.";
     }
