@@ -1,5 +1,15 @@
 ﻿# TA Recruitment System (Group 28)
 
+## Group Name-list
+
+1. Norman-Ou: 190898878 (Support TA)
+2. fubo6688: 231220965 (Lead)
+3. Andyfree-98: 231223014 (Member)
+4. YYYNickYYY: 231222936 (Member)
+5. huweize123: 231221766 (Member)
+6. Yihua Zeng: 231222626 (Member)
+7. Liyuan Tian: 231220943 (Member)
+
 A lightweight web-based TA recruitment system using static HTML/CSS/JavaScript on the frontend and Java Servlet APIs on the backend.
 
 ## Current Delivery Mode
