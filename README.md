@@ -30,8 +30,8 @@ Press `Ctrl+C` in terminal to stop the server.
 
 | Username | Password | Role | Name |
 |----------|----------|------|------|
-| `admin_user` | `123` | ADMIN | System Manager |
-| `admin_02` | `admin888` | ADMIN | Office Coordinator |
+| `admin_user` | `admin_user` | ADMIN | System Manager |
+| `admin_02` | `123` | ADMIN | Office Coordinator |
 | `mo_smith` | `123` | MO | Dr. Smith (Java Module) |
 | `mo_jones` | `123` | MO | Prof. Jones (Agile Module) |
 | `mo_wang` | `123` | MO | Dr. Wang (Network Module) |

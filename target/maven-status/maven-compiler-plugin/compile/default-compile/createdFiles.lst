@@ -1,4 +1,5 @@
 com\bupt\model\Job.class
+com\bupt\controller\LoginServlet$LoginAttempt.class
 com\bupt\controller\AdminDashboardServlet.class
 com\bupt\controller\ProfileServlet.class
 com\bupt\controller\AuthFilter.class
