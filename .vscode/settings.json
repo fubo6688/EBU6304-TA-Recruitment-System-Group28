@@ -1,0 +1,9 @@
+{
+  "java.project.sourcePaths": [
+    "backend/src"
+  ],
+  "java.project.outputPath": "backend/WEB-INF/classes",
+  "java.project.referencedLibraries": [
+    "backend/WEB-INF/lib/**/*.jar"
+  ]
+}
