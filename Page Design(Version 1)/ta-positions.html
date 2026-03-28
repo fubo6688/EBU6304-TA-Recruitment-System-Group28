@@ -1,0 +1,642 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Positions - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: var(--gray-100);
+      padding: 20px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .sidebar-menu-item:hover {
+      background-color: var(--gray-200);
+      color: var(--primary-color);
+    }
+
+    .sidebar-menu-item.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      padding: 0;
+    }
+
+    .recommend-bar {
+      background-color: #e0f2fe;
+      padding: 20px 30px;
+      border-bottom: 1px solid #cce5ff;
+    }
+
+    .recommend-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 16px;
+    }
+
+    .recommend-cards {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+    }
+
+    .recommend-card {
+      flex: 0 0 280px;
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .recommend-card-title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .recommend-card-course {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+
+    .recommend-card-match {
+      display: inline-block;
+      background-color: #d1fae5;
+      color: var(--success-color);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .recommend-card-info {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+    }
+
+    .main-content {
+      display: flex;
+      padding: 30px;
+      gap: 20px;
+    }
+
+    .filter-panel {
+      width: 200px;
+      flex-shrink: 0;
+    }
+
+    .filter-card {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .filter-item {
+      margin-bottom: 12px;
+    }
+
+    .filter-checkbox {
+      margin-right: 8px;
+    }
+
+    .filter-checkbox + label {
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .filter-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .filter-buttons .btn {
+      width: 100%;
+    }
+
+    .position-list {
+      flex: 1;
+    }
+
+    .position-card {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 16px;
+      transition: box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .position-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .position-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .position-title {
+      font-weight: 700;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .position-course {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+
+    .position-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .position-tag {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .position-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+
+    .position-detail-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .position-detail-label {
+      color: var(--gray-500);
+      font-weight: 500;
+      min-width: 80px;
+    }
+
+    .position-detail-value {
+      color: #333;
+      flex: 1;
+    }
+
+    .position-deadline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background-color: #fef3c7;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #d97706;
+      margin-bottom: 12px;
+    }
+
+    .position-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .position-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Modal */
+    .detail-modal .modal-content {
+      max-width: 600px;
+    }
+
+    .detail-modal .modal-body {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .detail-section {
+      margin-bottom: 20px;
+    }
+
+    .detail-section-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .skill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .skill-badge {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <!-- TopNavbar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">📋</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a href="profile.html">Profile</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- left menu -->
+    <div class="sidebar">
+      <div class="sidebar-title">TA Function</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item">My Profile</li>
+        <li class="sidebar-menu-item active">Browse Positions</li>
+        <li class="sidebar-menu-item">My Applications</li>
+        <li class="sidebar-menu-item">Profile</li>
+        <li class="sidebar-menu-item">Notifications</li>
+      </ul>
+    </div>
+
+    <!-- right sideContent -->
+    <div class="content">
+      <!-- Recommendation column -->
+      <div class="recommend-bar">
+        <div class="recommend-title">🤖 Matching jobs recommended for you</div>
+        <div class="recommend-cards">
+          <div class="recommend-card">
+            <div class="recommend-card-title">Data Structures TA</div>
+            <div class="recommend-card-course">School of Computer Science</div>
+            <div class="recommend-card-match">Match Score 95%</div>
+            <div class="recommend-card-info">📌 Need 3, 1 spot left</div>
+            <button class="btn btn-sm btn-primary w-full">Apply Now</button>
+          </div>
+
+          <div class="recommend-card">
+            <div class="recommend-card-title">Algorithm Design TA</div>
+            <div class="recommend-card-course">School of Computer Science</div>
+            <div class="recommend-card-match">Match Score 88%</div>
+            <div class="recommend-card-info">📌 Need 2, 2 spots left</div>
+            <button class="btn btn-sm btn-primary w-full">Apply Now</button>
+          </div>
+
+          <div class="recommend-card">
+            <div class="recommend-card-title">Operating Systems TA</div>
+            <div class="recommend-card-course">School of Computer Science</div>
+            <div class="recommend-card-match">Match Score 82%</div>
+            <div class="recommend-card-info">📌 Need 1, 1 spot left</div>
+            <button class="btn btn-sm btn-primary w-full">Apply Now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- hostContentdistrict -->
+      <div class="main-content">
+        <!-- Filter Bar -->
+        <div class="filter-panel">
+          <div class="filter-card">
+            <div class="filter-title">Filters</div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <input type="text" class="form-control" placeholder="Course Name" style="font-size: 12px;">
+            </div>
+
+            <div class="filter-title" style="font-size: 12px;">Major Requirements</div>
+            <div class="filter-item">
+              <input type="checkbox" class="filter-checkbox" id="major1">
+              <label for="major1">Computer Science</label>
+            </div>
+            <div class="filter-item">
+              <input type="checkbox" class="filter-checkbox" id="major2">
+              <label for="major2">Software Engineering</label>
+            </div>
+            <div class="filter-item">
+              <input type="checkbox" class="filter-checkbox" id="major3">
+              <label for="major3">Cybersecurity</label>
+            </div>
+
+            <div class="filter-title" style="font-size: 12px; margin-top: 16px;">Skill Requirements</div>
+            <div class="filter-item">
+              <input type="checkbox" class="filter-checkbox" id="skill1">
+              <label for="skill1">Python</label>
+            </div>
+            <div class="filter-item">
+              <input type="checkbox" class="filter-checkbox" id="skill2">
+              <label for="skill2">Java</label>
+            </div>
+            <div class="filter-item">
+              <input type="checkbox" class="filter-checkbox" id="skill3">
+              <label for="skill3">C++</label>
+            </div>
+
+            <div class="filter-title" style="font-size: 12px; margin-top: 16px;">Position Status</div>
+            <select class="form-control" style="font-size: 12px;">
+              <option value="">-- All Statuses --</option>
+              <option value="open">Open</option>
+              <option value="closing">Closing Soon</option>
+              <option value="closed">Closed</option>
+            </select>
+
+            <div class="filter-buttons">
+              <button class="btn btn-secondary btn-sm">Reset</button>
+              <button class="btn btn-primary btn-sm">Confirm</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Position List -->
+        <div class="position-list">
+          <!-- Position Card 1 -->
+          <div class="position-card">
+            <div class="position-header">
+              <div>
+                <div class="position-title">Data Structures TA</div>
+                <div class="position-course">School of Computer Science · ECS2024</div>
+              </div>
+            </div>
+            <div class="position-tags">
+              <span class="position-tag">Python</span>
+              <span class="position-tag">Object-Oriented</span>
+            </div>
+            <div class="position-details">
+              <div class="position-detail-row">
+                <span class="position-detail-label">📌 recruitment</span>
+                <span class="position-detail-value">Need 3, 1 spot left</span>
+              </div>
+              <div class="position-detail-row">
+                <span class="position-detail-label">📚 Require</span>
+                <span class="position-detail-value">Major: Computer Science</span>
+              </div>
+              <div class="position-detail-row">
+                <span class="position-detail-label">⏰ time</span>
+                <span class="position-detail-value">4 hours/week / 13:00-17:00</span>
+              </div>
+              <div class="position-detail-row">
+                <span class="position-detail-label">🎯 Skill</span>
+                <span class="position-detail-value">Python · Data Structures</span>
+              </div>
+            </div>
+            <div class="position-deadline">
+              ⏱️ There is still time left before the deadline 5 sky (2025-03-21)
+            </div>
+            <div class="position-footer">
+              <div></div>
+              <div class="position-buttons">
+                <button class="btn btn-outline btn-sm" onclick="taSystem.openModal('detailModal')">View Details</button>
+                <button class="btn btn-primary btn-sm">Apply Now</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Position Card 2 -->
+          <div class="position-card">
+            <div class="position-header">
+              <div>
+                <div class="position-title">Algorithm Design TA</div>
+                <div class="position-course">School of Computer Science · CS2030</div>
+              </div>
+            </div>
+            <div class="position-tags">
+              <span class="position-tag">Java</span>
+              <span class="position-tag">Algorithms</span>
+            </div>
+            <div class="position-details">
+              <div class="position-detail-row">
+                <span class="position-detail-label">📌 recruitment</span>
+                <span class="position-detail-value">Need 2, 2 spots left</span>
+              </div>
+              <div class="position-detail-row">
+                <span class="position-detail-label">📚 Require</span>
+                <span class="position-detail-value">Major: Computer Science</span>
+              </div>
+              <div class="position-detail-row">
+                <span class="position-detail-label">⏰ time</span>
+                <span class="position-detail-value">6 hours/week / 9:00-12:00</span>
+              </div>
+              <div class="position-detail-row">
+                <span class="position-detail-label">🎯 Skill</span>
+                <span class="position-detail-value">Java · Algorithm Design</span>
+              </div>
+            </div>
+            <div class="position-deadline">
+              ⏱️ There is still time left before the deadline 8 sky (2025-03-24)
+            </div>
+            <div class="position-footer">
+              <div></div>
+              <div class="position-buttons">
+                <button class="btn btn-outline btn-sm" onclick="taSystem.openModal('detailModal')">View Details</button>
+                <button class="btn btn-primary btn-sm">Apply Now</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Position Card 3 -->
+          <div class="position-card">
+            <div class="position-header">
+              <div>
+                <div class="position-title">Operating Systems TA</div>
+                <div class="position-course">School of Computer Science · OS2050</div>
+              </div>
+            </div>
+            <div class="position-tags">
+              <span class="position-tag">C++</span>
+              <span class="position-tag">Linux</span>
+            </div>
+            <div class="position-details">
+              <div class="position-detail-row">
+                <span class="position-detail-label">📌 recruitment</span>
+                <span class="position-detail-value">Need 1, 1 spot left</span>
+              </div>
+              <div class="position-detail-row">
+                <span class="position-detail-label">📚 Require</span>
+                <span class="position-detail-value">Major: Computer Science</span>
+              </div>
+              <div class="position-detail-row">
+                <span class="position-detail-label">⏰ time</span>
+                <span class="position-detail-value">5 hours/week / 13:00-17:00</span>
+              </div>
+              <div class="position-detail-row">
+                <span class="position-detail-label">🎯 Skill</span>
+                <span class="position-detail-value">C++ · Linux · Operating Systems</span>
+              </div>
+            </div>
+            <div class="position-footer">
+              <div></div>
+              <div class="position-buttons">
+                <button class="btn btn-outline btn-sm" onclick="taSystem.openModal('detailModal')">View Details</button>
+                <button class="btn btn-primary btn-sm">Apply Now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailsmodal box -->
+  <div id="detailModal" class="modal detail-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Position Details</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-section">
+          <div class="detail-section-title">Position Info</div>
+          <p><strong>Data Structures TA</strong></p>
+          <p style="color: var(--gray-500); font-size: 13px;">School of Computer Science · ECS2024</p>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Course Description</div>
+          <p style="font-size: 13px; color: var(--gray-600); line-height: 1.8;">
+            This course isComputer Sciencebasic course，HighlightsData Structuresbasic concepts、Algorithm Designand implementation methods。Students will learn a variety of basicData Structures（Such as array、linked list、Tree、Pictures, etc.）and relatedAlgorithms，andApproveProgramming exercises deepen understanding。
+          </p>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">TA Responsibilities</div>
+          <ul style="font-size: 13px; color: var(--gray-600); line-height: 1.8; padding-left: 20px;">
+            <li>Assist the instructor with teaching tasks</li>
+            <li>Guide students on programming assignments and projects</li>
+            <li>Grade assignments and exams</li>
+            <li>Hold office hours and answer student questions</li>
+            <li>Maintain course website and materials</li>
+          </ul>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Location & Schedule</div>
+          <p style="font-size: 13px; color: var(--gray-600);">
+            📍 Location: School of Computer Science, Building C, Room 410<br>
+            ⏰ Working hours: Tue & Thu, 13:00-17:00<br>
+            💰 Compensation: RMB 120/hour
+          </p>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Required Skills</div>
+          <div class="skill-list">
+            <span class="skill-badge">Python</span>
+            <span class="skill-badge">Data Structures</span>
+            <span class="skill-badge">Object-Oriented Programming</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">MO Introduction</div>
+          <p style="font-size: 13px; color: var(--gray-600);">
+            <strong>Prof. Li</strong> (Prof. Li)<br>
+            School of Computer Scienceprofessor，Doctoral supervisor<br>
+            Research Area：Algorithm Designand analysis
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="taSystem.closeModal('detailModal')">closure</button>
+        <button class="btn btn-primary" onclick="taSystem.showMessage('Application has been submitted', 'success'); taSystem.closeModal('detailModal')">Apply Now</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script>
+    // SidebarMenu navigation
+    const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
+    const menuMap = {
+      'My Profile': 'ta-profile.html',
+      'Browse Positions': 'ta-positions.html',
+      'My Applications': 'ta-applications.html',
+      'Profile': 'profile.html',
+      'Notifications': 'notification.html'
+    };
+    
+    sidebarMenuItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const text = this.textContent.trim();
+        const page = menuMap[text];
+        if (page) {
+          // Updates activeStatus
+          sidebarMenuItems.forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          // navigation
+          window.location.href = page;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+
