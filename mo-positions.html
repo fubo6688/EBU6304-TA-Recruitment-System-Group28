@@ -1,0 +1,767 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Position Management - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: var(--gray-100);
+      padding: 20px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .sidebar-menu-item:hover {
+      background-color: var(--gray-200);
+      color: var(--primary-color);
+    }
+
+    .sidebar-menu-item.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .filter-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tag {
+      padding: 8px 14px;
+      background-color: var(--gray-200);
+      border: 1px solid var(--gray-300);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .filter-tag.active {
+      background-color: var(--primary-color);
+      color: var(--white);
+      border-color: var(--primary-color);
+    }
+
+    .table-container {
+      background-color: var(--white);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .table {
+      width: 100%;
+      font-size: 13px;
+    }
+
+    .table thead {
+      background-color: var(--gray-100);
+    }
+
+    .table th {
+      padding: 16px 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--gray-200);
+      font-size: 12px;
+    }
+
+    .table td {
+      padding: 16px 12px;
+      border-bottom: 1px solid var(--gray-200);
+      font-size: 12px;
+    }
+
+    .table tbody tr:hover {
+      background-color: #fafafa;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status-open {
+      background-color: #d1fae5;
+      color: var(--success-color);
+    }
+
+    .status-pending {
+      background-color: #fef3c7;
+      color: #d97706;
+    }
+
+    .status-closed {
+      background-color: #fee2e2;
+      color: var(--danger-color);
+    }
+
+    .status-reopening {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      padding: 4px 10px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .modal-large .modal-content {
+      max-width: 700px;
+    }
+
+    .form-steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .form-step {
+      flex: 1;
+      height: 4px;
+      background-color: var(--gray-200);
+      margin: 0 8px;
+    }
+
+    .form-step.completed {
+      background-color: var(--success-color);
+    }
+
+    .form-step.active {
+      background-color: var(--primary-color);
+    }
+
+    .form-step-titles {
+      display: flex;
+      font-size: 12px;
+      margin-top: 8px;
+      gap: 12px;
+    }
+
+    .form-step-title {
+      flex: 1;
+      text-align: center;
+      color: var(--gray-500);
+    }
+
+    .form-step-title.active {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .form-section {
+      display: none;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    .confirm-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .confirm-grid div {
+      background-color: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 6px;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- TopNavbar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">📋</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a href="profile.html">Profile</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- left menu -->
+    <div class="sidebar">
+      <div class="sidebar-title">MO Function</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item active">Position Management</li>
+        <li class="sidebar-menu-item">Application Review</li>
+        <li class="sidebar-menu-item">Profile</li>
+        <li class="sidebar-menu-item">Notifications</li>
+      </ul>
+    </div>
+
+    <!-- right sideContent -->
+    <div class="content">
+      <!-- Action Bar -->
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="taSystem.openModal('publishModal')">+ Post New Position</button>
+        <div class="filter-tags">
+          <div class="filter-tag active" onclick="filterStatus(this, 'all')">All</div>
+          <div class="filter-tag" onclick="filterStatus(this, 'open')">Open</div>
+          <div class="filter-tag" onclick="filterStatus(this, 'pending')">Pending review</div>
+          <div class="filter-tag" onclick="filterStatus(this, 'closed')">Closed</div>
+          <div class="filter-tag" onclick="filterStatus(this, 'reopening')">Reopening</div>
+        </div>
+      </div>
+
+      <!-- Position Listsheet -->
+      <div class="table-container">
+        <table class="table table-striped" id="positionsTable">
+          <thead>
+            <tr>
+              <th>Position ID</th>
+              <th>Course Name</th>
+              <th>Openings/Already applied/Accepted</th>
+              <th>Release time</th>
+              <th>Deadline</th>
+              <th>Status</th>
+              <th style="width: 250px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-status="open">
+              <td>#001</td>
+              <td>Data Structures</td>
+              <td>3 / 8 / 2</td>
+              <td>2025-03-10</td>
+              <td>2025-03-21</td>
+              <td><span class="status-badge status-open">✓ Open</span></td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn btn-outline btn-action" onclick="taSystem.openModal('editModal')">Edit Position</button>
+                  <button class="btn btn-secondary btn-action" onclick="taSystem.showMessage('PositionClosed', 'success')">Close Position</button>
+                  <button class="btn btn-secondary btn-action" onclick="taSystem.openModal('applicantsModal')">View Applicants</button>
+                  <button class="btn btn-secondary btn-action">Reopen Settings</button>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="open">
+              <td>#002</td>
+              <td>Algorithm Design</td>
+              <td>2 / 5 / 1</td>
+              <td>2025-03-12</td>
+              <td>2025-03-24</td>
+              <td><span class="status-badge status-open">✓ Open</span></td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn btn-outline btn-action" onclick="taSystem.openModal('editModal')">Edit Position</button>
+                  <button class="btn btn-secondary btn-action" onclick="taSystem.showMessage('PositionClosed', 'success')">Close Position</button>
+                  <button class="btn btn-secondary btn-action" onclick="taSystem.openModal('applicantsModal')">View Applicants</button>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="closed">
+              <td>#003</td>
+              <td>Operating Systems</td>
+              <td>1 / 3 / 1</td>
+              <td>2025-03-05</td>
+              <td>2025-03-18</td>
+              <td><span class="status-badge status-closed">✗ Closed</span></td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn btn-secondary btn-action">Reopen Position</button>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="reopening">
+              <td>#004</td>
+              <td>database system</td>
+              <td>2 / 6 / 1</td>
+              <td>2025-03-08</td>
+              <td>2025-03-28</td>
+              <td><span class="status-badge status-reopening">🔄 Reopening</span></td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn btn-secondary btn-action">Edit Reopen Info</button>
+                  <button class="btn btn-secondary btn-action">Close Reopen</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- release/Edit Positionmodal box -->
+  <div id="publishModal" class="modal modal-large">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Post New Position</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- step instructions -->
+        <div class="form-steps">
+          <div class="form-step completed"></div>
+          <div class="form-step active"></div>
+          <div class="form-step"></div>
+          <div class="form-step"></div>
+          <div class="form-step"></div>
+        </div>
+        <div class="form-step-titles">
+          <div class="form-step-title active">Basic Information</div>
+          <div class="form-step-title">Recruitment requirements</div>
+          <div class="form-step-title">job information</div>
+          <div class="form-step-title">Time setting</div>
+          <div class="form-step-title">confirm</div>
+        </div>
+
+        <!-- step 1：Basic Information -->
+        <div id="step1" class="form-section active">
+          <div class="form-group">
+            <label class="form-label required">Course Name</label>
+            <input id="publishTitle" type="text" class="form-control" placeholder="like：Data Structures">
+          </div>
+          <div class="form-two-col">
+            <div class="form-group">
+              <label class="form-label required">Openings</label>
+              <input id="publishOpenings" type="number" class="form-control" placeholder="1-5people" min="1" max="5">
+            </div>
+            <div class="form-group">
+              <label class="form-label required">job description</label>
+              <input id="publishDepartment" type="text" class="form-control" placeholder="department like: Computer Science">
+            </div>
+          </div>
+        </div>
+
+        <div id="step2" class="form-section">
+          <div class="form-group">
+            <label class="form-label required">Recruitment requirements</label>
+            <textarea id="publishRequirements" class="form-control" placeholder="Skills and prerequisites"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred background</label>
+            <input id="publishPreferred" type="text" class="form-control" placeholder="e.g. Java, Python, teaching experience">
+          </div>
+        </div>
+
+        <div id="step3" class="form-section">
+          <div class="form-group">
+            <label class="form-label">Salary</label>
+            <input id="publishSalary" type="text" class="form-control" placeholder="e.g. 2000-3000 RMB/month">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Job Details</label>
+            <textarea id="publishDescription" class="form-control" placeholder="Detailed responsibilities"></textarea>
+          </div>
+        </div>
+
+        <div id="step4" class="form-section">
+          <div class="form-group">
+            <label class="form-label">Deadline</label>
+            <input id="publishDeadline" type="date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea id="publishNotes" class="form-control" placeholder="Optional timeline notes"></textarea>
+          </div>
+        </div>
+
+        <div id="step5" class="form-section">
+          <p style="margin-bottom:12px; color: var(--gray-600);">Please confirm before posting:</p>
+          <div id="publishConfirm" class="confirm-grid"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="publishPrevBtn" class="btn btn-secondary" onclick="prevPublishStep()" style="display:none;">Previous</button>
+        <button id="publishCancelBtn" class="btn btn-secondary" onclick="taSystem.closeModal('publishModal')">Cancel</button>
+        <button id="publishNextBtn" class="btn btn-primary" onclick="nextPublishStep()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Positionmodal box -->
+  <div id="editModal" class="modal modal-large">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Position</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label required">Course Name</label>
+          <input type="text" class="form-control" value="Data Structures">
+        </div>
+        <div class="form-two-col">
+          <div class="form-group">
+            <label class="form-label required">Openings</label>
+            <input type="number" class="form-control" value="3" min="1" max="5">
+          </div>
+          <div class="form-group">
+            <label class="form-label required">job type</label>
+            <select class="form-control">
+              <option value="ta">TA</option>
+              <option value="tutor">Tutor</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">job description</label>
+          <textarea class="form-control" placeholder="Detailed description of job responsibilities">Assist teachers to complete teaching work...</textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="taSystem.closeModal('editModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="taSystem.showMessage('Job has been updated', 'success'); taSystem.closeModal('editModal')">save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Applicantsmodal box -->
+  <div id="applicantsModal" class="modal modal-large">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Applicant List</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: grid; gap: 16px;">
+          <!-- Applicant card 1 -->
+          <div style="background-color: var(--gray-50); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div>
+                <p style="margin: 0 0 4px; font-weight: 600;">Zhang San (20210001)</p>
+                <p style="margin: 0; font-size: 12px; color: var(--gray-500);">Computer Science and Technology</p>
+              </div>
+              <span style="background-color: #d1fae5; color: var(--success-color); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">First Choice</span>
+            </div>
+            <p style="margin: 0 0 8px; font-size: 13px;"><strong>📊 Match Score：</strong> <span style="color: var(--success-color); font-weight: 600;">95%</span></p>
+            <p style="margin: 0 0 8px; font-size: 13px;"><strong>🎯 Matched Skills：</strong> <span style="color: #e11d48;">Python</span> · C++ · Data Structures</p>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
+              <button class="btn btn-sm btn-success" onclick="acceptApplicant()">Approve</button>
+              <button class="btn btn-sm btn-danger" onclick="rejectApplicant()">Reject</button>
+            </div>
+          </div>
+
+          <!-- Applicant card 2 -->
+          <div style="background-color: var(--gray-50); padding: 16px; border-radius: 8px; border-left: 4px solid var(--gray-300);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div>
+                <p style="margin: 0 0 4px; font-weight: 600;">Li Si (20210002)</p>
+                <p style="margin: 0; font-size: 12px; color: var(--gray-500);">Computer Science and Technology</p>
+              </div>
+              <span style="background-color: #dbeafe; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">Second Choice</span>
+            </div>
+            <p style="margin: 0 0 8px; font-size: 13px;"><strong>📊 Match Score：</strong> <span style="color: #f59e0b; font-weight: 600;">78%</span></p>
+            <p style="margin: 0 0 8px; font-size: 13px;"><strong>🎯 Matched Skills：</strong> Python · <span style="color: #e11d48;">Object-Oriented</span></p>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
+              <button class="btn btn-sm btn-success" onclick="acceptApplicant()">Approve</button>
+              <button class="btn btn-sm btn-danger" onclick="rejectApplicant()">Reject</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="taSystem.showMessage('batchApproveCompleted', 'success'); taSystem.closeModal('applicantsModal')">batchApprove</button>
+        <button class="btn btn-danger" onclick="taSystem.showMessage('batchRejectCompleted', 'success'); taSystem.closeModal('applicantsModal')">batchReject</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    let publishStep = 1;
+
+    function collectPublishForm() {
+      return {
+        title: (document.getElementById('publishTitle')?.value || '').trim(),
+        openings: (document.getElementById('publishOpenings')?.value || '1').trim(),
+        department: (document.getElementById('publishDepartment')?.value || '').trim(),
+        requirements: [
+          (document.getElementById('publishRequirements')?.value || '').trim(),
+          (document.getElementById('publishPreferred')?.value || '').trim()
+        ].filter(Boolean).join(', '),
+        salary: (document.getElementById('publishSalary')?.value || '').trim(),
+        description: [
+          (document.getElementById('publishDescription')?.value || '').trim(),
+          (document.getElementById('publishNotes')?.value || '').trim()
+        ].filter(Boolean).join(', '),
+        deadline: (document.getElementById('publishDeadline')?.value || '').trim()
+      };
+    }
+
+    function updatePublishStepUI() {
+      document.querySelectorAll('#publishModal .form-section').forEach((section, index) => {
+        section.classList.toggle('active', index + 1 === publishStep);
+      });
+
+      document.querySelectorAll('#publishModal .form-step').forEach((step, index) => {
+        step.classList.remove('active', 'completed');
+        if (index + 1 < publishStep) {
+          step.classList.add('completed');
+        } else if (index + 1 === publishStep) {
+          step.classList.add('active');
+        }
+      });
+
+      document.querySelectorAll('#publishModal .form-step-title').forEach((title, index) => {
+        title.classList.toggle('active', index + 1 === publishStep);
+      });
+
+      const prevBtn = document.getElementById('publishPrevBtn');
+      const cancelBtn = document.getElementById('publishCancelBtn');
+      const nextBtn = document.getElementById('publishNextBtn');
+      if (prevBtn) prevBtn.style.display = publishStep > 1 ? '' : 'none';
+      if (cancelBtn) cancelBtn.style.display = publishStep > 1 ? 'none' : '';
+      if (nextBtn) nextBtn.textContent = publishStep === 5 ? 'Submit' : 'Next';
+
+      if (publishStep === 5) {
+        const data = collectPublishForm();
+        const confirm = document.getElementById('publishConfirm');
+        if (confirm) {
+          confirm.innerHTML = `
+            <div><strong>Title:</strong> ${data.title || '-'}</div>
+            <div><strong>Openings:</strong> ${data.openings || '-'}</div>
+            <div><strong>Department:</strong> ${data.department || '-'}</div>
+            <div><strong>Salary:</strong> ${data.salary || '-'}</div>
+            <div><strong>Requirements:</strong> ${data.requirements || '-'}</div>
+            <div><strong>Deadline:</strong> ${data.deadline || '-'}</div>
+            <div style="grid-column: 1 / span 2;"><strong>Description:</strong> ${data.description || '-'}</div>
+          `;
+        }
+      }
+    }
+
+    function validatePublishStep() {
+      const data = collectPublishForm();
+      if (publishStep === 1) {
+        if (!data.title) {
+          taSystem.showMessage('Course Name required', 'warning');
+          return false;
+        }
+        if (!data.openings) {
+          taSystem.showMessage('Openings required', 'warning');
+          return false;
+        }
+      }
+      if (publishStep === 2 && !data.requirements) {
+        taSystem.showMessage('Please fill recruitment requirements', 'warning');
+        return false;
+      }
+      return true;
+    }
+
+    function nextPublishStep() {
+      if (!validatePublishStep()) {
+        return;
+      }
+      if (publishStep < 5) {
+        publishStep += 1;
+        updatePublishStepUI();
+        return;
+      }
+      submitPublishPosition();
+    }
+
+    function prevPublishStep() {
+      if (publishStep > 1) {
+        publishStep -= 1;
+        updatePublishStepUI();
+      }
+    }
+
+    async function submitPublishPosition() {
+      const data = collectPublishForm();
+      try {
+        const result = await API.createPosition({
+          title: data.title,
+          department: data.department || '计算机学院',
+          salary: data.salary || '面议',
+          description: data.description || '由 MO 补充',
+          requirements: data.requirements || '由 MO 补充',
+          openings: data.openings || '1',
+          deadline: data.deadline || ''
+        });
+        if (result.success) {
+          taSystem.showMessage('Job posted', 'success');
+          taSystem.closeModal('publishModal');
+          publishStep = 1;
+          updatePublishStepUI();
+          await loadPositions();
+        } else {
+          taSystem.showMessage(result.message || '发布失败', 'danger');
+        }
+      } catch (error) {
+        taSystem.showMessage(error.message || '发布失败', 'danger');
+      }
+    }
+
+    function mapStatusClass(status) {
+      const s = (status || '').toLowerCase();
+      if (s === 'closed') return 'status-closed';
+      if (s === 'pending') return 'status-pending';
+      if (s === 'reopening') return 'status-reopening';
+      return 'status-open';
+    }
+
+    function mapStatusText(status) {
+      const s = (status || '').toLowerCase();
+      if (s === 'closed') return 'Closed';
+      if (s === 'pending') return 'Pending review';
+      if (s === 'reopening') return 'Reopening';
+      return 'Open';
+    }
+
+    function renderPositions(positions) {
+      const tbody = document.querySelector('#positionsTable tbody');
+      if (!tbody) return;
+
+      if (!positions.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);">暂无职位</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = positions.map((p) => `
+        <tr data-status="${(p.status || 'open').toLowerCase()}">
+          <td>${p.id}</td>
+          <td>${p.title || ''}</td>
+          <td>${p.openings || 0} / ${p.appliedCount || 0} / ${p.acceptedCount || 0}</td>
+          <td>${p.createdAt || ''}</td>
+          <td>${p.deadline || ''}</td>
+          <td><span class="status-badge ${mapStatusClass(p.status)}">${mapStatusText(p.status)}</span></td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-secondary btn-action" onclick="changeStatus('${p.id}', 'open')">Open</button>
+              <button class="btn btn-secondary btn-action" onclick="changeStatus('${p.id}', 'closed')">Close</button>
+              <button class="btn btn-secondary btn-action" onclick="window.location.href='mo-review.html'">View Applicants</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadPositions() {
+      try {
+        const list = await API.getPositions();
+        renderPositions(Array.isArray(list) ? list : []);
+      } catch (error) {
+        taSystem.showMessage(error.message || '加载职位失败', 'danger');
+      }
+    }
+
+    function filterStatus(element, status) {
+      document.querySelectorAll('.filter-tag').forEach(tag => tag.classList.remove('active'));
+      element.classList.add('active');
+
+      const table = document.getElementById('positionsTable');
+      const rows = table.querySelectorAll('tbody tr');
+
+      rows.forEach(row => {
+        if (status === 'all') {
+          row.style.display = '';
+        } else {
+          row.style.display = row.getAttribute('data-status') === status ? '' : 'none';
+        }
+      });
+    }
+
+    async function changeStatus(positionId, status) {
+      try {
+        const result = await API.updatePositionStatus(positionId, status);
+        if (result.success) {
+          taSystem.showMessage('Position status updated', 'success');
+          await loadPositions();
+        } else {
+          taSystem.showMessage(result.message || '更新失败', 'danger');
+        }
+      } catch (error) {
+        taSystem.showMessage(error.message || '更新失败', 'danger');
+      }
+    }
+
+    function acceptApplicant() {
+      taSystem.showMessage('请在 Application Review 页面操作', 'info');
+    }
+
+    function rejectApplicant() {
+      taSystem.showMessage('请在 Application Review 页面操作', 'info');
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadPositions();
+      updatePublishStepUI();
+
+      const openPublishBtn = document.querySelector('.toolbar .btn.btn-primary');
+      if (openPublishBtn) {
+        openPublishBtn.addEventListener('click', () => {
+          publishStep = 1;
+          updatePublishStepUI();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
