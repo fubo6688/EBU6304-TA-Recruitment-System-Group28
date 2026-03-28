@@ -1,3 +1,4 @@
+### Java ###
 # Compiled class file
 *.class
 
@@ -19,6 +20,25 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# virtual machine crash logs
 hs_err_pid*
 replay_pid*
+
+
+### Maven (关键修复部分) ###
+# 忽略整个构建输出目录 (这是解决你冲突的关键)
+/target/
+
+# IDE (如果你用 VS Code 或其他)
+.vscode/
+*.code-workspace
+
+# Eclipse
+.settings/
+.classpath
+.project
+
+# IntelliJ
+.idea/
+*.iml
+/out/
