@@ -86,26 +86,6 @@ public class PositionServlet extends HttpServlet {
             return;
         }
 
-        if ("/status".equalsIgnoreCase(path)) {
-            if (!isRole(user, "MO", "Admin")) {
-                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                out.print(new JSONObject().put("success", false).put("message", "No permission").toString());
-                return;
-            }
-
-            String positionId = value(req.getParameter("positionId"));
-            String status = value(req.getParameter("status"));
-            if (positionId.isEmpty() || status.isEmpty()) {
-                out.print(new JSONObject().put("success", false).put("message", "Missing parameters").toString());
-                return;
-            }
-
-            boolean ok = dataManager.updatePositionStatus(positionId, status);
-            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "UPDATE_POSITION_STATUS", positionId + "->" + status, ok ? "success" : "failed");
-            out.print(new JSONObject().put("success", ok).put("message", ok ? "Status updated" : "Position not found").toString());
-            return;
-        }
-
         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
