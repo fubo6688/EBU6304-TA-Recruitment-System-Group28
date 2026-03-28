@@ -1,0 +1,18 @@
+ntf1774242715721|application|Application Submitted|Your application was submitted.|2026-03-23 13:11:55|1
+ntf1774242753514|application|Application Update|Your application was approved. Feedback: 审核通过|2026-03-23 13:12:33|1
+ntf1774242763047|application|Application Update|Your application was approved. Feedback: 审核通过|2026-03-23 13:12:43|0
+ntf1774243991709|application|Application Update|Your application was rejected. Feedback: awnjkdfd|2026-03-23 13:33:11|0
+ntf1774244690914|application|Application Submitted|Your application was submitted.|2026-03-23 13:44:50|0
+ntf1774244713239|application|Application Update|Your application was approved. Feedback: 审核通过|2026-03-23 13:45:13|0
+ntf1774245097332|application|Application Submitted|Your application was submitted.|2026-03-23 13:51:37|0
+ntf1774255805071|application|Application Submitted|Your application was submitted.|2026-03-23 16:50:05|0
+ntf1774255818956|application|Application Submitted|Your application was submitted.|2026-03-23 16:50:18|0
+ntf1774255844188|application|Application Submitted|Your application was submitted.|2026-03-23 16:50:44|0
+ntf1774255873422|application|Application Submitted|Your application was submitted.|2026-03-23 16:51:13|0
+ntf1774255907899|application|Application Update|Your application was rejected. Feedback: 111|2026-03-23 16:51:47|0
+ntf1774258983264|system|ss|ssssss|2026-03-23 17:43:03|0
+ntf1774259145617|application|Application Submitted|Your application was submitted.|2026-03-23 17:45:45|0
+ntf1774259475799|application|Application Submitted|Your application was submitted.|2026-03-23 17:51:15|0
+ntf1774259476720|application|Application Submitted|Your application was submitted.|2026-03-23 17:51:16|0
+ntf1774267679633|application|Application Submitted|Your application was submitted.|2026-03-23 20:07:59|0
+ntf1774267682753|application|Application Submitted|Your application was submitted.|2026-03-23 20:08:02|0
