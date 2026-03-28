@@ -250,7 +250,7 @@
         <li class="sidebar-menu-item active">Position Management</li>
         <li class="sidebar-menu-item">Application Review</li>
         <li class="sidebar-menu-item">Profile</li>
-        <li class="sidebar-menu-item">Notifications</li>
+        <!-- Sprint 2 disabled: <li class="sidebar-menu-item">Notifications</li> -->
       </ul>
     </div>
 
@@ -262,9 +262,10 @@
         <div class="filter-tags">
           <div class="filter-tag active" onclick="filterStatus(this, 'all')">All</div>
           <div class="filter-tag" onclick="filterStatus(this, 'open')">Open</div>
-          <div class="filter-tag" onclick="filterStatus(this, 'pending')">Pending review</div>
-          <div class="filter-tag" onclick="filterStatus(this, 'closed')">Closed</div>
-          <div class="filter-tag" onclick="filterStatus(this, 'reopening')">Reopening</div>
+          <!-- Sprint 2 disabled: status-management filters -->
+          <!-- <div class="filter-tag" onclick="filterStatus(this, 'pending')">Pending review</div> -->
+          <!-- <div class="filter-tag" onclick="filterStatus(this, 'closed')">Closed</div> -->
+          <!-- <div class="filter-tag" onclick="filterStatus(this, 'reopening')">Reopening</div> -->
         </div>
       </div>
 
@@ -691,8 +692,9 @@
           <td><span class="status-badge ${mapStatusClass(p.status)}">${mapStatusText(p.status)}</span></td>
           <td>
             <div class="action-buttons">
-              <button class="btn btn-secondary btn-action" onclick="changeStatus('${p.id}', 'open')">Open</button>
-              <button class="btn btn-secondary btn-action" onclick="changeStatus('${p.id}', 'closed')">Close</button>
+              <!-- Sprint 2 disabled: status update actions -->
+              <!-- <button class="btn btn-secondary btn-action" onclick="changeStatus('${p.id}', 'open')">Open</button> -->
+              <!-- <button class="btn btn-secondary btn-action" onclick="changeStatus('${p.id}', 'closed')">Close</button> -->
               <button class="btn btn-secondary btn-action" onclick="window.location.href='mo-review.html'">View Applicants</button>
             </div>
           </td>
@@ -726,17 +728,8 @@
     }
 
     async function changeStatus(positionId, status) {
-      try {
-        const result = await API.updatePositionStatus(positionId, status);
-        if (result.success) {
-          taSystem.showMessage('Position status updated', 'success');
-          await loadPositions();
-        } else {
-          taSystem.showMessage(result.message || '更新失败', 'danger');
-        }
-      } catch (error) {
-        taSystem.showMessage(error.message || '更新失败', 'danger');
-      }
+      // Sprint 2 disabled: MO job status editing/closing.
+      taSystem.showMessage('Sprint 2 功能已注释：当前仅保留发布岗位与查看申请人。', 'info');
     }
 
     function acceptApplicant() {

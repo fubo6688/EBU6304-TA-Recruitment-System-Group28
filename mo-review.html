@@ -374,8 +374,9 @@
             <div class="applicant-footer">
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-              <button class="btn btn-sm btn-success" onclick="acceptApplicant()">Approve</button>
-              <button class="btn btn-sm btn-danger" onclick="rejectApplicant()">Reject</button>
+              <!-- Sprint 2 disabled: approve/reject -->
+              <button class="btn btn-sm btn-success" disabled title="Sprint 2 disabled">Approve</button>
+              <button class="btn btn-sm btn-danger" disabled title="Sprint 2 disabled">Reject</button>
             </div>
           </div>
 
@@ -406,8 +407,9 @@
             <div class="applicant-footer">
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-              <button class="btn btn-sm btn-success" onclick="acceptApplicant()">Approve</button>
-              <button class="btn btn-sm btn-danger" onclick="rejectApplicant()">Reject</button>
+              <!-- Sprint 2 disabled: approve/reject -->
+              <button class="btn btn-sm btn-success" disabled title="Sprint 2 disabled">Approve</button>
+              <button class="btn btn-sm btn-danger" disabled title="Sprint 2 disabled">Reject</button>
             </div>
           </div>
 
@@ -437,8 +439,9 @@
             <div class="applicant-footer">
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-              <button class="btn btn-sm btn-success" onclick="acceptApplicant()">Approve</button>
-              <button class="btn btn-sm btn-danger" onclick="rejectApplicant()">Reject</button>
+              <!-- Sprint 2 disabled: approve/reject -->
+              <button class="btn btn-sm btn-success" disabled title="Sprint 2 disabled">Approve</button>
+              <button class="btn btn-sm btn-danger" disabled title="Sprint 2 disabled">Reject</button>
             </div>
           </div>
 
@@ -470,8 +473,9 @@
             <div class="applicant-footer">
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-              <button class="btn btn-sm btn-success" onclick="acceptApplicant()">Approve</button>
-              <button class="btn btn-sm btn-danger" onclick="rejectApplicant()">Reject</button>
+              <!-- Sprint 2 disabled: approve/reject -->
+              <button class="btn btn-sm btn-success" disabled title="Sprint 2 disabled">Approve</button>
+              <button class="btn btn-sm btn-danger" disabled title="Sprint 2 disabled">Reject</button>
             </div>
           </div>
         </div>
@@ -567,8 +571,9 @@
           <div class="applicant-footer">
             <button class="btn btn-sm btn-outline" onclick="openResume('${app.userId}')">View Resume</button>
             <button class="btn btn-sm btn-outline" onclick="showApplicantProfile('${app.userId}')">View Profile</button>
-            <button class="btn btn-sm btn-success" onclick="acceptApplicant('${app.id}')" ${lockApprove || lockBoth ? 'disabled title="Cannot approve in current status"' : ''}>Approve</button>
-            <button class="btn btn-sm btn-danger" onclick="rejectApplicant('${app.id}')" ${lockReject || lockBoth ? 'disabled title="Cannot reject in current status"' : ''}>Reject</button>
+            <!-- Sprint 2 disabled: approve/reject -->
+            <button class="btn btn-sm btn-success" disabled title="Sprint 2 disabled">Approve</button>
+            <button class="btn btn-sm btn-danger" disabled title="Sprint 2 disabled">Reject</button>
           </div>
         </div>
       `;
@@ -648,52 +653,13 @@
     }
 
     async function acceptApplicant(applicationId) {
-      const app = currentApplications.find((item) => item.id === applicationId);
-      const s = normalizeStatus(app && app.status);
-      if (s === 'rejected') {
-        taSystem.showMessage('This application is already rejected and cannot be approved', 'warning');
-        return;
-      }
-      if (s === 'approved') {
-        taSystem.showMessage('Already approved', 'info');
-        return;
-      }
-      try {
-        const result = await API.processApplication(applicationId, 'approved', '审核通过');
-        if (result.success) {
-          taSystem.showMessage('Application has beenApprove', 'success');
-          await loadApplications();
-        } else {
-          taSystem.showMessage(result.message || '处理失败', 'danger');
-        }
-      } catch (error) {
-        taSystem.showMessage(error.message || '处理失败', 'danger');
-      }
+      // Sprint 2 disabled: status update actions.
+      taSystem.showMessage('Sprint 2 功能已注释：当前仅保留查看申请人信息。', 'info');
     }
 
     async function rejectApplicant(applicationId) {
-      const app = currentApplications.find((item) => item.id === applicationId);
-      const s = normalizeStatus(app && app.status);
-      if (s === 'approved') {
-        taSystem.showMessage('This application is already approved and cannot be rejected', 'warning');
-        return;
-      }
-      if (s === 'rejected') {
-        taSystem.showMessage('Already rejected', 'info');
-        return;
-      }
-      const reason = prompt('Please enterRejectreason：') || '审核不通过';
-      try {
-        const result = await API.processApplication(applicationId, 'rejected', reason);
-        if (result.success) {
-          taSystem.showMessage('RejectSent', 'info');
-          await loadApplications();
-        } else {
-          taSystem.showMessage(result.message || '处理失败', 'danger');
-        }
-      } catch (error) {
-        taSystem.showMessage(error.message || '处理失败', 'danger');
-      }
+      // Sprint 2 disabled: status update actions.
+      taSystem.showMessage('Sprint 2 功能已注释：当前仅保留查看申请人信息。', 'info');
     }
 
     document.querySelectorAll('.filter-btn').forEach(btn => {

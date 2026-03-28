@@ -319,7 +319,9 @@
         } else if (data.user.userRole === 'MO') {
           window.location.href = 'mo-positions.html';
         } else {
-          window.location.href = 'admin-analytics.html';
+          // Sprint 2 disabled: admin analytics/user/log pages are hidden in Phase 1 mode.
+          alert('当前为 Sprint 1 模式，管理员二阶段功能已注释，先进入 Profile 页面。');
+          window.location.href = 'profile.html';
         }
       } catch (error) {
         registerFailedAttempt();

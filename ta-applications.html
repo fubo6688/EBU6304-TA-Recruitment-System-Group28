@@ -238,6 +238,9 @@
 
     <!-- right sideContent -->
     <div class="content">
+      <div style="margin-bottom:16px; padding:12px 14px; border-radius:6px; background:#fff3cd; color:#8a6d1e; border:1px solid #ffe69c;">
+        Sprint 2 功能已注释：此页面的申请状态跟踪、撤销和优先级设置暂不开放。
+      </div>
       <!-- Action Bar -->
       <div class="toolbar">
         <div class="filter-tags">
@@ -421,18 +424,8 @@
     }
 
     async function cancelApplication(applicationId) {
-      if (!confirm('ConfirmwantDeleteThis application?？')) return;
-      try {
-        const result = await API.cancelApplication(applicationId);
-        if (result.success) {
-          taSystem.showMessage('Application has beenDelete', 'success');
-          await loadApplications();
-        } else {
-          taSystem.showMessage(result.message || '删除失败', 'danger');
-        }
-      } catch (error) {
-        taSystem.showMessage(error.message || '删除失败', 'danger');
-      }
+      // Sprint 2 disabled: cancel application action.
+      taSystem.showMessage('Sprint 2 功能已注释：暂不支持删除申请。', 'info');
     }
 
     function selectPriority(element, priority) {
@@ -442,22 +435,8 @@
     }
 
     async function savePriority() {
-      if (!selectedPriority || !selectedApplicationId) {
-        taSystem.showMessage('Please select a priority', 'danger');
-        return;
-      }
-      try {
-        const result = await API.updateApplicationPriority(selectedApplicationId, selectedPriority);
-        if (result.success) {
-          taSystem.showMessage('Priority has been set', 'success');
-          taSystem.closeModal('priorityModal');
-          await loadApplications();
-        } else {
-          taSystem.showMessage(result.message || '设置失败', 'danger');
-        }
-      } catch (error) {
-        taSystem.showMessage(error.message || '设置失败', 'danger');
-      }
+      // Sprint 2 disabled: update application priority.
+      taSystem.showMessage('Sprint 2 功能已注释：暂不支持设置申请优先级。', 'info');
     }
 
     function showDetail(applicationId) {

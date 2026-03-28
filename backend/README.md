@@ -1,225 +1,135 @@
-# TA 招聘系统 - 后端部署指南
+﻿# Backend Deployment Guide (TA Recruitment System)
 
-## 项目结构
+This backend is implemented with Java Servlets and file-based persistence.
 
-```
+## Directory Layout
+
+```text
 backend/
-├── WEB-INF/
-│   ├── web.xml              # Tomcat 配置文件
-│   ├── classes/             # 编译后的 Java 类
-│   └── lib/                 # 依赖库
-├── src/
-│   └── com/ta/
-│       ├── servlet/         # Servlet 类
-│       ├── model/           # 数据模型
-│       └── util/            # 工具类
-├── data/                    # 数据文件存储目录
-├── build.bat                # 编译脚本
-└── README.md                # 本文件
+|- src/com/ta/
+|  |- model/
+|  |- servlet/
+|  |- util/
+|- WEB-INF/
+|  |- web.xml
+|  |- classes/
+|  |- lib/
+|- data/
+|- build.bat
+|- deploy.bat
 ```
 
-## 前置要求
+## Requirements
 
-1. **Java JDK 8+**
-   - 下载：https://www.oracle.com/java/technologies/downloads/
-   - 验证：`javac -version`
+1. JDK 8+ (JDK 17+ recommended)
+2. Tomcat 9+ (Tomcat 11 supported)
+3. Dependency jars in `backend/WEB-INF/lib/`:
+   - `json-20240303.jar`
+   - `servlet-api.jar` (compile-time only)
 
-2. **Tomcat 9.0+**
-   - 下载：https://tomcat.apache.org/download-90.cgi
-   - 解压到任意位置（如 `C:\Program Files\Tomcat`)
+## Build Backend Classes
 
-3. **JSON 库**
-   - 下载：https://mvnrepository.com/artifact/org.json/json
-   - 放到 `WEB-INF/lib/json-xxx.jar`
+From repository root:
 
-## 部署步骤
-
-### 1. 编译 Java 源代码
-
-在 `backend` 目录下运行：
-
-```bash
-build.bat
+```powershell
+cd .\backend
+.\build.bat
 ```
 
-或手动编译：
+Or compile manually:
 
-```bash
-javac -d WEB-INF\classes src\com\ta\model\*.java src\com\ta\util\*.java src\com\ta\servlet\*.java
+```powershell
+javac -encoding UTF-8 -cp "WEB-INF\lib\*" -d WEB-INF\classes src\com\ta\model\*.java src\com\ta\util\*.java src\com\ta\servlet\*.java
 ```
 
-### 2. 下载依赖库
+## Recommended Deployment (Automated)
 
-下载 JSON 库并放到 `WEB-INF/lib/`:
+Use the root one-command startup script:
 
-- 访问：https://mvnrepository.com/artifact/org.json/json
-- 下载最新版本 JAR 文件（如 `json-20240303.jar`）
-- 放到 `c:\Users\ROG\Desktop\PAGE\backend\WEB-INF\lib\`
-
-### 3. 配置 Tomcat
-
-#### 方式 A：直接部署（推荐用于学习）
-
-1. 进入 Tomcat 的 `webapps` 目录
-2. 创建文件夹 `ta-system`
-3. 复制整个 `backend` 目录的内容到 `webapps/ta-system`
-4. 目录结构应该是：
-   ```
-   webapps/ta-system/
-   ├── WEB-INF/
-   ├── index.html      (复制前端文件)
-   ├── css/
-   ├── js/
-   └── ...
-   ```
-
-#### 方式 B：使用 Build 目录（推荐用于生产）
-
-1. 右键项目 → 选择 "Run as" → "Run on Server"
-2. 或使用 IDE 的部署功能
-
-### 4. 配置前端连接后端
-
-编辑 `js/script.js`，添加后端 API 基础 URL：
-
-```javascript
-const API_BASE_URL = 'http://localhost:8080/ta-system/api';
+```powershell
+cd ..
+.\start-dev.bat
 ```
 
-### 5. 启动 Tomcat
+This compiles backend, syncs runtime files, deploys to Tomcat, and starts service.
 
-#### Windows 启动
+## Manual Deployment (Optional)
 
-```bash
-cd C:\Program Files\Tomcat\bin
-startup.bat
+1. Build backend classes
+2. Copy project to Tomcat webapps as `ta-system`
+3. Ensure `WEB-INF/web.xml` and compiled classes are present
+4. Start Tomcat
+5. Open:
+
+```text
+http://localhost:8080/ta-system/login.html
 ```
 
-#### 验证启动
+## API Endpoints
 
-访问 `http://localhost:8080` 看到 Tomcat 欢迎页面说明启动成功。
+Authentication:
+1. `POST /api/login`
+2. `GET /api/login?action=logout`
 
-### 6. 访问系统
+User:
+1. `GET /api/user/profile`
+2. `POST /api/user/profile`
+3. `POST /api/user/password`
+4. `GET /api/user/ta-profile`
+5. `GET /api/user/resume`
 
-打开浏览器访问：
+Position:
+1. `GET /api/position/list`
+2. `POST /api/position/create`
+3. `POST /api/position/status`
 
-```
-http://localhost:8080/ta-system/
-```
+Application:
+1. `GET /api/application/list`
+2. `GET /api/application/review-list`
+3. `POST /api/application/submit`
+4. `POST /api/application/cancel`
+5. `POST /api/application/process`
+6. `POST /api/application/priority`
 
-## API 端点
+Notification:
+1. `GET /api/notification/list`
+2. `POST /api/notification/read`
+3. `POST /api/notification/read-all`
+4. `POST /api/notification/create`
 
-### 用户认证
+Admin:
+1. `GET /api/admin/analytics`
+2. `GET /api/admin/users`
+3. `GET /api/admin/logs`
+4. `POST /api/admin/user-status`
+5. `GET /api/admin/export`
 
-- **POST /api/login**
-  - 参数: `userId`, `password`
-  - 返回: `{success: bool, message: string, user: object}`
+## Data Files
 
-### 用户信息
+Runtime data is stored in:
+1. `backend/data/users.txt`
+2. `backend/data/positions.txt`
+3. `backend/data/applications.txt`
+4. `backend/data/profiles.txt`
+5. `backend/data/logs.txt`
+6. `backend/data/*_notifications.txt`
 
-- **GET /api/user/profile**
-  - 获取当前用户信息
-  - 返回: `{userId, userName, email, role, qmId}`
+## Known Mode Constraint
 
-- **PUT /api/user/password**
-  - 修改密码
-  - 参数: `oldPassword`, `newPassword`
+The current branch is configured for **Sprint 1 mode**.
+Some Sprint 2 frontend actions are intentionally disabled to match Phase 1 deliverables.
 
-### 职位管理
+## Troubleshooting
 
-- **GET /api/position/list**
-  - 获取所有职位列表
-  - 返回: 职位数组
+1. App fails to start:
+   - Verify jar dependencies in `backend/WEB-INF/lib`
+2. API 404:
+   - Verify deployment path is `/ta-system`
+3. CORS/session issues:
+   - Use deployed URL (not `file://`)
+4. Port conflicts:
+   - Use `..\stop-dev.bat` or `..\stop-dev.ps1 -ForceKill`
 
-- **POST /api/position/create**
-  - 创建新职位（仅 MO）
+## Version
 
-### 应用管理
-
-- **GET /api/application/list**
-  - 获取用户的应用列表
-
-- **POST /api/application/submit**
-  - 提交职位应用
-
-### 通知
-
-- **GET /api/notification/list**
-  - 获取用户通知
-
-- **POST /api/notification/create**
-  - 创建新通知
-
-## 默认测试账号
-
-| 账号 | 密码 | 角色 |
-|------|------|------|
-| ta001 | 123456 | TA |
-| ta002 | 123456 | TA |
-| mo001 | 123456 | MO |
-| admin001 | admin123 | Admin |
-
-## 数据存储
-
-所有数据存储在 `backend/data/` 目录：
-
-- `users.txt` - 用户列表
-- `positions.txt` - 职位列表
-- `{userId}_notifications.txt` - 用户通知
-
-## 常见问题
-
-### Q: 报错 "Web application at context path [/ta-system] has been marked as failed to start"
-
-A: 检查：
-1. Java 类是否编译成功
-2. `WEB-INF/lib/` 中是否有 json-xxx.jar
-3. 路径中不能有中文字符
-
-### Q: 404 错误访问不到 API
-
-A: 确认：
-1. Tomcat 已启动
-2. 访问的 URL 路径正确
-3. web.xml 中的映射配置正确
-
-### Q: 无法登录
-
-A: 检查：
-1. 账号和密码是否正确（见上表）
-2. `backend/data/users.txt` 是否存在
-3. 检查浏览器控制台的错误信息
-
-## 扩展功能
-
-如需添加更多功能：
-
-1. 在 `src/com/ta/servlet/` 中创建新的 Servlet
-2. 在 `web.xml` 中配置新的 Servlet 映射
-3. 修改前端代码调用新 API
-
-## 性能优化（生产环境）
-
-1. **使用数据库**替换纯文本存储
-   - 替换 `DataManager` 中的文件操作为 JDBC/数据库操作
-   - 推荐使用 MySQL 或 PostgreSQL
-
-2. **添加缓存**
-   - 使用 Redis 缓存用户信息和职位列表
-
-3. **连接池**
-   - 使用 HikariCP 管理数据库连接
-
-4. **对象关系映射**
-   - 使用 MyBatis 或 Hibernate
-
-## 联系方式
-
-如有问题，查看 Tomcat logs：
-- Windows: `C:\Program Files\Tomcat\logs\catalina.out`
-- 提供日志信息以便诊断
-
----
-
-**版本**: 1.0  
-**更新**: 2026-03-16
+Updated: 2026-03-29
