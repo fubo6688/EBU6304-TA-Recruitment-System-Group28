@@ -1,0 +1,20 @@
+<<<<<<< HEAD
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\controller\AuthFilter.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\model\MO.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\controller\LoginServlet.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\controller\ProfileServlet.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\utils\FileStorageUtil.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\controller\ProcessApplicationServlet.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\controller\AdminDashboardServlet.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\model\Job.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\controller\ApplyServlet.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\model\Application.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\controller\JobServlet.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\controller\JobListServlet.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\model\User.java
+e:\文档\软件工程\Project\EBU6304-TA-Recruitment-System-Group28\src\main\java\com\bupt\model\TA.java
+=======
+D:\MyRecruitmentSystem\src\main\java\com\bupt\model\Job.java
+D:\MyRecruitmentSystem\src\main\java\com\bupt\utils\FileStorageUtil.java
+D:\MyRecruitmentSystem\src\main\java\com\bupt\controller\JobServlet.java
+>>>>>>> 672021a (Initial commit - Java 11 baseline)

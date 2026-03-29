@@ -1,0 +1,21 @@
+<<<<<<< HEAD
+com\bupt\controller\ProfileServlet.class
+com\bupt\controller\AuthFilter.class
+com\bupt\controller\ApplyServlet.class
+com\bupt\model\User.class
+com\bupt\controller\JobListServlet.class
+com\bupt\model\Application.class
+com\bupt\utils\FileStorageUtil.class
+com\bupt\controller\LoginServlet.class
+com\bupt\model\Job.class
+com\bupt\model\MO.class
+com\bupt\controller\AdminDashboardServlet.class
+com\bupt\controller\JobServlet.class
+com\bupt\model\MO$MOJobPosting.class
+com\bupt\controller\ProcessApplicationServlet.class
+com\bupt\model\TA.class
+=======
+com\bupt\model\Job.class
+com\bupt\utils\FileStorageUtil.class
+com\bupt\controller\JobServlet.class
+>>>>>>> 672021a (Initial commit - Java 11 baseline)

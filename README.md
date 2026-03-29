@@ -23,12 +23,12 @@ Enabled Sprint 1 workflow:
 4. TA browse open jobs and submit applications
 5. MO view applicants for their own jobs
 
-Removed from Sprint 1 scope:
+Temporarily disabled in Sprint 1 mode:
 1. MO approve/reject actions
 2. TA application status tracking and priority updates
 3. MO job status editing/closing/reopening
 4. Admin analytics, user management, and logs pages
-5. Standalone notification center pages
+5. Notification center pages
 
 ## Project Structure
 
@@ -38,8 +38,13 @@ Removed from Sprint 1 scope:
 |- profile.html
 |- ta-profile.html
 |- ta-positions.html
+|- ta-applications.html
 |- mo-positions.html
 |- mo-review.html
+|- admin-analytics.html
+|- admin-users.html
+|- admin-logs.html
+|- notification.html
 |- css/
 |- js/
 |  |- script.js
@@ -138,6 +143,8 @@ Main endpoint groups:
 2. `/api/user/*`
 3. `/api/position/*`
 4. `/api/application/*`
+5. `/api/notification/*`
+6. `/api/admin/*`
 
 ## Sprint 1 Demonstration Path
 
