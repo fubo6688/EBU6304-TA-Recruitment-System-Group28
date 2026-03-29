@@ -588,6 +588,7 @@
   </div>
 
   <script src="js/script.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script>
     let allPositions = [];
@@ -755,28 +756,29 @@
         return;
       }
       if (!list.length) {
-        container.innerHTML = '<div class="card" style="padding:20px;">暂无可申请职位</div>';
+        container.innerHTML = '<div class="card" style="padding:20px;">No open positions available</div>';
         return;
       }
 
       container.innerHTML = list.map((p) => {
         const closed = isClosedPosition(p);
-        const applyLabel = closed ? 'Closed' : 'Apply Now';
-        const applyDisabledAttr = closed ? 'disabled title="Closed positions cannot be applied"' : '';
+        const alreadyApplied = p.taApplied === true;
+        const applyLabel = closed ? 'Closed' : (alreadyApplied ? 'Already Applied' : 'Apply Now');
+        const applyDisabledAttr = (closed || alreadyApplied) ? 'disabled title="' + (closed ? 'Closed positions cannot be applied' : 'You have already applied for this position') + '"' : '';
         return `
         <div class="position-card">
           <div class="position-header">
             <div>
               <div class="position-title">${p.title || ''}</div>
-              <div class="position-course">${p.department || ''}</div>
+              <div class="position-course">${p.major || ''}</div>
             </div>
             <span class="status-badge">${p.status || 'open'}</span>
           </div>
           <div class="position-details">
-            <div class="position-detail-row"><span class="position-detail-label">薪资</span><span class="position-detail-value">${p.salary || '面议'}</span></div>
-            <div class="position-detail-row"><span class="position-detail-label">截止</span><span class="position-detail-value">${p.deadline || '-'}</span></div>
-            <div class="position-detail-row"><span class="position-detail-label">申请数</span><span class="position-detail-value">${p.appliedCount || 0}</span></div>
-            <div class="position-detail-row"><span class="position-detail-label">名额</span><span class="position-detail-value">${p.openings || 0}</span></div>
+            <div class="position-detail-row"><span class="position-detail-label">Salary</span><span class="position-detail-value">${p.salary || 'To be determined'}</span></div>
+            <div class="position-detail-row"><span class="position-detail-label">Expected</span><span class="position-detail-value">${p.expectedCount || 0}</span></div>
+            <div class="position-detail-row"><span class="position-detail-label">Accepted</span><span class="position-detail-value">${p.acceptedCount || 0}</span></div>
+            <div class="position-detail-row"><span class="position-detail-label">Available</span><span class="position-detail-value">${Math.max(0, (p.expectedCount || 0) - (p.acceptedCount || 0))}</span></div>
           </div>
           <div class="position-footer">
             <div style="font-size:12px;color:var(--gray-500);">${p.description || ''}</div>
@@ -825,6 +827,21 @@
     }
 
     async function applyPosition(positionId) {
+      // Check if user is logged in
+      const userId = localStorage.getItem('userId');
+      const userRole = localStorage.getItem('userRole');
+      
+      if (!userId) {
+        taSystem.showMessage('Please log in first', 'warning');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      if (userRole !== 'TA') {
+        taSystem.showMessage('Only TAs can apply for positions', 'warning');
+        return;
+      }
+
       const position = allPositions.find((item) => item.id === positionId);
       if (position && isClosedPosition(position)) {
         taSystem.showMessage('Closed positions cannot be applied', 'warning');
@@ -832,27 +849,32 @@
       }
 
       try {
-        const result = await API.submitApplication(positionId, 'first');
+        const result = await API.submitApplication(positionId, userId, 'first');
         if (result.success) {
-          taSystem.showMessage('Application has been submitted', 'success');
+          taSystem.showMessage('Application has been submitted successfully', 'success');
           loadPositions();
         } else {
-          taSystem.showMessage(result.message || '提交失败', 'danger');
+          taSystem.showMessage(result.message || 'Failed to submit application', 'danger');
         }
       } catch (error) {
-        taSystem.showMessage(error.message || '提交失败', 'danger');
+        taSystem.showMessage(error.message || 'Failed to submit application', 'danger');
       }
     }
 
     async function loadPositions() {
       try {
-        const list = await API.getPositions();
-        allPositions = Array.isArray(list) ? list : [];
+        const userId = localStorage.getItem('userId');
+        const list = await API.getPositions(userId);
+        if (list.success && Array.isArray(list.positions)) {
+          allPositions = list.positions;
+        } else {
+          allPositions = Array.isArray(list) ? list : [];
+        }
         buildDynamicFilterOptions(allPositions);
         currentPositions = allPositions.slice();
         renderPositions(currentPositions);
       } catch (error) {
-        taSystem.showMessage(error.message || '职位加载失败', 'danger');
+        taSystem.showMessage(error.message || 'Failed to load positions', 'danger');
       }
     }
 

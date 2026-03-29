@@ -125,8 +125,9 @@ class API {
     });
   }
 
-  static getPositions() {
-    return API.request("/position/list");
+  static getPositions(taId = null) {
+    const qs = taId ? `?taId=${encodeURIComponent(taId)}` : "";
+    return API.request(`/positions${qs}`);
   }
 
   static createPosition(payload) {
@@ -145,8 +146,9 @@ class API {
     });
   }
 
-  static getApplications() {
-    return API.request("/application/list");
+  static getApplications(taId = null) {
+    const qs = taId ? `?taId=${encodeURIComponent(taId)}` : "";
+    return API.request(`/applications${qs}`);
   }
 
   static getReviewApplications(positionId) {
@@ -154,11 +156,11 @@ class API {
     return API.request(`/application/review-list${qs}`);
   }
 
-  static submitApplication(positionId, priority = "first") {
-    return API.request("/application/submit", {
+  static submitApplication(positionId, taId, priority = "first") {
+    return API.request("/applications", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body: API.formBody({ positionId, priority })
+      body: API.formBody({ positionId, taId, priority })
     });
   }
 
