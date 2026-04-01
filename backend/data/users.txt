@@ -1,0 +1,8 @@
+20210001|张三|zhangsan@example.com|123456|TA|20210001|active
+20210002|李四|lisi@example.com|123456|TA|20210002|active
+M001|王老师|wangteacher@example.com|123456|MO|M001|active
+ADM001|管理员|admin@example.com|admin123|Admin|ADM001|active
+ta001|张三|zhangsan@example.com|123456|TA|20210001|active
+ta002|李四|lisi@example.com|123456|TA|20210002|active
+mo001|王老师|wangteacher@example.com|123456|MO|M001|active
+admin001|管理员|admin@example.com|admin123|Admin|ADM001|active

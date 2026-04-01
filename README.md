@@ -1,297 +1,174 @@
-# BUPT TA Recruitment System
+﻿# TA Recruitment System (Group 28)
 
-A web-based Teaching Assistant (TA) recruitment management system built with Jakarta Servlet and JSP. The system supports three user roles: **Module Owner (MO)**, **Teaching Assistant (TA)**, and **Administrator (ADMIN)**, each with distinct functionalities.
+## Group Name-list
 
-## 📋 Group Name-list
+1. Norman-Ou: 190898878 (Support TA)
+2. fubo6688: 231220965 (Lead)
+3. Andyfree-98: 231223014 (Member)
+4. YYYNickYYY: 231222936 (Member)
+5. huweize123: 231221766 (Member)
+6. benlink1234: 231222626 (Member)
+7. Drak3Nnnn: 231220943 (Member)
 
-- Norman-Ou: 190898878 (Support TA)
-- fubo6688：231220965（Lead）
-- Andyfree-98: 231223014 (Member)
-- YYYNickYYY: 231222936 (Member)
-- huweize123: 231221766 (Member)
-- Yihua Zeng: 231222626(Member)
-- Liyuan Tian : 231220943 (Member) 
+A lightweight web-based TA recruitment system using static HTML/CSS/JavaScript on the frontend and Java Servlet APIs on the backend.
 
-## Quick Start
+## Current Delivery Mode
 
-### Prerequisites
+This repository is currently configured for **Sprint 1 (Core MVP)**.
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| **JDK** | 21+ | Java runtime & compiler |
-| **Maven** | 3.8+ | Build & dependency management |
+Enabled Sprint 1 workflow:
+1. User authentication (login/logout)
+2. TA profile creation and resume upload
+3. MO job posting
+4. TA browse open jobs and submit applications
+5. MO view applicants for their own jobs
 
-### Run (One Command)
-
-```bash
-cd MyRecruitmentSystem
-mvn clean package cargo:run
-```
-
-Open browser: **http://localhost:8080/MyRecruitmentSystem/login.jsp**
-
-Press `Ctrl+C` in terminal to stop the server.
-
-> The project uses an **embedded Tomcat 10.x** via the Cargo Maven plugin — no need to install Tomcat separately.
-
-### Test Accounts
-
-| Username | Password | Role | Name |
-|----------|----------|------|------|
-| `admin_user` | `123` | ADMIN | System Manager |
-| `admin_02` | `admin888` | ADMIN | Office Coordinator |
-| `mo_smith` | `123` | MO | Dr. Smith (Java Module) |
-| `mo_jones` | `123` | MO | Prof. Jones (Agile Module) |
-| `mo_wang` | `123` | MO | Dr. Wang (Network Module) |
-| `ta_alice` | `123` | TA | Alice Zhang |
-| `ta_bob` | `123` | TA | Bob Li |
-| `ta_charlie` | `123` | TA | Charlie Brown |
-| `ta_david` | `123` | TA | David Wang |
-| `ta_emma` | `123` | TA | Emma Wilson |
-
----
-
-## Features
-
-### Role-Based Functionalities
-
-| Role | Feature | Description |
-|------|---------|-------------|
-| **MO** | Post Recruitment | Create TA/Invigilator job listings with required skills |
-| **MO** | Review Applications | Accept or reject pending applications |
-| **TA** | Browse Jobs | View all available positions |
-| **TA** | Apply for Jobs | Submit applications with name and email |
-| **TA** | Manage Profile | Upload CV and specify skills |
-| **ADMIN** | Workload Dashboard | Monitor TA assignment counts, flag overloaded TAs (>2 jobs) |
-
-### System Features
-
-- **Authentication** — CSV-based login with session management
-- **Authorization** — URL-level access control via `AuthFilter` (admin-only, MO-only endpoints)
-- **File Upload** — CV upload support (PDF, DOC, DOCX, max 10MB)
-- **Data Persistence** — All data stored in CSV files (no database required)
-
----
+Temporarily disabled in Sprint 1 mode:
+1. MO approve/reject actions
+2. TA application status tracking and priority updates
+3. MO job status editing/closing/reopening
+4. Admin analytics, user management, and logs pages
+5. Notification center pages
 
 ## Project Structure
 
-```
-MyRecruitmentSystem/
-├── pom.xml                          # Maven config
-├── users.csv                        # User credentials
-├── README.md
-└── src/main/
-    ├── java/com/bupt/
-    │   ├── controller/              # Servlets & Filter
-    │   │   ├── AdminDashboardServlet.java
-    │   │   ├── ApplyServlet.java
-    │   │   ├── AuthFilter.java
-    │   │   ├── JobListServlet.java
-    │   │   ├── JobServlet.java
-    │   │   ├── LoginServlet.java
-    │   │   ├── ProcessApplicationServlet.java
-    │   │   └── ProfileServlet.java
-    │   ├── model/                   # Data models
-    │   │   ├── Application.java
-    │   │   └── Job.java
-    │   └── utils/                   # Utility classes
-    │       └── FileStorageUtil.java
-    └── webapp/
-        ├── WEB-INF/web.xml
-        ├── login.jsp
-        ├── index.jsp
-        ├── postJob.jsp
-        ├── jobList.jsp
-        ├── applyJob.jsp
-        ├── moDashboard.jsp
-        ├── admin.jsp
-        ├── profile.jsp
-        ├── success.jsp
-        └── logout.jsp
+```text
+.
+|- login.html
+|- profile.html
+|- ta-profile.html
+|- ta-positions.html
+|- ta-applications.html
+|- mo-positions.html
+|- mo-review.html
+|- admin-analytics.html
+|- admin-users.html
+|- admin-logs.html
+|- notification.html
+|- css/
+|- js/
+|  |- script.js
+|  |- api.js
+|- backend/
+|  |- src/com/ta/
+|  |- WEB-INF/
+|  |- data/
+|- WEB-INF/
+|- start-dev.ps1 / start-dev.bat
+|- stop-dev.ps1 / stop-dev.bat
+|- restart-dev.ps1 / restart-dev.bat
 ```
 
----
+## Prerequisites
 
-## API / URL Mappings
+1. Windows PowerShell 5.1+
+2. JDK 8+ (JDK 17+ recommended)
+3. Apache Tomcat 9+ (Tomcat 11 supported in this repository)
+4. Environment variable `CATALINA_HOME` recommended (auto-discovery is also supported)
 
-### Servlets
+## Quick Start
 
-| URL Pattern | Class | Method | Description |
-|-------------|-------|--------|-------------|
-| `/login` | `LoginServlet` | POST | Authenticate user, create session |
-| `/postJob` | `JobServlet` | POST | Create new job listing |
-| `/jobs` | `JobListServlet` | GET | Retrieve and display all jobs |
-| `/apply` | `ApplyServlet` | POST | Submit a job application |
-| `/processApplication` | `ProcessApplicationServlet` | POST | Accept/reject application |
-| `/createProfile` | `ProfileServlet` | POST | Save TA profile with CV upload |
-| `/adminDashboard` | `AdminDashboardServlet` | GET | Load TA workload data |
+Run from repository root:
 
-### Filter
-
-| URL Pattern | Class | Description |
-|-------------|-------|-------------|
-| `/*` | `AuthFilter` | Intercepts all requests; enforces login & role-based access |
-
-### Pages
-
-| Page | Access | Description |
-|------|--------|-------------|
-| `login.jsp` | Public | Login form |
-| `index.jsp` | All authenticated | Role-based dashboard menu |
-| `postJob.jsp` | MO only | Job creation form |
-| `jobList.jsp` | TA | Available positions table |
-| `applyJob.jsp` | TA | Job application form |
-| `moDashboard.jsp` | MO | Application review table |
-| `admin.jsp` | ADMIN | TA workload dashboard |
-| `profile.jsp` | TA | Profile & CV upload form |
-| `success.jsp` | All authenticated | Operation success confirmation |
-| `logout.jsp` | All authenticated | Invalidates session, redirects to login |
-
----
-
-## Data Models
-
-### Application
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `applicationId` | String | Auto-generated UUID (8 chars) |
-| `jobId` | String | Reference to the job |
-| `applicantName` | String | Name of the applicant |
-| `applicantEmail` | String | Email of the applicant |
-| `status` | String | `PENDING` / `ACCEPTED` / `REJECTED` (default: `PENDING`) |
-
-**Methods:**
-
-```java
-// Constructor
-public Application(String jobId, String applicantName, String applicantEmail)
-
-// Serialization
-public String toCSV()  // → "applicationId,jobId,applicantName,applicantEmail,status"
-
-// Getters
-public String getApplicationId()
-public String getJobId()
-public String getApplicantName()
-public String getApplicantEmail()
-public String getStatus()
-
-// Setters
-public void setApplicationId(String applicationId)
-public void setStatus(String status)
+```powershell
+.\start-dev.bat
 ```
 
-### Job
+What this does:
+1. Compiles backend Java sources
+2. Syncs runtime `WEB-INF`
+3. Deploys project to Tomcat `webapps/ta-system`
+4. Starts Tomcat if not already running
+5. Opens the login page in browser
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `jobId` | String | Auto-generated UUID (8 chars) |
-| `moduleName` | String | Course/module name |
-| `role` | String | `Teaching Assistant` or `Invigilator` |
-| `requiredSkills` | String | Comma-separated skill list |
+Default URL:
 
-**Methods:**
-
-```java
-// Constructor
-public Job(String moduleName, String role, String requiredSkills)
-
-// Serialization
-public String toCSV()  // → "jobId,moduleName,role,requiredSkills"
-
-// Getters
-public String getJobId()
-public String getModuleName()
-public String getRole()
-public String getRequiredSkills()
-
-// Setter
-public void setJobId(String jobId)
+```text
+http://localhost:8080/ta-system/login.html
 ```
 
----
+## Stop / Restart
 
-## Utility Class — FileStorageUtil
+Stop service:
 
-Central data access layer for CSV file operations.
-
-### Constants
-
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `APP_FILE` | `applications.csv` | Stores job applications |
-| `JOB_FILE` | `jobs.csv` | Stores job listings |
-| `PROFILE_FILE` | `profiles.csv` | Stores TA profiles |
-
-### Methods
-
-```java
-// Application operations
-public static synchronized void saveApplication(Application app)
-public static List<Application> getAllApplications()
-public static synchronized void updateApplicationStatus(String appId, String newStatus)
-
-// Job operations
-public static synchronized void saveJob(Job job)
-public static List<Job> getAllJobs()
-
-// Profile operations
-public static synchronized void saveProfile(String taId, String name, String skills, String cvPath)
-
-// Admin operations
-public static Map<String, Integer> getTAWorkload()  // Returns TA → accepted job count
+```powershell
+.\stop-dev.bat
 ```
 
----
+Force stop (if port is occupied):
 
-## CSV File Formats
-
-### users.csv (Pre-configured)
-
-```
-username,password,role,displayName
+```powershell
+powershell -ExecutionPolicy Bypass -File .\stop-dev.ps1 -ForceKill
 ```
 
-### applications.csv (Runtime-generated)
+Restart service:
 
-```
-applicationId,jobId,applicantName,applicantEmail,status
-```
-
-### jobs.csv (Runtime-generated)
-
-```
-jobId,moduleName,role,requiredSkills
+```powershell
+.\restart-dev.bat
 ```
 
-### profiles.csv (Runtime-generated)
+Restart with options (no browser + force cleanup):
 
-```
-taId,name,skills,cvFilePath
-```
-
----
-
-## Technology Stack
-
-| Component | Technology |
-|-----------|-----------|
-| Language | Java 21 |
-| Web Framework | Jakarta Servlet 5.0 / JSP |
-| Server | Apache Tomcat 10.x (embedded via Cargo) |
-| Build Tool | Apache Maven |
-| Data Storage | CSV files (no database) |
-| Packaging | WAR |
-
----
-
-## Alternative Deployment (Manual Tomcat)
-
-If you prefer using a standalone Tomcat installation:
-
-```bash
-mvn clean package
+```powershell
+powershell -ExecutionPolicy Bypass -File .\restart-dev.ps1 -NoBrowser -ForceKill
 ```
 
-Copy `target/MyRecruitmentSystem.war` to Tomcat's `webapps/` directory, then start Tomcat.
+## Test Accounts
+
+Validated from `data/users.txt` and `backend/data/users.txt`.
+
+| Username | Password | Role |
+|---|---|---|
+| ta002 | 123456 | TA |
+| mo001 | 123456 | MO |
+| admin001 | admin123 | Admin |
+| 20210001 | 123456 | TA |
+| M001 | 123456 | MO |
+| ADM001 | admin123 | Admin |
+
+Notes:
+1. `ta001` may be marked as `inactive` in some datasets.
+2. For stable testing, prefer the accounts listed above.
+
+## Backend API Base
+
+By default the frontend resolves API base from current URL:
+
+```text
+http://localhost:8080/ta-system/api
+```
+
+Main endpoint groups:
+1. `/api/login`
+2. `/api/user/*`
+3. `/api/position/*`
+4. `/api/application/*`
+5. `/api/notification/*`
+6. `/api/admin/*`
+
+## Sprint 1 Demonstration Path
+
+Use this order during demo/viva:
+1. Login as TA -> open `ta-profile.html`
+2. Complete TA profile and upload resume
+3. Login as MO -> open `mo-positions.html`
+4. Post a new position
+5. Login as TA -> browse positions and apply
+6. Login as MO -> open `mo-review.html` and verify applicants are visible
+
+## Troubleshooting
+
+1. Port 8080 occupied:
+   - Run `stop-dev.ps1 -ForceKill` then `start-dev.bat`
+2. 404 under `/ta-system`:
+   - Re-run `start-dev.bat`
+   - Check Tomcat `webapps/ta-system` exists
+3. Login/API failures:
+   - Verify Tomcat is running
+   - Verify dataset files exist in `backend/data`
+4. Build errors:
+   - Ensure `backend/WEB-INF/lib/json-20240303.jar` exists
+
+## License
+
+See `LICENSE`.
