@@ -133,14 +133,6 @@
       background-color: #059669;
     }
 
-    .page-card.admin .page-link {
-      background-color: var(--warning-color);
-    }
-
-    .page-card.admin .page-link:hover {
-      background-color: #d97706;
-    }
-
     .info-box {
       background-color: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.3);
@@ -182,11 +174,6 @@
     .role-badge.mo {
       background-color: #d1fae5;
       color: var(--success-color);
-    }
-
-    .role-badge.admin {
-      background-color: #fef3c7;
-      color: #d97706;
     }
 
     .role-badge.common {
@@ -235,7 +222,7 @@
   <div class="header">
     <div class="header-logo">📋</div>
     <h1 class="header-title">TA Recruitment system</h1>
-    <p class="header-subtitle">Complete frontend demo project - includes 10 pages and supports 3 roles</p>
+    <p class="header-subtitle">Sprint 1 demo project - core TA recruitment workflow</p>
   </div>
 
   <!-- Content -->
@@ -247,10 +234,10 @@
         <li>Click the"System Login"button (login.html)</li>
         <li>Select anyRole: TA / MO / Admin</li>
         <li>Enter anyAccountandPasswordconductLogin</li>
-        <li>Based on selectedRole，Entercorresponding functional module</li>
+        <li>Based on selectedRole，Entercorresponding Sprint 1 module</li>
       </ol>
       <div class="tutorial-note">
-        💡 Tip：3Second-rateLoginFailedwill lockAccount5minutes；all pages are prefilled with demo data for testing
+        💡 Tip：Use TA and MO accounts to complete profile -> post job -> apply -> review flow.
       </div>
     </div>
 
@@ -276,7 +263,7 @@
           <div class="page-title">Profile</div>
           <span class="role-badge common">Common</span>
           <p class="page-description">
-            A two-column personal information center. You can edit profile info, change password, and view/manage notifications.
+            A two-column personal information center. You can edit profile info and change password.
           </p>
           <a href="profile.html" class="page-link">Open Page →</a>
         </div>
@@ -310,15 +297,6 @@
           <a href="ta-positions.html" class="page-link">Open Page →</a>
         </div>
 
-        <div class="page-card ta">
-          <div class="page-icon">📋</div>
-          <div class="page-title">My Applicationscenter</div>
-          <span class="role-badge ta">TA</span>
-          <p class="page-description">
-            Manage all application records with status filters, detail view, deletion, and priority settings.
-          </p>
-          <a href="ta-applications.html" class="page-link">Open Page →</a>
-        </div>
       </div>
     </div>
 
@@ -334,7 +312,7 @@
           <div class="page-title">Position Management</div>
           <span class="role-badge mo">MO</span>
           <p class="page-description">
-            Post and manage jobs。Support creation、edit、Close Position，View Applicantslist of people，Manage RecruitmentStatus。
+            Post and manage jobs. Support creating positions and viewing applicants.
           </p>
           <a href="mo-positions.html" class="page-link">Open Page →</a>
         </div>
@@ -344,48 +322,9 @@
           <div class="page-title">Application Reviewcenter</div>
           <span class="role-badge mo">MO</span>
           <p class="page-description">
-            Job selection on the left，right sideApplicant List。supportAIfilter、View Resumefile、Approve/Rejectreview。
+            Job selection on the left and applicant list on the right. Support viewing resume and profile.
           </p>
           <a href="mo-review.html" class="page-link">Open Page →</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Admin Dedicated Pages -->
-    <div class="section">
-      <div class="section-title">
-        <span class="section-icon">🛡️</span>
-        Admin Dedicated Pages（systemAdmin）
-      </div>
-      <div class="pages-grid">
-        <div class="page-card admin">
-          <div class="page-icon">📊</div>
-          <div class="page-title">Analyticsand monitoring</div>
-          <span class="role-badge admin">Admin</span>
-          <p class="page-description">
-            System overview and visual analytics including 4 stat cards, 3 Chart.js charts, and 2 data tables.
-          </p>
-          <a href="admin-analytics.html" class="page-link">Open Page →</a>
-        </div>
-
-        <div class="page-card admin">
-          <div class="page-icon">👥</div>
-          <div class="page-title">User Management & Data export</div>
-          <span class="role-badge admin">Admin</span>
-          <p class="page-description">
-            userAccountManagement and data export capabilities。Support usersDisabled/Enable、Various data exports、Export HistoryRecord。
-          </p>
-          <a href="admin-users.html" class="page-link">Open Page →</a>
-        </div>
-
-        <div class="page-card admin">
-          <div class="page-icon">📝</div>
-          <div class="page-title">System Logsand audit</div>
-          <span class="role-badge admin">Admin</span>
-          <p class="page-description">
-            System operation logs with advanced filters, detail view, export, and pagination.
-          </p>
-          <a href="admin-logs.html" class="page-link">Open Page →</a>
         </div>
       </div>
     </div>
@@ -394,11 +333,10 @@
     <div class="info-box">
       <h3>📚 Project Information</h3>
       <ul>
-        <li><strong>Total Pages：</strong>10core pages + 1index pages = 11page</li>
-        <li><strong>supportRole：</strong>TA（student teaching assistant）、MO（Teacher）、Admin（systemAdmin）</li>
-        <li><strong>Lines of Code：</strong>CSSabout1500OK、JavaScriptabout300OK、HTMLeach200-600OK</li>
-        <li><strong>Tech Stack：</strong>HTML5 + CSS3 + Vanilla JavaScript + Chart.js</li>
-        <li><strong>Features：</strong>modal box、formValidation、Data filtering、Chart display、File uploadPreviewwait</li>
+        <li><strong>Total Pages：</strong>6 core pages + 1 index page = 7 pages</li>
+        <li><strong>Supported Roles：</strong>TA, MO, Admin (profile/basic access)</li>
+        <li><strong>Tech Stack：</strong>HTML5 + CSS3 + Vanilla JavaScript + Java Servlet backend</li>
+        <li><strong>Sprint 1 Features：</strong>Login/Logout, TA profile + resume upload, MO post positions, TA apply, MO review applicants</li>
       </ul>
     </div>
 

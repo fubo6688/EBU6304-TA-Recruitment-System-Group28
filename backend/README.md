@@ -81,28 +81,10 @@ User:
 Position:
 1. `GET /api/position/list`
 2. `POST /api/position/create`
-3. `POST /api/position/status`
 
 Application:
-1. `GET /api/application/list`
-2. `GET /api/application/review-list`
-3. `POST /api/application/submit`
-4. `POST /api/application/cancel`
-5. `POST /api/application/process`
-6. `POST /api/application/priority`
-
-Notification:
-1. `GET /api/notification/list`
-2. `POST /api/notification/read`
-3. `POST /api/notification/read-all`
-4. `POST /api/notification/create`
-
-Admin:
-1. `GET /api/admin/analytics`
-2. `GET /api/admin/users`
-3. `GET /api/admin/logs`
-4. `POST /api/admin/user-status`
-5. `GET /api/admin/export`
+1. `GET /api/application/review-list`
+2. `POST /api/application/submit`
 
 ## Data Files
 
@@ -112,12 +94,11 @@ Runtime data is stored in:
 3. `backend/data/applications.txt`
 4. `backend/data/profiles.txt`
 5. `backend/data/logs.txt`
-6. `backend/data/*_notifications.txt`
 
 ## Known Mode Constraint
 
 The current branch is configured for **Sprint 1 mode**.
-Some Sprint 2 frontend actions are intentionally disabled to match Phase 1 deliverables.
+Non-Sprint-1 backend endpoints have been removed to keep behavior aligned with Phase 1 deliverables.
 
 ## Troubleshooting
 

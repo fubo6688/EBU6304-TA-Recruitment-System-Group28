@@ -292,7 +292,6 @@
         <li class="sidebar-menu-item">Position Management</li>
         <li class="sidebar-menu-item active">Application Review</li>
         <li class="sidebar-menu-item">Profile</li>
-        <li class="sidebar-menu-item">Notifications</li>
       </ul>
     </div>
 
@@ -374,9 +373,6 @@
             <div class="applicant-footer">
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-              <!-- Sprint 2 disabled: approve/reject -->
-              <button class="btn btn-sm btn-success" disabled title="Sprint 2 disabled">Approve</button>
-              <button class="btn btn-sm btn-danger" disabled title="Sprint 2 disabled">Reject</button>
             </div>
           </div>
 
@@ -407,9 +403,6 @@
             <div class="applicant-footer">
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-              <!-- Sprint 2 disabled: approve/reject -->
-              <button class="btn btn-sm btn-success" disabled title="Sprint 2 disabled">Approve</button>
-              <button class="btn btn-sm btn-danger" disabled title="Sprint 2 disabled">Reject</button>
             </div>
           </div>
 
@@ -439,9 +432,6 @@
             <div class="applicant-footer">
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-              <!-- Sprint 2 disabled: approve/reject -->
-              <button class="btn btn-sm btn-success" disabled title="Sprint 2 disabled">Approve</button>
-              <button class="btn btn-sm btn-danger" disabled title="Sprint 2 disabled">Reject</button>
             </div>
           </div>
 
@@ -473,9 +463,6 @@
             <div class="applicant-footer">
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
               <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-              <!-- Sprint 2 disabled: approve/reject -->
-              <button class="btn btn-sm btn-success" disabled title="Sprint 2 disabled">Approve</button>
-              <button class="btn btn-sm btn-danger" disabled title="Sprint 2 disabled">Reject</button>
             </div>
           </div>
         </div>
@@ -571,9 +558,6 @@
           <div class="applicant-footer">
             <button class="btn btn-sm btn-outline" onclick="openResume('${app.userId}')">View Resume</button>
             <button class="btn btn-sm btn-outline" onclick="showApplicantProfile('${app.userId}')">View Profile</button>
-            <!-- Sprint 2 disabled: approve/reject -->
-            <button class="btn btn-sm btn-success" disabled title="Sprint 2 disabled">Approve</button>
-            <button class="btn btn-sm btn-danger" disabled title="Sprint 2 disabled">Reject</button>
           </div>
         </div>
       `;
@@ -650,16 +634,6 @@
         element.classList.add('active');
       }
       loadApplications();
-    }
-
-    async function acceptApplicant(applicationId) {
-      // Sprint 2 disabled: status update actions.
-      taSystem.showMessage('Sprint 2 功能已注释：当前仅保留查看申请人信息。', 'info');
-    }
-
-    async function rejectApplicant(applicationId) {
-      // Sprint 2 disabled: status update actions.
-      taSystem.showMessage('Sprint 2 功能已注释：当前仅保留查看申请人信息。', 'info');
     }
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
