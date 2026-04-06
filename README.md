@@ -1,5 +1,7 @@
 ﻿# TA Recruitment System (Group 28)
 
+A lightweight web-based TA recruitment system using static HTML/CSS/JavaScript on the frontend and Java Servlet APIs on the backend.
+
 ## Group Name-list
 
 1. Norman-Ou: 190898878 (Support TA)
@@ -10,11 +12,13 @@
 6. benlink1234: 231222626 (Member)
 7. Drak3Nnnn: 231220943 (Member)
 
-A lightweight web-based TA recruitment system using static HTML/CSS/JavaScript on the frontend and Java Servlet APIs on the backend.
-
 ## Current Delivery Mode
 
 This repository is currently configured for **Sprint 1 (Core MVP)**.
+
+Build and deployment mode is now **single-path only**:
+1. Only the `backend` script flow is supported (`start-dev.*`, `stop-dev.*`, `restart-dev.*`, `backend/build.bat`)
+2. Maven build path has been removed from this branch
 
 Enabled Sprint 1 workflow:
 1. User authentication (login/logout)
@@ -80,6 +84,10 @@ What this does:
 3. Deploys project to Tomcat `webapps/ta-system`
 4. Starts Tomcat if not already running
 5. Opens the login page in browser
+
+Note:
+1. This branch keeps only the backend script build/deploy workflow.
+2. Do not use Maven commands in this branch.
 
 Default URL:
 
