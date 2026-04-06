@@ -60,22 +60,4 @@
     <url-pattern>/api/application/*</url-pattern>
   </servlet-mapping>
 
-  <servlet>
-    <servlet-name>NotificationServlet</servlet-name>
-    <servlet-class>com.ta.servlet.NotificationServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>NotificationServlet</servlet-name>
-    <url-pattern>/api/notification/*</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
-    <servlet-name>AdminServlet</servlet-name>
-    <servlet-class>com.ta.servlet.AdminServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>AdminServlet</servlet-name>
-    <url-pattern>/api/admin/*</url-pattern>
-  </servlet-mapping>
-
 </web-app>

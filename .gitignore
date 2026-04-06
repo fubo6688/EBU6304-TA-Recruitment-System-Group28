@@ -1,5 +1,7 @@
 # Build output
 target/
+WEB-INF/classes/
+backend/WEB-INF/classes/
 
 # IDE files
 .idea/

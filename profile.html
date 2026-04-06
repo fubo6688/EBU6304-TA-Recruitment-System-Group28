@@ -334,7 +334,6 @@
         <div class="tabs">
           <button class="tab-button active" data-tab="personal">personal information</button>
           <button class="tab-button" data-tab="password">PasswordRevise</button>
-          <button class="tab-button" data-tab="notifications">Notifications</button>
         </div>
 
         <!-- tab page1：personal information -->
@@ -404,22 +403,6 @@
           </form>
         </div>
 
-        <!-- tab page3：Notifications -->
-        <div class="tab-content" data-tab="notifications">
-          <div class="notification-toolbar">
-            <button class="notification-filter active" data-filter="all">All</button>
-            <button class="notification-filter" data-filter="apply">ApplyStatus</button>
-            <button class="notification-filter" data-filter="position">Position Updates</button>
-            <button class="notification-filter" data-filter="system">System Notifications</button>
-            <div style="flex: 1;"></div>
-            <button class="btn btn-sm btn-secondary" id="clearReadBtn">Clear Read</button>
-            <button class="btn btn-sm btn-secondary" id="deleteSelectedBtn">Delete Selected</button>
-          </div>
-
-          <div id="notificationList">
-            <!-- Notification items will be JavaScript Dynamically generated -->
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -433,12 +416,10 @@
       const rolePageMap = {
         'TA': 'ta-profile.html',
         'MO': 'mo-positions.html',
-        'Admin': 'admin-analytics.html'
+        'Admin': 'profile.html'
       };
       window.location.href = rolePageMap[userRole] || 'ta-profile.html';
     }
-    // Notification data management
-    let notificationData = [];
 
     function setAvatarImage(url) {
       const avatarDisplay = document.getElementById('avatarDisplay');
@@ -506,79 +487,6 @@
       return { valid: true, message: 'PasswordMeet the requirements' };
     }
 
-    // renderingNotification List
-    function renderNotifications(filter = 'all') {
-      const notificationList = document.getElementById('notificationList');
-      notificationList.innerHTML = '';
-
-      const filteredData = filter === 'all'
-        ? notificationData 
-        : notificationData.filter(n => n.type === filter);
-
-      if (filteredData.length === 0) {
-        notificationList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--gray-500);">No notifications</div>';
-        return;
-      }
-
-      filteredData.forEach(notification => {
-        const item = document.createElement('div');
-        item.className = 'notification-item';
-        item.id = `notification-${notification.id}`;
-        item.style.opacity = notification.unread ? '1' : '0.6';
-        
-        const badge = notification.unread 
-          ? '<div class="notification-badge"></div>' 
-          : '<div style="width: 12px; margin-top: 6px; flex-shrink: 0;"></div>';
-        
-        item.innerHTML = `
-          <input type="checkbox" class="notification-checkbox" data-id="${notification.id}">
-          <div class="notification-content" style="flex: 1; margin-left: 12px;">
-            <div class="notification-title">${notification.title}</div>
-            <div class="notification-text">${notification.text}</div>
-            <div class="notification-time">${notification.time}</div>
-          </div>
-          ${badge}
-          <div style="margin-left: 12px; display: flex; gap: 8px;">
-            <button class="btn btn-sm btn-outline" onclick="markAsRead('${notification.id}', event)" style="padding: 4px 8px; font-size: 12px;">Read</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteNotification('${notification.id}', event)" style="padding: 4px 8px; font-size: 12px;">Delete</button>
-          </div>
-        `;
-        notificationList.appendChild(item);
-      });
-    }
-
-    // marked asRead
-    async function markAsRead(id, event) {
-      event.preventDefault();
-      event.stopPropagation();
-      const notification = notificationData.find(n => String(n.id) === String(id));
-      if (notification) {
-        notification.unread = false;
-        try {
-          await API.markNotificationRead(String(id));
-        } catch (error) {
-        }
-        const currentFilter = document.querySelector('.notification-filter.active')?.getAttribute('data-filter') || 'all';
-        renderNotifications(currentFilter);
-        taSystem.showMessage('taggedRead', 'success');
-      }
-    }
-
-    // Deletenotify
-    function deleteNotification(id, event) {
-      event.preventDefault();
-      event.stopPropagation();
-      if (confirm('ConfirmwantDeleteIs this notice?？')) {
-        const index = notificationData.findIndex(n => String(n.id) === String(id));
-        if (index !== -1) {
-          notificationData.splice(index, 1);
-          const currentFilter = document.querySelector('.notification-filter.active')?.getAttribute('data-filter') || 'all';
-          renderNotifications(currentFilter);
-          taSystem.showMessage('Notification has beenDelete', 'success');
-        }
-      }
-    }
-
     // Initialize user information
     document.addEventListener('DOMContentLoaded', async () => {
       const userRole = localStorage.getItem('userRole') || 'TA';
@@ -621,20 +529,6 @@
         taSystem.showMessage(error.message || '获取用户信息失败', 'danger');
       }
 
-      try {
-        const list = await API.getNotifications();
-        notificationData = (Array.isArray(list) ? list : []).map((n) => ({
-          id: String(n.id || ''),
-          title: n.title || '通知',
-          text: n.message || '',
-          time: n.time || '',
-          type: n.type || 'system',
-          unread: !(String(n.read) === '1' || n.read === true)
-        }));
-      } catch (error) {
-        notificationData = [];
-      }
-
       // Tab switching
       const tabButtons = document.querySelectorAll('.tab-button');
       const tabContents = document.querySelectorAll('.tab-content');
@@ -651,61 +545,6 @@
           button.classList.add('active');
           document.querySelector(`.tab-content[data-tab="${tabName}"]`)?.classList.add('active');
         });
-      });
-
-      // initializationNotification List
-      renderNotifications('all');
-
-      // Notification Filtering
-      document.querySelectorAll('.notification-filter').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.notification-filter').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const filter = btn.getAttribute('data-filter');
-          renderNotifications(filter);
-        });
-      });
-
-      // Clear Read
-      document.getElementById('clearReadBtn').addEventListener('click', async () => {
-        const hasUnread = notificationData.some(n => n.unread);
-        if (!hasUnread) {
-          taSystem.showMessage('NoReadnotify', 'warning');
-          return;
-        }
-        if (confirm('ConfirmTo clear allReadNotice?？')) {
-          try {
-            await API.markAllNotificationsRead();
-          } catch (error) {
-          }
-          notificationData.forEach(n => {
-            n.unread = false;
-          });
-          const currentFilter = document.querySelector('.notification-filter.active')?.getAttribute('data-filter') || 'all';
-          renderNotifications(currentFilter);
-          taSystem.showMessage('alreadyClear Readnotify', 'success');
-        }
-      });
-
-      // Delete Selected
-      document.getElementById('deleteSelectedBtn').addEventListener('click', () => {
-        const checked = document.querySelectorAll('.notification-checkbox:checked');
-        if (checked.length === 0) {
-          taSystem.showMessage('Please select firstDeletenotification', 'warning');
-          return;
-        }
-        if (confirm(`ConfirmwantDelete${checked.length}Notice?？`)) {
-          const idsToDelete = Array.from(checked).map(cb => String(cb.getAttribute('data-id')));
-          idsToDelete.forEach(id => {
-            const index = notificationData.findIndex(n => String(n.id) === String(id));
-            if (index !== -1) {
-              notificationData.splice(index, 1);
-            }
-          });
-          const currentFilter = document.querySelector('.notification-filter.active')?.getAttribute('data-filter') || 'all';
-          renderNotifications(currentFilter);
-          taSystem.showMessage(`alreadyDelete${idsToDelete.length}notification`, 'success');
-        }
       });
 
       // personal informationForm Submission
