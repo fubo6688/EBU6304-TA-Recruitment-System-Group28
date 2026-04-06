@@ -5,8 +5,6 @@ class TARecruitmentSystem {
   }
 
   initEventListeners() {
-    this.enforcePhaseOneMode();
-
     // Modal box closesbutton
     document.addEventListener('click', (e) => {
       if (e.target.classList.contains('modal-close')) {
@@ -55,25 +53,6 @@ class TARecruitmentSystem {
     }
   }
 
-  enforcePhaseOneMode() {
-    const disabledPages = {
-      'ta-applications.html': 'ta-positions.html',
-      'admin-analytics.html': 'profile.html',
-      'admin-users.html': 'profile.html',
-      'admin-logs.html': 'profile.html',
-      'notification.html': 'profile.html'
-    };
-
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    const redirectPage = disabledPages[currentPage];
-    if (!redirectPage) {
-      return;
-    }
-
-    alert('当前为 Sprint 1 模式，该页面（二阶段功能）已注释。');
-    window.location.href = redirectPage;
-  }
-
   // Menu navigation map
   initMenuNavigation() {
     // TA RoleMenu mapping
@@ -81,8 +60,8 @@ class TARecruitmentSystem {
       'My Profile': 'ta-profile.html',
       'Browse Positions': 'ta-positions.html',
       'Profile': 'profile.html',
-      // Sprint 2 disabled: 'My Applications': 'ta-applications.html',
-      // Sprint 2 disabled: 'Notifications': 'notification.html'
+      'My Applications': 'ta-applications.html',
+      'Notifications': 'notification.html'
     };
 
     // MO RoleMenu mapping
@@ -90,16 +69,16 @@ class TARecruitmentSystem {
       'Position Management': 'mo-positions.html',
       'Application Review': 'mo-review.html',
       'Profile': 'profile.html',
-      // Sprint 2 disabled: 'Notifications': 'notification.html'
+      'Notifications': 'notification.html'
     };
 
     // AdminMenu mapping
     const adminMenuMap = {
       'Profile': 'profile.html',
-      // Sprint 2 disabled: 'Analytics': 'admin-analytics.html',
-      // Sprint 2 disabled: 'User Management': 'admin-users.html',
-      // Sprint 2 disabled: 'System Logs': 'admin-logs.html',
-      // Sprint 2 disabled: 'Notifications': 'notification.html'
+      'Analytics': 'admin-analytics.html',
+      'User Management': 'admin-users.html',
+      'System Logs': 'admin-logs.html',
+      'Notifications': 'notification.html'
     };
 
     // Get userRole
