@@ -6,3 +6,13 @@ ta001|张三|zhangsan@example.com|123456|TA|20210001|active
 ta002|李四|lisi@example.com|123456|TA|20210002|active
 mo001|王老师|wangteacher@example.com|123456|MO|M001|active
 admin001|管理员|admin@example.com|admin123|Admin|ADM001|active
+admin_user|System Manager|admin_user@example.com|123|Admin|admin_user|active
+admin_02|Office Coordinator|admin_02@example.com|admin888|Admin|admin_02|active
+mo_smith|Dr. Smith (Java Module)|mo_smith@example.com|123|MO|mo_smith|active
+mo_jones|Prof. Jones (Agile Module)|mo_jones@example.com|123|MO|mo_jones|active
+mo_wang|Dr. Wang (Network Module)|mo_wang@example.com|123|MO|mo_wang|active
+ta_alice|Alice Zhang|ta_alice@example.com|123|TA|ta_alice|active
+ta_bob|Bob Li|ta_bob@example.com|123|TA|ta_bob|active
+ta_charlie|Charlie Brown|ta_charlie@example.com|123|TA|ta_charlie|active
+ta_david|David Wang|ta_david@example.com|123|TA|ta_david|active
+ta_emma|Emma Wilson|ta_emma@example.com|123|TA|ta_emma|active

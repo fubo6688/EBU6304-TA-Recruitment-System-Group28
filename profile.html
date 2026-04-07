@@ -278,13 +278,13 @@
   <!-- TopNavbar -->
   <div class="topbar">
     <div class="topbar-logo">
-      <div class="topbar-logo-icon">📋</div>
+      <div class="topbar-logo-icon">TA</div>
       <span>TARecruitment system</span>
     </div>
     <div class="topbar-nav">
-      <a href="#" onclick="goBackToHome(); return false;" style="cursor: pointer;">Back</a>
+      <a href="#" class="topbar-back" onclick="goBackToHome(); return false;">← Back</a>
       <div class="topbar-avatar">👤</div>
-      <a id="logoutBtn" href="#">Logout</a>
+      <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
     </div>
   </div>
 
@@ -324,7 +324,7 @@
 
       <!-- Profile Status -->
       <div class="profile-status" id="profileStatus">
-        ✓ The file has been completed
+        ✓ Profile is complete
       </div>
     </div>
 
@@ -332,8 +332,8 @@
     <div class="main-content">
       <div class="tabs-container">
         <div class="tabs">
-          <button class="tab-button active" data-tab="personal">personal information</button>
-          <button class="tab-button" data-tab="password">PasswordRevise</button>
+          <button class="tab-button active" data-tab="personal">Personal Information</button>
+          <button class="tab-button" data-tab="password">Change Password</button>
         </div>
 
         <!-- tab page1：personal information -->
@@ -342,7 +342,7 @@
             <div class="form-two-col">
               <div class="form-group">
                 <label class="form-label required">Name</label>
-                <input type="text" class="form-control" value="Zhang San" placeholder="Please enterName">
+                <input type="text" class="form-control" value="Zhang San" placeholder="Enter your name">
               </div>
               <div class="form-group">
                 <label class="form-label required">Mail</label>
@@ -367,12 +367,12 @@
         <div class="tab-content" data-tab="password">
           <form id="passwordForm" style="max-width: 500px;">
             <div class="form-group">
-              <label class="form-label required">OriginalPassword</label>
-              <input type="password" class="form-control" id="oldPassword" placeholder="Please enter the originalPassword" required>
+              <label class="form-label required">Current Password</label>
+              <input type="password" class="form-control" id="oldPassword" placeholder="Enter your current password" required>
             </div>
             <div class="form-group">
-              <label class="form-label required">newPassword</label>
-              <input type="password" class="form-control" id="newPassword" placeholder="Please enter newPassword（tofew8Bit，Contains uppercase and lowercase letters、number）" required>
+              <label class="form-label required">New Password</label>
+              <input type="password" class="form-control" id="newPassword" placeholder="At least 8 characters, including upper/lowercase letters and numbers" required>
               <div id="passwordStrength"></div>
               <div class="password-requirement">
                 <div class="requirement-item">
@@ -394,11 +394,11 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label required">confirm newPassword</label>
-              <input type="password" class="form-control" id="confirmPassword" placeholder="Please enter newPassword" required>
+              <label class="form-label required">Confirm New Password</label>
+              <input type="password" class="form-control" id="confirmPassword" placeholder="Re-enter the new password" required>
             </div>
             <div style="text-align: right;">
-              <button type="submit" class="btn btn-primary">savePassword</button>
+              <button type="submit" class="btn btn-primary">Save Password</button>
             </div>
           </form>
         </div>
@@ -460,11 +460,11 @@
       if (password.length === 0) {
         strengthDiv.innerHTML = '';
       } else if (metCount === 4) {
-        strengthDiv.innerHTML = '<div class="password-strength strong">Passwordstrength：powerful ✓</div>';
+        strengthDiv.innerHTML = '<div class="password-strength strong">Password strength: Strong ✓</div>';
       } else if (metCount >= 2) {
-        strengthDiv.innerHTML = '<div class="password-strength medium">Passwordstrength：middle</div>';
+        strengthDiv.innerHTML = '<div class="password-strength medium">Password strength: Medium</div>';
       } else {
-        strengthDiv.innerHTML = '<div class="password-strength weak">Passwordstrength：weak</div>';
+        strengthDiv.innerHTML = '<div class="password-strength weak">Password strength: Weak</div>';
       }
 
       return requirements;
@@ -473,18 +473,18 @@
     // PasswordValidationfunction
     function validatePassword(password) {
       if (password.length < 8) {
-        return { valid: false, message: 'Passwordlengthtofew8Bit' };
+        return { valid: false, message: 'Password must be at least 8 characters long' };
       }
       if (!/[A-Z]/.test(password)) {
-        return { valid: false, message: 'PasswordMust contain uppercase letters' };
+        return { valid: false, message: 'Password must include at least one uppercase letter' };
       }
       if (!/[a-z]/.test(password)) {
-        return { valid: false, message: 'PasswordMust contain lowercase letters' };
+        return { valid: false, message: 'Password must include at least one lowercase letter' };
       }
       if (!/[0-9]/.test(password)) {
-        return { valid: false, message: 'Passwordmust contain numbers' };
+        return { valid: false, message: 'Password must include at least one number' };
       }
-      return { valid: true, message: 'PasswordMeet the requirements' };
+      return { valid: true, message: 'Password meets all requirements' };
     }
 
     // Initialize user information
@@ -493,7 +493,7 @@
       const userId = localStorage.getItem('userId') || '';
       const userName = localStorage.getItem('userName') || '';
 
-      document.getElementById('userName').textContent = userName || '未登录';
+      document.getElementById('userName').textContent = userName || 'Not logged in';
       document.getElementById('userRole').textContent = userRole;
       document.getElementById('roleInfo').textContent = userRole;
       document.getElementById('idInfo').textContent = userId;
@@ -526,7 +526,7 @@
           }
         }
       } catch (error) {
-        taSystem.showMessage(error.message || '获取用户信息失败', 'danger');
+        taSystem.showMessage(error.message || 'Failed to load user profile', 'danger');
       }
 
       // Tab switching
@@ -563,10 +563,10 @@
             document.getElementById('emailInfo').textContent = result.user.email;
             taSystem.showMessage('Personal information saved', 'success');
           } else {
-            taSystem.showMessage(result.message || '保存失败', 'danger');
+            taSystem.showMessage(result.message || 'Save failed', 'danger');
           }
         } catch (error) {
-          taSystem.showMessage(error.message || '保存失败', 'danger');
+          taSystem.showMessage(error.message || 'Save failed', 'danger');
         }
       });
 
@@ -584,7 +584,7 @@
 
         // ValidationOriginalPassword
         if (oldPassword.length === 0) {
-          taSystem.showMessage('Please enter the originalPassword', 'danger');
+          taSystem.showMessage('Please enter your current password', 'danger');
           return;
         }
 
@@ -597,20 +597,20 @@
 
         // Validationtwice newPasswordconsistent
         if (newPassword !== confirmPassword) {
-          taSystem.showMessage('Entered twicePasswordinconsistent', 'danger');
+          taSystem.showMessage('The two new passwords do not match', 'danger');
           return;
         }
 
         // Validationold and newPassworddifferent
         if (oldPassword === newPassword) {
-          taSystem.showMessage('newPasswordcannot be compared with the originalPasswordsame', 'warning');
+          taSystem.showMessage('New password must be different from current password', 'warning');
           return;
         }
 
         try {
           const result = await API.changePassword(oldPassword, newPassword);
           if (result.success) {
-            taSystem.showMessage('PasswordModifiedSuccess，Please try againLogin', 'success');
+            taSystem.showMessage('Password updated successfully. Please sign in again.', 'success');
             setTimeout(async () => {
               try {
                 await API.logout();
@@ -620,10 +620,10 @@
               window.location.href = 'login.html';
             }, 1200);
           } else {
-            taSystem.showMessage(result.message || '密码修改失败', 'danger');
+            taSystem.showMessage(result.message || 'Password update failed', 'danger');
           }
         } catch (error) {
-          taSystem.showMessage(error.message || '密码修改失败', 'danger');
+          taSystem.showMessage(error.message || 'Password update failed', 'danger');
         }
       });
 
@@ -659,10 +659,10 @@
               }
               taSystem.showMessage('Avatar updated', 'success');
             } else {
-              taSystem.showMessage((result && result.message) || '头像保存失败', 'danger');
+              taSystem.showMessage((result && result.message) || 'Avatar update failed', 'danger');
             }
           } catch (error) {
-            taSystem.showMessage(error.message || '头像保存失败', 'danger');
+            taSystem.showMessage(error.message || 'Avatar update failed', 'danger');
           } finally {
             URL.revokeObjectURL(localPreview);
             e.target.value = '';
@@ -673,7 +673,7 @@
       // LogoutLogin
       document.getElementById('logoutBtn').addEventListener('click', (e) => {
         e.preventDefault();
-        if (confirm('ConfirmwantLogoutLogin?？')) {
+        if (confirm('Are you sure you want to log out?')) {
           localStorage.clear();
           window.location.href = 'login.html';
         }

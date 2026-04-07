@@ -232,13 +232,13 @@
   <!-- TopNavbar -->
   <div class="topbar">
     <div class="topbar-logo">
-      <div class="topbar-logo-icon">📋</div>
+      <div class="topbar-logo-icon">TA</div>
       <span>TARecruitment system</span>
     </div>
     <div class="topbar-nav">
-      <a href="profile.html">Profile</a>
+      <a class="topbar-link" href="profile.html">Profile</a>
       <div class="topbar-avatar">👤</div>
-      <a id="logoutBtn" href="#">Logout</a>
+      <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
     </div>
   </div>
 
@@ -570,10 +570,10 @@
       try {
         const result = await API.createPosition({
           title: data.title,
-          department: data.department || '计算机学院',
-          salary: data.salary || '面议',
-          description: data.description || '由 MO 补充',
-          requirements: data.requirements || '由 MO 补充',
+          department: data.department || 'School of Computer Science',
+          salary: data.salary || 'Negotiable',
+          description: data.description || 'To be completed by MO',
+          requirements: data.requirements || 'To be completed by MO',
           openings: data.openings || '1',
           deadline: data.deadline || ''
         });
@@ -584,10 +584,10 @@
           updatePublishStepUI();
           await loadPositions();
         } else {
-          taSystem.showMessage(result.message || '发布失败', 'danger');
+          taSystem.showMessage(result.message || 'Failed to publish position', 'danger');
         }
       } catch (error) {
-        taSystem.showMessage(error.message || '发布失败', 'danger');
+        taSystem.showMessage(error.message || 'Failed to publish position', 'danger');
       }
     }
 
@@ -596,7 +596,7 @@
       if (!tbody) return;
 
       if (!positions.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">暂无职位</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">No positions available</td></tr>';
         return;
       }
 
@@ -621,7 +621,7 @@
         const list = await API.getPositions();
         renderPositions(Array.isArray(list) ? list : []);
       } catch (error) {
-        taSystem.showMessage(error.message || '加载职位失败', 'danger');
+        taSystem.showMessage(error.message || 'Failed to load positions', 'danger');
       }
     }
 

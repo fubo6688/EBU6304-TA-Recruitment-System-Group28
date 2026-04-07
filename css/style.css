@@ -75,36 +75,41 @@ small { font-size: 12px; }
 .topbar {
   background-color: var(--primary-color);
   color: var(--white);
-  padding: 16px 0;
+  padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-height: 64px;
 }
 
 .topbar-logo {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .topbar-logo-icon {
-  width: 32px;
-  height: 32px;
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.12));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .topbar-nav {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 12px;
 }
 
 .topbar-nav a {
@@ -112,21 +117,77 @@ small { font-size: 12px; }
   text-decoration: none;
   font-size: 14px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, background-color 0.2s, border-color 0.2s;
 }
 
 .topbar-nav a:hover {
   opacity: 0.8;
 }
 
+.topbar-nav .topbar-link,
+.topbar-nav .topbar-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+}
+
+.topbar-nav .topbar-link {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.topbar-nav .topbar-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+}
+
+.topbar-nav .topbar-logout {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: var(--white);
+  font-weight: 600;
+}
+
+.topbar-nav .topbar-logout:hover {
+  background: rgba(255, 255, 255, 0.2);
+  opacity: 1;
+}
+
+.topbar-nav .topbar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.topbar-nav .topbar-back:hover {
+  background: rgba(255, 255, 255, 0.2);
+  opacity: 1;
+}
+
 .topbar-avatar {
-  width: 32px;
-  height: 32px;
-  background-color: rgba(255, 255, 255, 0.3);
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--white);
 }
 
 /* ========== Sidebar ========== */

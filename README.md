@@ -123,6 +123,9 @@ powershell -ExecutionPolicy Bypass -File .\restart-dev.ps1 -NoBrowser -ForceKill
 
 ## Test Accounts
 
+The system reads user credentials from `users.txt` only.
+`users.csv` has been removed to avoid accidental misuse.
+
 Validated from `data/users.txt` and `backend/data/users.txt`.
 
 | Username | Password | Role |
@@ -133,10 +136,19 @@ Validated from `data/users.txt` and `backend/data/users.txt`.
 | 20210001 | 123456 | TA |
 | M001 | 123456 | MO |
 | ADM001 | admin123 | Admin |
+| admin_user | 123 | Admin |
+| admin_02 | admin888 | Admin |
+| mo_smith | 123 | MO |
+| mo_jones | 123 | MO |
+| mo_wang | 123 | MO |
+| ta_alice | 123 | TA |
+| ta_bob | 123 | TA |
+| ta_charlie | 123 | TA |
+| ta_david | 123 | TA |
+| ta_emma | 123 | TA |
 
 Notes:
-1. `ta001` may be marked as `inactive` in some datasets.
-2. For stable testing, prefer the accounts listed above.
+1. If an account still cannot log in, restart service with `./restart-dev.bat` so runtime data is reloaded.
 
 ## Backend API Base
 
