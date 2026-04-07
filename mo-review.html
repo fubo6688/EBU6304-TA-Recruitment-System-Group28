@@ -274,13 +274,13 @@
   <!-- TopNavbar -->
   <div class="topbar">
     <div class="topbar-logo">
-      <div class="topbar-logo-icon">📋</div>
+      <div class="topbar-logo-icon">TA</div>
       <span>TARecruitment system</span>
     </div>
     <div class="topbar-nav">
-      <a href="profile.html">Profile</a>
+      <a class="topbar-link" href="profile.html">Profile</a>
       <div class="topbar-avatar">👤</div>
-      <a id="logoutBtn" href="#">Logout</a>
+      <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
     </div>
   </div>
 
@@ -303,19 +303,19 @@
         <ul class="position-list-left">
           <li class="position-item active" onclick="selectPosition(this)">
             <div>📌 Data Structures</div>
-            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">8 applications / 2 alreadyApprove</div>
+            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">8 applications / 2 approved</div>
           </li>
           <li class="position-item" onclick="selectPosition(this)">
             <div>📌 Algorithm Design</div>
-            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">5 applications / 1 alreadyApprove</div>
+            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">5 applications / 1 approved</div>
           </li>
           <li class="position-item" onclick="selectPosition(this)">
             <div>📌 Operating Systems</div>
-            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">3 applications / 1 alreadyApprove</div>
+            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">3 applications / 1 approved</div>
           </li>
           <li class="position-item" onclick="selectPosition(this)">
             <div>📌 database system</div>
-            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">6 applications / 0 alreadyApprove</div>
+            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">6 applications / 0 approved</div>
           </li>
         </ul>
       </div>
@@ -516,7 +516,7 @@
       list.innerHTML = positions.map((p, index) => `
         <li class="position-item ${index === 0 ? 'active' : ''}" onclick="selectPosition('${p.id}', this)">
           <div>📌 ${p.title || ''}</div>
-          <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">${p.appliedCount || 0} applications / ${p.acceptedCount || 0} alreadyApprove</div>
+          <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">${p.appliedCount || 0} applications / ${p.acceptedCount || 0} approved</div>
         </li>
       `).join('');
 
@@ -530,7 +530,7 @@
       if (!grid) return;
 
       if (!apps.length) {
-        grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">暂无申请</div></div>';
+        grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">No applications yet</div></div>';
         return;
       }
 
@@ -550,10 +550,10 @@
             <span class="applicant-priority">${app.priority || 'first'}</span>
           </div>
           <div class="applicant-body">
-            <div class="match-row"><span class="match-label">申请职位:</span><span class="match-value">${app.positionTitle || ''}</span></div>
-            <div class="match-row"><span class="match-label">状态:</span><span class="match-value">${statusText(app.status)}</span></div>
-            <div class="match-row"><span class="match-label">技能:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.skills || '未填写').toString()}</span></div>
-            <div class="match-row"><span class="match-label">可用时间:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.availableTime || '未填写').toString()}</span></div>
+            <div class="match-row"><span class="match-label">Position:</span><span class="match-value">${app.positionTitle || ''}</span></div>
+            <div class="match-row"><span class="match-label">Status:</span><span class="match-value">${statusText(app.status)}</span></div>
+            <div class="match-row"><span class="match-label">Skills:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.skills || 'Not provided').toString()}</span></div>
+            <div class="match-row"><span class="match-label">Availability:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.availableTime || 'Not provided').toString()}</span></div>
           </div>
           <div class="applicant-footer">
             <button class="btn btn-sm btn-outline" onclick="openResume('${app.userId}')">View Resume</button>
@@ -589,7 +589,7 @@
         await preloadApplicantProfiles(apps);
         renderApplicants(apps);
       } catch (error) {
-        taSystem.showMessage(error.message || '加载申请失败', 'danger');
+        taSystem.showMessage(error.message || 'Failed to load applications', 'danger');
       }
     }
 
@@ -602,7 +602,7 @@
       const result = applicantProfileMap[userId];
       const p = result && result.profile ? result.profile : null;
       if (!p) {
-        taSystem.showMessage('未找到该申请人的详细资料', 'warning');
+        taSystem.showMessage('Detailed profile for this applicant was not found', 'warning');
         return;
       }
 
@@ -652,7 +652,7 @@
         renderPositions(list);
         await loadApplications();
       } catch (error) {
-        taSystem.showMessage(error.message || '加载失败', 'danger');
+        taSystem.showMessage(error.message || 'Failed to load data', 'danger');
       }
     });
   </script>

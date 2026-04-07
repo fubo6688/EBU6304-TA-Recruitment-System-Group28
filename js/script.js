@@ -2,6 +2,7 @@
 class TARecruitmentSystem {
   constructor() {
     this.initEventListeners();
+    this.initTopbarBranding();
   }
 
   initEventListeners() {
@@ -53,6 +54,31 @@ class TARecruitmentSystem {
     }
   }
 
+  initTopbarBranding() {
+    const avatarElements = document.querySelectorAll('.topbar-avatar');
+    if (!avatarElements.length) {
+      return;
+    }
+
+    const userName = (localStorage.getItem('userName') || '').trim();
+    const userRole = (localStorage.getItem('userRole') || 'U').trim();
+    const fallback = userRole ? userRole.charAt(0).toUpperCase() : 'U';
+    const initials = userName
+      ? userName
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((part) => part.charAt(0).toUpperCase())
+          .join('')
+      : fallback;
+
+    avatarElements.forEach((avatar) => {
+      avatar.textContent = initials || 'U';
+      avatar.setAttribute('aria-label', userName ? `${userName} avatar` : 'User avatar');
+      avatar.setAttribute('title', userName || userRole || 'User');
+    });
+  }
+
   // Menu navigation map
   initMenuNavigation() {
     // TA RoleMenu mapping
@@ -93,6 +119,8 @@ class TARecruitmentSystem {
           
           // Navigate to page
           window.location.href = page;
+        } else if (userRole === 'TA' && (menuText === 'My Applications' || menuText === 'Notifications')) {
+          this.showMessage('This page is not available yet.', 'info');
         }
       }
     });

@@ -6,71 +6,125 @@
   <title>System Login - TARecruitment system</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      inset: auto;
+      pointer-events: none;
+      border-radius: 50%;
+      filter: blur(18px);
+      opacity: 0.35;
+      z-index: 0;
+    }
+
+    body::before {
+      width: 240px;
+      height: 240px;
+      top: -90px;
+      right: -90px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    body::after {
+      width: 220px;
+      height: 220px;
+      left: -90px;
+      bottom: -90px;
+      background: rgba(79, 70, 229, 0.16);
+    }
+
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.10), transparent 20%),
+        radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.08), transparent 18%),
+        linear-gradient(135deg, #4f46e5 0%, #5b67d2 42%, #6d28d9 100%);
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
+      padding: 24px 16px;
     }
 
     .login-container {
       width: 100%;
-      max-width: 400px;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
+      position: relative;
+      z-index: 1;
     }
 
     .login-topbar {
-      text-align: center;
-      margin-bottom: 60px;
+      display: flex;
+      justify-content: center;
+      padding: 2px 0 6px;
       color: var(--white);
     }
 
     .login-topbar-logo {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 14px;
+      margin-bottom: 0;
     }
 
     .login-topbar-icon {
-      width: 48px;
-      height: 48px;
-      background-color: var(--white);
-      border-radius: 8px;
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      font-weight: 600;
-      color: #667eea;
+      font-size: 26px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
     }
 
     .login-topbar-text {
       font-size: 20px;
       font-weight: 600;
+      letter-spacing: 0.02em;
     }
 
     .login-card {
-      background-color: var(--white);
-      border-radius: 12px;
-      padding: 32px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 22px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 18px 46px rgba(15, 23, 42, 0.18);
+      backdrop-filter: blur(16px);
+      width: 100%;
+      max-width: 100%;
     }
 
     .login-title {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 700;
-      margin-bottom: 24px;
+      margin-bottom: 6px;
       text-align: center;
-      color: #333;
+      color: #1f2937;
+      letter-spacing: -0.02em;
+    }
+
+    .login-subtitle {
+      text-align: center;
+      color: var(--gray-500);
+      font-size: 13px;
+      margin-bottom: 16px;
     }
 
     .login-footer {
       text-align: center;
-      color: var(--white);
-      margin-top: 40px;
+      color: rgba(255, 255, 255, 0.88);
+      margin-top: 4px;
       font-size: 12px;
+      letter-spacing: 0.03em;
     }
 
     .password-wrapper {
@@ -79,25 +133,32 @@
 
     .password-toggle {
       position: absolute;
-      right: 12px;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
-      background: none;
-      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: rgba(30, 58, 138, 0.08);
+      border: 1px solid rgba(30, 58, 138, 0.08);
       cursor: pointer;
       color: var(--gray-500);
-      font-size: 18px;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .forgot-password {
       text-align: right;
-      margin-top: 12px;
+      margin-top: 14px;
     }
 
     .forgot-password a {
       color: var(--primary-color);
       text-decoration: none;
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: 500;
     }
 
     .forgot-password a:hover {
@@ -116,14 +177,15 @@
     }
 
     .lock-info {
-      background-color: #fee2e2;
+      background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%);
       color: var(--danger-color);
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 13px;
       text-align: center;
       margin-bottom: 16px;
       display: none;
+      border: 1px solid rgba(239, 68, 68, 0.14);
     }
 
     .lock-info.show {
@@ -135,7 +197,7 @@
   <div class="login-container">
     <div class="login-topbar">
       <div class="login-topbar-logo">
-        <div class="login-topbar-icon">📋</div>
+        <div class="login-topbar-icon">TA</div>
         <div class="login-topbar-text">TARecruitment system</div>
       </div>
     </div>
@@ -148,9 +210,9 @@
       <form id="loginForm">
         <!-- Rolechoose -->
         <div class="form-group">
-          <label class="form-label required">Please selectRole</label>
+          <label class="form-label required">Role</label>
           <select id="roleSelect" class="form-control" required>
-            <option value="">-- Please selectRole --</option>
+            <option value="">-- Select a role --</option>
             <option value="TA">TA</option>
             <option value="MO">MO</option>
             <option value="Admin">Admin</option>
@@ -161,7 +223,7 @@
         <!-- Accountenter -->
         <div class="form-group">
           <label class="form-label required">Account</label>
-          <input type="text" id="username" class="form-control" placeholder="Enter QM Student/Staff ID" required>
+          <input type="text" id="username" class="form-control" placeholder="Enter your QM student or staff ID" required>
           <div class="form-error-inline"></div>
         </div>
 
@@ -169,7 +231,7 @@
         <div class="form-group">
           <label class="form-label required">Password</label>
           <div class="password-wrapper">
-            <input type="password" id="password" class="form-control" placeholder="Please enterPassword" required style="padding-right: 40px;">
+            <input type="password" id="password" class="form-control" placeholder="Enter your password" required style="padding-right: 44px;">
             <button type="button" class="password-toggle" id="passwordToggle">👁️</button>
           </div>
           <div class="form-error-inline"></div>
@@ -180,7 +242,7 @@
       </form>
 
       <div class="forgot-password">
-        <a href="#">forgetPassword？</a>
+        <a href="#">Forgot your password?</a>
       </div>
     </div>
 
@@ -233,7 +295,7 @@
 
       if (lockTime && now < lockTime) {
         const remainSeconds = Math.ceil((lockTime - now) / 1000);
-        document.getElementById('lockInfo').textContent = `Accountlocked，please ${remainSeconds} seconds before retry`;
+        document.getElementById('lockInfo').textContent = `Account locked. Please try again in ${remainSeconds} seconds.`;
         document.getElementById('lockInfo').classList.add('show');
         document.getElementById('loginForm').style.opacity = '0.5';
         document.getElementById('loginForm').style.pointerEvents = 'none';
@@ -271,7 +333,7 @@
       const errorDivs = document.querySelectorAll('.form-error-inline');
 
       if (!role) {
-        errorDivs[0].textContent = 'Please selectRole';
+        errorDivs[0].textContent = 'Please select a role';
         errorDivs[0].classList.add('show');
         hasError = true;
       } else {
@@ -305,7 +367,7 @@
         const data = await API.login(username, password, role);
         if (!data.success) {
           registerFailedAttempt();
-          alert(data.message || '登录失败');
+          alert(data.message || 'Login failed');
           return;
         }
 
@@ -319,12 +381,12 @@
         } else if (data.user.userRole === 'MO') {
           window.location.href = 'mo-positions.html';
         } else {
-          alert('当前为 Sprint 1 模式，管理员将进入 Profile 页面。');
+          alert('Sprint 1 mode: Admin users will be redirected to the Profile page.');
           window.location.href = 'profile.html';
         }
       } catch (error) {
         registerFailedAttempt();
-        alert(error.message || '网络错误，请检查后端服务');
+        alert(error.message || 'Network error. Please check the backend service.');
       }
     });
   </script>

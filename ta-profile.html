@@ -310,13 +310,13 @@
   <!-- TopNavbar -->
   <div class="topbar">
     <div class="topbar-logo">
-      <div class="topbar-logo-icon">📋</div>
+      <div class="topbar-logo-icon">TA</div>
       <span>TARecruitment system</span>
     </div>
     <div class="topbar-nav">
-      <a href="profile.html">Profile</a>
+      <a class="topbar-link" href="profile.html">Profile</a>
       <div class="topbar-avatar">👤</div>
-      <a id="logoutBtn" href="#">Logout</a>
+      <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
     </div>
   </div>
 
@@ -363,7 +363,7 @@
             <div class="form-group">
               <label class="form-label required">Year</label>
               <select class="form-control" id="grade" required>
-                <option value="">-- Please selectYear --</option>
+                <option value="">-- Select Year --</option>
                 <option value="Year 1">Year 1</option>
                 <option value="Year 2">Year 2</option>
                 <option value="Year 3">Year 3</option>
@@ -373,7 +373,7 @@
             <div class="form-group">
               <label class="form-label required">Major</label>
               <select class="form-control" id="major" required>
-                <option value="">-- Please selectMajor --</option>
+                <option value="">-- Select Major --</option>
                 <option value="Computer Science and Technology">Computer Science and Technology</option>
                 <option value="Software Engineering">Software Engineering</option>
                 <option value="Cybersecurity">Cybersecurity</option>
@@ -754,15 +754,17 @@
 
         const result = await uploadProfileRequest(form);
         if (result.success) {
-          taSystem.showMessage('Profile submitted and saved', 'success');
-          setTimeout(() => {
-            window.location.href = 'ta-positions.html';
-          }, 1200);
+          profileData.existingResumeName = result.resumeFileName || profileData.existingResumeName;
+          profileData.resume = null;
+          currentStep = 4;
+          updateStepView();
+          populateConfirmData();
+          taSystem.showMessage('Profile saved successfully. Your information remains on this page.', 'success');
         } else {
-          taSystem.showMessage(result.message || '保存失败', 'danger');
+          taSystem.showMessage(result.message || 'Save failed', 'danger');
         }
       } catch (error) {
-        taSystem.showMessage(error.message || '保存失败', 'danger');
+        taSystem.showMessage(error.message || 'Save failed', 'danger');
       }
     }
 
@@ -825,6 +827,20 @@
       collectAvailableTime();
     }
 
+    function ensureSelectOption(selectId, value) {
+      const select = document.getElementById(selectId);
+      const v = String(value || '').trim();
+      if (!select || !v) return;
+
+      const exists = Array.from(select.options).some((opt) => opt.value === v);
+      if (!exists) {
+        const option = document.createElement('option');
+        option.value = v;
+        option.textContent = v;
+        select.appendChild(option);
+      }
+    }
+
     async function loadExistingProfile() {
       try {
         const profile = await API.getProfile();
@@ -836,6 +852,9 @@
         profileData.email = profile.email || '';
         profileData.skills = (profile.skills || '').split(',').map((s) => s.trim()).filter(Boolean);
         profileData.existingResumeName = profile.resumeFileName || '';
+
+        ensureSelectOption('grade', profileData.grade);
+        ensureSelectOption('major', profileData.major);
 
         document.getElementById('grade').value = profileData.grade;
         document.getElementById('major').value = profileData.major;
@@ -862,6 +881,22 @@
               <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('resumeFile').click()">Re-upload</button>
             </div>
           `;
+        }
+
+        const hasSavedProfile = Boolean(
+          profileData.grade ||
+          profileData.major ||
+          profileData.gpa ||
+          profileData.email ||
+          profileData.skills.length ||
+          profileData.availableTime.length ||
+          profileData.existingResumeName
+        );
+
+        if (hasSavedProfile) {
+          currentStep = 4;
+          updateStepView();
+          populateConfirmData();
         }
       } catch (error) {
       }
