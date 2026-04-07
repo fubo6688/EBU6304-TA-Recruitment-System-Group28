@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,6 +50,28 @@ public class UserServlet extends HttpServlet {
         }
 
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
+        if ("/pending-registrations".equalsIgnoreCase(path)) {
+            if (!isAdmin(user)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Admin only").toString());
+                return;
+            }
+
+            JSONArray items = new JSONArray();
+            for (User item : dataManager.getAllUsers()) {
+                if (!"pending".equalsIgnoreCase(item.getStatus())) {
+                    continue;
+                }
+                if (!"TA".equalsIgnoreCase(item.getRole()) && !"MO".equalsIgnoreCase(item.getRole())) {
+                    continue;
+                }
+                items.put(toUserJson(item));
+            }
+
+            resp.getWriter().print(new JSONObject().put("success", true).put("users", items).toString());
+            return;
+        }
+
         if ("/avatar".equalsIgnoreCase(path)) {
             String targetUserId = value(req.getParameter("userId"));
             if (targetUserId.isEmpty()) {
@@ -249,6 +272,47 @@ public class UserServlet extends HttpServlet {
         }
 
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
+        if ("/approve-registration".equalsIgnoreCase(path)) {
+            if (!isAdmin(user)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print(new JSONObject().put("success", false).put("message", "Admin only").toString());
+                return;
+            }
+
+            String targetUserId = value(req.getParameter("userId"));
+            String decision = value(req.getParameter("decision"));
+            if (targetUserId.isEmpty() || decision.isEmpty()) {
+                out.print(new JSONObject().put("success", false).put("message", "Missing userId or decision").toString());
+                return;
+            }
+
+            User target = dataManager.getUserById(targetUserId);
+            if (target == null) {
+                out.print(new JSONObject().put("success", false).put("message", "Target user not found").toString());
+                return;
+            }
+            if (!"pending".equalsIgnoreCase(target.getStatus())) {
+                out.print(new JSONObject().put("success", false).put("message", "Target user is not pending").toString());
+                return;
+            }
+
+            String nextStatus;
+            if ("approve".equalsIgnoreCase(decision) || "approved".equalsIgnoreCase(decision)) {
+                nextStatus = "active";
+            } else if ("reject".equalsIgnoreCase(decision) || "rejected".equalsIgnoreCase(decision)) {
+                nextStatus = "inactive";
+            } else {
+                out.print(new JSONObject().put("success", false).put("message", "Invalid decision").toString());
+                return;
+            }
+
+            target.setStatus(nextStatus);
+            dataManager.saveUser(target);
+            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "APPROVE_REGISTRATION", targetUserId + " -> " + nextStatus, "success");
+            out.print(new JSONObject().put("success", true).put("message", "Registration updated").put("status", nextStatus).toString());
+            return;
+        }
+
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
             req.setCharacterEncoding("UTF-8");
             String userName = value(req.getParameter("userName"));
@@ -329,7 +393,7 @@ public class UserServlet extends HttpServlet {
                         Path resumeDir = dataManager.getDataDirPath().resolve("resumes");
                         Files.createDirectories(resumeDir);
                         String safeOriginal = sanitizeFileName(submitted);
-                        String stored = user.getUserId() + "_" + System.currentTimeMillis() + ".pdf";
+                        String stored = sanitizeFileName(user.getUserId()) + ".pdf";
                         Path target = resumeDir.resolve(stored);
 
                         try (InputStream in = part.getInputStream()) {
@@ -394,6 +458,12 @@ public class UserServlet extends HttpServlet {
                 out.print(new JSONObject().put("success", false).put("message", "Old password is incorrect").toString());
                 return;
             }
+            if (!isPasswordComplex(newPassword)) {
+                out.print(new JSONObject().put("success", false)
+                        .put("message", "Password must be at least 8 chars with uppercase, lowercase, digit, and letters/digits only")
+                        .toString());
+                return;
+            }
             user.setPassword(newPassword);
             dataManager.saveUser(user);
             dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "CHANGE_PASSWORD", "password", "success");
@@ -443,6 +513,17 @@ public class UserServlet extends HttpServlet {
         return s == null ? "" : s.trim();
     }
 
+    private boolean isAdmin(User user) {
+        return user != null && "Admin".equalsIgnoreCase(value(user.getRole()));
+    }
+
+    private boolean isPasswordComplex(String password) {
+        if (password == null) {
+            return false;
+        }
+        return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$");
+    }
+
     private boolean canViewProfile(User currentUser, String targetUserId) {
         if (targetUserId == null || targetUserId.trim().isEmpty()) {
             return false;
@@ -485,15 +566,28 @@ public class UserServlet extends HttpServlet {
     private Path resolveResumeFile(String userId, String storedName, String originalName) {
         Path dataDir = dataManager.getDataDirPath();
         Path resumesDir = dataDir.resolve("resumes");
+        Path parentDir = dataDir.getParent();
+        String fixedName = sanitizeFileName(userId) + ".pdf";
 
         List<Path> candidates = new ArrayList<>();
+        candidates.add(resumesDir.resolve(fixedName));
+        candidates.add(dataDir.resolve(fixedName));
+        if (parentDir != null) {
+            candidates.add(parentDir.resolve("resumes").resolve(fixedName));
+        }
         if (!storedName.isEmpty()) {
             candidates.add(resumesDir.resolve(storedName));
             candidates.add(dataDir.resolve(storedName));
+            if (parentDir != null) {
+                candidates.add(parentDir.resolve("resumes").resolve(storedName));
+            }
         }
         if (!originalName.isEmpty() && !originalName.equals(storedName)) {
             candidates.add(resumesDir.resolve(originalName));
             candidates.add(dataDir.resolve(originalName));
+            if (parentDir != null) {
+                candidates.add(parentDir.resolve("resumes").resolve(originalName));
+            }
         }
 
         for (Path p : candidates) {

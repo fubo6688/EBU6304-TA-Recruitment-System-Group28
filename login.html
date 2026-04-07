@@ -191,6 +191,19 @@
     .lock-info.show {
       display: block;
     }
+
+    .register-entry {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(148, 163, 184, 0.35);
+      text-align: center;
+    }
+
+    .register-entry p {
+      margin-bottom: 10px;
+      color: var(--gray-500);
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -243,6 +256,11 @@
 
       <div class="forgot-password">
         <a href="#">Forgot your password?</a>
+      </div>
+
+      <div class="register-entry">
+        <p>New TA/MO user?</p>
+        <a href="register.html" class="btn btn-secondary btn-block">Go to Register</a>
       </div>
     </div>
 
@@ -389,6 +407,7 @@
         alert(error.message || 'Network error. Please check the backend service.');
       }
     });
+
   </script>
 </body>
 </html>

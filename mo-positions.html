@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -315,17 +315,21 @@
         <div id="step1" class="form-section active">
           <div class="form-group">
             <label class="form-label required">Course Name</label>
-            <input id="publishTitle" type="text" class="form-control" placeholder="like：Data Structures">
+            <input id="publishTitle" type="text" class="form-control" placeholder="e.g. Data Structures">
           </div>
           <div class="form-two-col">
             <div class="form-group">
               <label class="form-label required">Openings</label>
-              <input id="publishOpenings" type="number" class="form-control" placeholder="1-5people" min="1" max="5">
+              <input id="publishOpenings" type="number" class="form-control" placeholder="1 to 5" min="1" max="5">
             </div>
             <div class="form-group">
-              <label class="form-label required">job description</label>
-              <input id="publishDepartment" type="text" class="form-control" placeholder="department like: Computer Science">
+              <label class="form-label required">Department</label>
+              <input id="publishDepartment" type="text" class="form-control" placeholder="e.g. Computer Science">
             </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Work Description</label>
+            <textarea id="publishDescription" class="form-control" placeholder="Describe the main responsibilities and expectations"></textarea>
           </div>
         </div>
 
@@ -345,16 +349,12 @@
             <label class="form-label">Salary</label>
             <input id="publishSalary" type="text" class="form-control" placeholder="e.g. 2000-3000 RMB/month">
           </div>
-          <div class="form-group">
-            <label class="form-label">Job Details</label>
-            <textarea id="publishDescription" class="form-control" placeholder="Detailed responsibilities"></textarea>
-          </div>
         </div>
 
         <div id="step4" class="form-section">
           <div class="form-group">
             <label class="form-label">Deadline</label>
-            <input id="publishDeadline" type="date" class="form-control">
+            <input id="publishDeadline" type="date" class="form-control" lang="en">
           </div>
           <div class="form-group">
             <label class="form-label">Notes</label>
@@ -477,10 +477,8 @@
           (document.getElementById('publishPreferred')?.value || '').trim()
         ].filter(Boolean).join(', '),
         salary: (document.getElementById('publishSalary')?.value || '').trim(),
-        description: [
-          (document.getElementById('publishDescription')?.value || '').trim(),
-          (document.getElementById('publishNotes')?.value || '').trim()
-        ].filter(Boolean).join(', '),
+        description: (document.getElementById('publishDescription')?.value || '').trim(),
+        notes: (document.getElementById('publishNotes')?.value || '').trim(),
         deadline: (document.getElementById('publishDeadline')?.value || '').trim()
       };
     }
@@ -520,8 +518,9 @@
             <div><strong>Department:</strong> ${data.department || '-'}</div>
             <div><strong>Salary:</strong> ${data.salary || '-'}</div>
             <div><strong>Requirements:</strong> ${data.requirements || '-'}</div>
+            <div><strong>Work Description:</strong> ${data.description || '-'}</div>
             <div><strong>Deadline:</strong> ${data.deadline || '-'}</div>
-            <div style="grid-column: 1 / span 2;"><strong>Description:</strong> ${data.description || '-'}</div>
+            <div style="grid-column: 1 / span 2;"><strong>Notes:</strong> ${data.notes || '-'}</div>
           `;
         }
       }

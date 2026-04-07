@@ -66,6 +66,14 @@ class API {
     });
   }
 
+  static register(payload) {
+    return API.request("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody({ ...payload, action: "register" })
+    });
+  }
+
   static session() {
     return API.request("/login");
   }
@@ -117,11 +125,59 @@ class API {
     return `${API.getBaseUrl()}/user/resume?userId=${encodeURIComponent(userId)}`;
   }
 
+  static async openResume(userId) {
+    const url = API.getResumePreviewUrl(userId);
+    const popup = window.open('about:blank', '_blank');
+    try {
+      const response = await fetch(url, { credentials: 'include' });
+      const contentType = (response.headers.get('content-type') || '').toLowerCase();
+      if (!response.ok || !contentType.includes('pdf')) {
+        let message = `HTTP ${response.status}`;
+        try {
+          const text = await response.text();
+          if (text) {
+            const data = JSON.parse(text);
+            message = data.message || text;
+          }
+        } catch (error) {
+        }
+        if (popup) popup.close();
+        throw new Error(message || 'Resume not found');
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      if (popup) {
+        popup.location.href = blobUrl;
+        popup.addEventListener('beforeunload', () => URL.revokeObjectURL(blobUrl), { once: true });
+      } else {
+        window.location.href = blobUrl;
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      }
+      return true;
+    } catch (error) {
+      if (popup) popup.close();
+      throw error;
+    }
+  }
+
   static changePassword(oldPassword, newPassword) {
     return API.request("/user/password", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
       body: API.formBody({ oldPassword, newPassword })
+    });
+  }
+
+  static getPendingRegistrations() {
+    return API.request("/user/pending-registrations");
+  }
+
+  static approveRegistration(userId, decision) {
+    return API.request("/user/approve-registration", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody({ userId, decision })
     });
   }
 
