@@ -1,5 +1,9 @@
-# Build output
+# Build output directories
 target/
+WEB-INF/classes/
+backend/WEB-INF/classes/
+
+# Servlet compiled output folders
 WEB-INF/classes/
 backend/WEB-INF/classes/
 
