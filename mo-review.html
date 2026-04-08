@@ -552,8 +552,8 @@
           <div class="applicant-body">
             <div class="match-row"><span class="match-label">Position:</span><span class="match-value">${app.positionTitle || ''}</span></div>
             <div class="match-row"><span class="match-label">Status:</span><span class="match-value">${statusText(app.status)}</span></div>
-            <div class="match-row"><span class="match-label">Skills:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.skills || 'Not provided').toString()}</span></div>
-            <div class="match-row"><span class="match-label">Availability:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.availableTime || 'Not provided').toString()}</span></div>
+            <div class="match-row"><span class="match-label">Skills:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.skills || '').toString().trim() || 'Not provided'}</span></div>
+            <div class="match-row"><span class="match-label">Availability:</span><span class="match-value">${formatAvailability(applicantProfileMap[app.userId]?.profile?.availableTime)}</span></div>
           </div>
           <div class="applicant-footer">
             <button class="btn btn-sm btn-outline" onclick="openResume('${app.userId}')">View Resume</button>
@@ -595,7 +595,21 @@
 
     function openResume(userId) {
       if (!userId) return;
+      if (typeof API.openResume === 'function') {
+        API.openResume(userId).catch((error) => {
+          taSystem.showMessage(error.message || 'Resume not found', 'warning');
+        });
+        return;
+      }
       window.open(API.getResumePreviewUrl(userId), '_blank');
+    }
+
+    function formatAvailability(raw) {
+      const text = (raw || '').toString().trim();
+      if (!text) {
+        return 'Not provided';
+      }
+      return text.split(';').map((s) => s.trim()).filter(Boolean).join(' | ') || 'Not provided';
     }
 
     function showApplicantProfile(userId) {
@@ -620,7 +634,7 @@
           <div><strong>Email:</strong> ${p.email || ''}</div>
           <div style="grid-column:1 / span 2;"><strong>Skills:</strong> ${p.skills || ''}</div>
           <div style="grid-column:1 / span 2;"><strong>Available Time:</strong> ${p.availableTime || ''}</div>
-          <div style="grid-column:1 / span 2;"><strong>Resume:</strong> <a href="${API.getResumePreviewUrl(userId)}" target="_blank">${p.resumeFileName || 'Open PDF'}</a></div>
+          <div style="grid-column:1 / span 2;"><strong>Resume:</strong> ${p.resumeFileName ? `<a href="#" onclick="openResume('${userId}'); return false;">${p.resumeFileName}</a>` : '<span style="color: var(--gray-500);">No resume uploaded</span>'}</div>
         </div>
       `;
 

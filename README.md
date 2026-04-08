@@ -39,6 +39,7 @@ Temporarily disabled in Sprint 1 mode:
 ```text
 .
 |- login.html
+|- register.html
 |- profile.html
 |- ta-profile.html
 |- ta-positions.html
@@ -130,25 +131,26 @@ Validated from `data/users.txt` and `backend/data/users.txt`.
 
 | Username | Password | Role |
 |---|---|---|
-| ta002 | 123456 | TA |
-| mo001 | 123456 | MO |
-| admin001 | admin123 | Admin |
-| 20210001 | 123456 | TA |
-| M001 | 123456 | MO |
-| ADM001 | admin123 | Admin |
-| admin_user | 123 | Admin |
-| admin_02 | admin888 | Admin |
-| mo_smith | 123 | MO |
-| mo_jones | 123 | MO |
-| mo_wang | 123 | MO |
-| ta_alice | 123 | TA |
-| ta_bob | 123 | TA |
-| ta_charlie | 123 | TA |
-| ta_david | 123 | TA |
-| ta_emma | 123 | TA |
+| ta002 | Qmta2026A | TA |
+| mo001 | Qmta2026A | MO |
+| admin001 | Qmta2026A | Admin |
+| 20210001 | Qmta2026A | TA |
+| M001 | Qmta2026A | MO |
+| ADM001 | Qmta2026A | Admin |
+| admin_user | Qmta2026A | Admin |
+| admin_02 | Qmta2026A | Admin |
+| mo_smith | Qmta2026A | MO |
+| mo_jones | Qmta2026A | MO |
+| mo_wang | Qmta2026A | MO |
+| ta_alice | Qmta2026A | TA |
+| ta_bob | Qmta2026A | TA |
+| ta_charlie | Qmta2026A | TA |
+| ta_david | Qmta2026A | TA |
+| ta_emma | Qmta2026A | TA |
 
 Notes:
-1. If an account still cannot log in, restart service with `./restart-dev.bat` so runtime data is reloaded.
+1. Legacy weak passwords were migrated in batch to `Qmta2026A`.
+2. If an account still cannot log in, restart service with `./restart-dev.bat` so runtime data is reloaded.
 
 ## Backend API Base
 
@@ -165,6 +167,83 @@ Main endpoint groups:
 4. `/api/application/*`
 5. `/api/notification/*`
 6. `/api/admin/*`
+
+Detailed Sprint 1 API endpoints:
+
+Authentication:
+1. `POST /api/login`
+2. `GET /api/login?action=logout`
+3. `POST /api/login` with `action=register` (TA/MO self-registration, pending admin approval)
+
+User:
+1. `GET /api/user/profile`
+2. `POST /api/user/profile`
+3. `POST /api/user/password`
+4. `GET /api/user/ta-profile`
+5. `GET /api/user/resume`
+6. `GET /api/user/pending-registrations` (Admin only)
+7. `POST /api/user/approve-registration` (Admin only, decision=`approve|reject`)
+
+## Registration and Password Policy
+
+1. TA and MO users can register on the login page.
+2. New registrations are created with `pending` status.
+3. Pending users cannot log in until Admin approval.
+4. Admin can approve/reject from API:
+   - `GET /api/user/pending-registrations`
+   - `POST /api/user/approve-registration`
+5. Password complexity (registration and password change):
+   - At least 8 characters
+   - Must contain uppercase + lowercase + digit
+   - Letters and digits only (no symbols)
+
+Position:
+1. `GET /api/position/list`
+2. `POST /api/position/create`
+
+Application:
+1. `GET /api/application/review-list`
+2. `POST /api/application/submit`
+
+## Backend Build and Deployment Details
+
+Backend directory layout:
+
+```text
+backend/
+|- src/com/ta/
+|  |- model/
+|  |- servlet/
+|  |- util/
+|- WEB-INF/
+|  |- web.xml
+|  |- classes/
+|  |- lib/
+|- data/
+|- build.bat
+|- deploy.bat
+```
+
+Build backend classes only (optional):
+
+```powershell
+cd .\backend
+.\build.bat
+```
+
+Manual compile command (optional):
+
+```powershell
+javac -encoding UTF-8 -cp "WEB-INF\lib\*" -d WEB-INF\classes src\com\ta\model\*.java src\com\ta\util\*.java src\com\ta\servlet\*.java
+```
+
+Runtime data files:
+1. `data/users.txt`
+2. `data/positions.txt`
+3. `data/applications.txt`
+4. `data/profiles.txt`
+5. `data/logs.txt`
+6. `data/resumes/*.pdf` (TA resume files, fixed name: `userId.pdf`)
 
 ## Sprint 1 Demonstration Path
 
@@ -185,9 +264,12 @@ Use this order during demo/viva:
    - Check Tomcat `webapps/ta-system` exists
 3. Login/API failures:
    - Verify Tomcat is running
-   - Verify dataset files exist in `backend/data`
+   - Verify dataset files exist in `data`
+   - Restart via `restart-dev.bat` so `TA_DATA_DIR` is applied correctly
 4. Build errors:
    - Ensure `backend/WEB-INF/lib/json-20240303.jar` exists
+5. CORS/session issues:
+   - Use deployed URL under Tomcat, not direct local file open (`file://`)
 
 ## License
 
