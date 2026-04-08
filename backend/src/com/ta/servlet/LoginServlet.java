@@ -121,9 +121,6 @@ public class LoginServlet extends HttpServlet {
         String password = value(req.getParameter("password"));
         String role = value(req.getParameter("role"));
         String qmId = value(req.getParameter("qmId"));
-        String major = value(req.getParameter("major"));
-        String skills = normalizeSkills(value(req.getParameter("skills")));
-        String availableTime = normalizeAvailableTime(value(req.getParameter("availableTime")));
 
         if (userId.isEmpty() || userName.isEmpty() || email.isEmpty() || password.isEmpty() || role.isEmpty()) {
             out.print(new JSONObject().put("success", false).put("message", "Required fields are missing").toString());
@@ -133,11 +130,6 @@ public class LoginServlet extends HttpServlet {
         String normalizedRole = role.toUpperCase(Locale.ROOT);
         if (!("TA".equals(normalizedRole) || "MO".equals(normalizedRole))) {
             out.print(new JSONObject().put("success", false).put("message", "Only TA or MO can register").toString());
-            return;
-        }
-
-        if ("TA".equals(normalizedRole) && (major.isEmpty() || skills.isEmpty() || availableTime.isEmpty())) {
-            out.print(new JSONObject().put("success", false).put("message", "TA registration requires major, skills and available time").toString());
             return;
         }
 
@@ -156,9 +148,6 @@ public class LoginServlet extends HttpServlet {
         User user = new User(userId, userName, email, password, normalizedRole, qmId.isEmpty() ? userId : qmId);
         user.setStatus("pending");
         dataManager.saveUser(user);
-        if ("TA".equals(normalizedRole)) {
-            dataManager.saveProfile(userId, "", major, "", email, skills, "", "", availableTime, "");
-        }
         dataManager.writeLog(userId, userName, normalizedRole, "REGISTER", "pending approval", "success");
 
         out.print(new JSONObject()
@@ -172,45 +161,6 @@ public class LoginServlet extends HttpServlet {
             return false;
         }
         return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$");
-    }
-
-    private String normalizeSkills(String raw) {
-        if (raw == null) {
-            return "";
-        }
-        String[] parts = raw.split("[,;]");
-        StringBuilder sb = new StringBuilder();
-        for (String part : parts) {
-            String item = value(part);
-            if (item.isEmpty()) {
-                continue;
-            }
-            if (sb.length() > 0) {
-                sb.append(", ");
-            }
-            sb.append(item);
-        }
-        return sb.toString();
-    }
-
-    private String normalizeAvailableTime(String raw) {
-        if (raw == null) {
-            return "";
-        }
-        String normalized = raw.replace("\n", ";").replace("\r", ";").replace(",", ";");
-        String[] parts = normalized.split(";");
-        StringBuilder sb = new StringBuilder();
-        for (String part : parts) {
-            String item = value(part);
-            if (item.isEmpty()) {
-                continue;
-            }
-            if (sb.length() > 0) {
-                sb.append("; ");
-            }
-            sb.append(item);
-        }
-        return sb.toString();
     }
 
     private JSONObject toUserJson(User user) {

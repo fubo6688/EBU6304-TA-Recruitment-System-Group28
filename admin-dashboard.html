@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: var(--gray-100);
+      padding: 20px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .sidebar-menu-item:hover {
+      background-color: var(--gray-200);
+      color: var(--primary-color);
+    }
+
+    .sidebar-menu-item.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .card-summary {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      padding: 14px;
+    }
+
+    .card-summary .label {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+
+    .card-summary .value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .panel {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .table {
+      width: 100%;
+      font-size: 12px;
+    }
+
+    .table th {
+      background: var(--gray-100);
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 360px;
+    }
+
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--gray-500);
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">TA</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a class="topbar-link" href="profile.html">Profile</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="sidebar-title">Admin Function</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item active">Admin Dashboard</li>
+        <li class="sidebar-menu-item">Registration Approvals</li>
+        <li class="sidebar-menu-item">Profile</li>
+      </ul>
+    </div>
+
+    <div class="content">
+      <div class="cards" id="summaryCards"></div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h3 class="panel-title">All Positions</h3>
+          <button class="btn btn-sm btn-secondary" id="refreshBtn">Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table class="table" id="positionsTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>MO</th>
+                <th>Status</th>
+                <th>Openings</th>
+                <th>Applied</th>
+                <th>Accepted</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="7" style="text-align:center;color:var(--gray-500);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h3 class="panel-title">TA Workload Monitoring</h3>
+        </div>
+        <div class="table-wrap">
+          <table class="table" id="workloadTable">
+            <thead>
+              <tr>
+                <th>TA</th>
+                <th>QM ID</th>
+                <th>Total Apps</th>
+                <th>Pending</th>
+                <th>Approved</th>
+                <th>Rejected</th>
+                <th>Current Load</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="7" style="text-align:center;color:var(--gray-500);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    function renderSummary(summary) {
+      const cards = document.getElementById('summaryCards');
+      if (!cards) return;
+      const safe = summary || {};
+      cards.innerHTML = [
+        ['Total Positions', safe.totalPositions || 0],
+        ['Open Positions', safe.openPositions || 0],
+        ['Closed Positions', safe.closedPositions || 0],
+        ['Total Applications', safe.totalApplications || 0],
+        ['Pending Applications', safe.pendingApplications || 0],
+        ['Approved Applications', safe.approvedApplications || 0]
+      ].map((item) => `
+        <div class="card-summary">
+          <div class="label">${item[0]}</div>
+          <div class="value">${item[1]}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderPositions(positions) {
+      const tbody = document.querySelector('#positionsTable tbody');
+      if (!tbody) return;
+      if (!positions.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">No positions available</td></tr>';
+        return;
+      }
+      tbody.innerHTML = positions.map((p) => `
+        <tr>
+          <td>${p.id || '-'}</td>
+          <td>${p.title || '-'}</td>
+          <td>${p.moId || '-'}</td>
+          <td>${p.status || '-'}</td>
+          <td>${p.openings || 0}</td>
+          <td>${p.appliedCount || 0}</td>
+          <td>${p.acceptedCount || 0}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderWorkload(items) {
+      const tbody = document.querySelector('#workloadTable tbody');
+      if (!tbody) return;
+      if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">No TA workload data</td></tr>';
+        return;
+      }
+      tbody.innerHTML = items.map((w) => `
+        <tr>
+          <td>${w.userName || '-'}</td>
+          <td>${w.qmId || w.userId || '-'}</td>
+          <td>${w.totalApplications || 0}</td>
+          <td>${w.pending || 0}</td>
+          <td>${w.approved || 0}</td>
+          <td>${w.rejected || 0}</td>
+          <td>${w.currentLoad || 0}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadDashboard() {
+      try {
+        const result = await API.getAdminDashboard();
+        if (!result || !result.success) {
+          taSystem.showMessage((result && result.message) || 'Failed to load dashboard', 'danger');
+          return;
+        }
+        renderSummary(result.summary || {});
+        renderPositions(Array.isArray(result.positions) ? result.positions : []);
+        renderWorkload(Array.isArray(result.taWorkload) ? result.taWorkload : []);
+      } catch (error) {
+        taSystem.showMessage(error.message || 'Failed to load dashboard', 'danger');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const role = (localStorage.getItem('userRole') || '').toLowerCase();
+      if (role !== 'admin') {
+        taSystem.showMessage('Admin only page', 'warning');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 900);
+        return;
+      }
+      await loadDashboard();
+      document.getElementById('refreshBtn')?.addEventListener('click', loadDashboard);
+    });
+  </script>
+</body>
+</html>
