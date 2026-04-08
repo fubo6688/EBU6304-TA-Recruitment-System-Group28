@@ -1,0 +1,751 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Logs - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: var(--gray-100);
+      padding: 20px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .sidebar-menu-item:hover {
+      background-color: var(--gray-200);
+      color: var(--primary-color);
+    }
+
+    .sidebar-menu-item.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .filter-bar {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-bar-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 1200px) {
+      .filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .filter-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 6px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+      width: 100%;
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .table-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .table-container {
+      background-color: var(--white);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .table {
+      width: 100%;
+      font-size: 12px;
+    }
+
+    .table thead {
+      background-color: var(--gray-100);
+    }
+
+    .table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    .table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .table tbody tr:hover {
+      background-color: #fafafa;
+    }
+
+    .log-id {
+      color: var(--gray-500);
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+    }
+
+    .operation-user {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .user-name {
+      font-weight: 600;
+    }
+
+    .user-id {
+      font-size: 11px;
+      color: var(--gray-500);
+    }
+
+    .user-role {
+      font-size: 10px;
+      display: inline-block;
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      padding: 2px 6px;
+      border-radius: 2px;
+      margin-top: 2px;
+    }
+
+    .operation-type {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .operation-content {
+      color: var(--gray-600);
+      font-size: 11px;
+    }
+
+    .result-badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .result-success {
+      background-color: #d1fae5;
+      color: var(--success-color);
+    }
+
+    .result-failed {
+      background-color: #fee2e2;
+      color: var(--danger-color);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .pagination button {
+      padding: 6px 10px;
+      border: 1px solid var(--gray-300);
+      background-color: var(--white);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .pagination button:hover {
+      background-color: var(--primary-color);
+      color: var(--white);
+      border-color: var(--primary-color);
+    }
+
+    .pagination button.active {
+      background-color: var(--primary-color);
+      color: var(--white);
+      border-color: var(--primary-color);
+    }
+
+    .pagination-info {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+  </style>
+</head>
+<body>
+  <!-- TopNavbar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">📋</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a href="profile.html">Profile</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- left menu -->
+    <div class="sidebar">
+      <div class="sidebar-title">Admin Function</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item">Analytics</li>
+        <li class="sidebar-menu-item">User Management</li>
+        <li class="sidebar-menu-item active">System Logs</li>
+        <li class="sidebar-menu-item">Profile</li>
+        <li class="sidebar-menu-item">Notifications</li>
+      </ul>
+    </div>
+
+    <!-- right sideContent -->
+    <div class="content">
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="filter-bar-title">🔍 Filters</div>
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label>Operation Type</label>
+            <select class="form-control">
+              <option value="">-- All --</option>
+              <option value="login">Login</option>
+              <option value="logout">Log out</option>
+              <option value="publish">Post a job</option>
+              <option value="review">review application</option>
+              <option value="disable">DisabledAccount</option>
+              <option value="export">Export data</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Operator</label>
+            <input type="text" class="form-control" placeholder="search QM ID / Name">
+          </div>
+          <div class="filter-group">
+            <label>start time</label>
+            <input type="date" class="form-control" value="2025-03-01">
+          </div>
+          <div class="filter-group">
+            <label>end time</label>
+            <input type="date" class="form-control" value="2025-03-16">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+          <div class="filter-group">
+            <label>Result</label>
+            <select class="form-control">
+              <option value="">All</option>
+              <option value="success">Success</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary btn-sm">Reset</button>
+          <button class="btn btn-primary btn-sm">Query</button>
+        </div>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="table-toolbar">
+        <div style="font-size: 13px; color: var(--gray-500);">
+          Total <strong>156</strong> log entries
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary btn-sm" onclick="exportLogs(true)">Export selected logs</button>
+          <button class="btn btn-outline btn-sm" onclick="exportLogs(false)">ExportAlllog</button>
+        </div>
+      </div>
+
+      <!-- Log Table -->
+      <div class="table-container">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th style="width: 30px;"><input type="checkbox"></th>
+              <th>Log ID</th>
+              <th>Operator</th>
+              <th>Operation Type</th>
+              <th>Operation Details</th>
+              <th>Operation Time</th>
+              <th>result</th>
+              <th style="width: 100px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><span class="log-id">#LOG-2025031626001</span></td>
+              <td>
+                <div class="operation-user">
+                  <span class="user-name">Zhang San</span>
+                  <span class="user-id">20210001</span>
+                  <span class="user-role">TA</span>
+                </div>
+              </td>
+              <td><span class="operation-type">Login</span></td>
+              <td><span class="operation-content">User account logged into system</span></td>
+              <td>2025-03-16 10:30:25</td>
+              <td><span class="result-badge result-success">✓ Success</span></td>
+              <td>
+                <button class="btn btn-outline btn-action" onclick="taSystem.openModal('detailModal')">Details</button>
+              </td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><span class="log-id">#LOG-2025031625998</span></td>
+              <td>
+                <div class="operation-user">
+                  <span class="user-name">Prof. Li</span>
+                  <span class="user-id">20210101</span>
+                  <span class="user-role">MO</span>
+                </div>
+              </td>
+              <td><span class="operation-type">Post a job</span></td>
+              <td><span class="operation-content">Created new position: Data Structures TA (ID: #001)</span></td>
+              <td>2025-03-16 09:15:10</td>
+              <td><span class="result-badge result-success">✓ Success</span></td>
+              <td>
+                <button class="btn btn-outline btn-action" onclick="taSystem.openModal('detailModal')">Details</button>
+              </td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><span class="log-id">#LOG-2025031625997</span></td>
+              <td>
+                <div class="operation-user">
+                  <span class="user-name">Prof. Li</span>
+                  <span class="user-id">20210101</span>
+                  <span class="user-role">MO</span>
+                </div>
+              </td>
+              <td><span class="operation-type">review application</span></td>
+              <td><span class="operation-content">Approved applicant Zhang San (ID: 20210001) application</span></td>
+              <td>2025-03-16 08:45:30</td>
+              <td><span class="result-badge result-success">✓ Success</span></td>
+              <td>
+                <button class="btn btn-outline btn-action" onclick="taSystem.openModal('detailModal')">Details</button>
+              </td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><span class="log-id">#LOG-2025031625996</span></td>
+              <td>
+                <div class="operation-user">
+                  <span class="user-name">Admin</span>
+                  <span class="user-id">20200001</span>
+                  <span class="user-role">Admin</span>
+                </div>
+              </td>
+              <td><span class="operation-type">DisabledAccount</span></td>
+              <td><span class="operation-content">DisabledAccount：Prof. Wang (ID: 20210102)</span></td>
+              <td>2025-03-16 07:30:15</td>
+              <td><span class="result-badge result-success">✓ Success</span></td>
+              <td>
+                <button class="btn btn-outline btn-action" onclick="taSystem.openModal('detailModal')">Details</button>
+              </td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><span class="log-id">#LOG-2025031625995</span></td>
+              <td>
+                <div class="operation-user">
+                  <span class="user-name">Li Si</span>
+                  <span class="user-id">20210002</span>
+                  <span class="user-role">TA</span>
+                </div>
+              </td>
+              <td><span class="operation-type">Login</span></td>
+              <td><span class="operation-content">User account logged into system</span></td>
+              <td>2025-03-15 19:20:45</td>
+              <td><span class="result-badge result-success">✓ Success</span></td>
+              <td>
+                <button class="btn btn-outline btn-action" onclick="taSystem.openModal('detailModal')">Details</button>
+              </td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><span class="log-id">#LOG-2025031625994</span></td>
+              <td>
+                <div class="operation-user">
+                  <span class="user-name">Admin</span>
+                  <span class="user-id">20200001</span>
+                  <span class="user-role">Admin</span>
+                </div>
+              </td>
+              <td><span class="operation-type">Export data</span></td>
+              <td><span class="operation-content">ExportPosition Data (2025-03-01 to 2025-03-15)</span></td>
+              <td>2025-03-15 14:10:20</td>
+              <td><span class="result-badge result-success">✓ Success</span></td>
+              <td>
+                <button class="btn btn-outline btn-action" onclick="taSystem.openModal('detailModal')">Details</button>
+              </td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><span class="log-id">#LOG-2025031625993</span></td>
+              <td>
+                <div class="operation-user">
+                  <span class="user-name">Prof. Li</span>
+                  <span class="user-id">20210101</span>
+                  <span class="user-role">MO</span>
+                </div>
+              </td>
+              <td><span class="operation-type">review application</span></td>
+              <td><span class="operation-content">RejectApplicantLi Si (ID: 20210002) application</span></td>
+              <td>2025-03-15 11:45:30</td>
+              <td><span class="result-badge result-success">✓ Success</span></td>
+              <td>
+                <button class="btn btn-outline btn-action" onclick="taSystem.openModal('detailModal')">Details</button>
+              </td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><span class="log-id">#LOG-2025031625992</span></td>
+              <td>
+                <div class="operation-user">
+                  <span class="user-name">Prof. Wang</span>
+                  <span class="user-id">20210102</span>
+                  <span class="user-role">MO</span>
+                </div>
+              </td>
+              <td><span class="operation-type">Log out</span></td>
+              <td><span class="operation-content">userAccountLog outsystem</span></td>
+              <td>2025-03-15 10:20:15</td>
+              <td><span class="result-badge result-success">✓ Success</span></td>
+              <td>
+                <button class="btn btn-outline btn-action" onclick="taSystem.openModal('detailModal')">Details</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button class="active">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>...</button>
+        <button>10</button>
+        <span class="pagination-info">Total 8 Page，per page 20 strip</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailsmodal box -->
+  <div id="detailModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Log Details</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div>
+            <p style="margin: 0 0 4px; font-size: 12px; color: var(--gray-500);">Log ID</p>
+            <p style="margin: 0; font-weight: 600; font-family: monospace;">#LOG-2025031626001</p>
+          </div>
+          <div>
+            <p style="margin: 0 0 4px; font-size: 12px; color: var(--gray-500);">Operation Time</p>
+            <p style="margin: 0; font-weight: 600;">2025-03-16 10:30:25</p>
+          </div>
+          <div>
+            <p style="margin: 0 0 4px; font-size: 12px; color: var(--gray-500);">Operator</p>
+            <p style="margin: 0; font-weight: 600;">Zhang San (20210001) [TA]</p>
+          </div>
+          <div>
+            <p style="margin: 0 0 4px; font-size: 12px; color: var(--gray-500);">Result</p>
+            <p style="margin: 0;"><span class="result-badge result-success">✓ Success</span></p>
+          </div>
+        </div>
+
+        <div>
+          <p style="margin: 0 0 8px; font-size: 12px; color: var(--gray-500);">Operation Type</p>
+          <p style="margin: 0 0 16px;"><span class="operation-type">Login</span></p>
+
+          <p style="margin: 0 0 8px; font-size: 12px; color: var(--gray-500);">Operation Details</p>
+          <p style="margin: 0 0 16px; color: var(--gray-600);">User account logged into system</p>
+
+          <p style="margin: 0 0 8px; font-size: 12px; color: var(--gray-500);">IP Address</p>
+          <p style="margin: 0; font-family: monospace;">192.168.1.100</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="taSystem.closeModal('detailModal')">closure</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    // Admin Menu navigation
+    const adminMenuMap = {
+      'Analytics': 'admin-analytics.html',
+      'User Management': 'admin-users.html',
+      'System Logs': 'admin-logs.html',
+      'Profile': 'profile.html',
+      'Notifications': 'notification.html'
+    };
+
+    let logsCache = [];
+
+    function csvEscape(value) {
+      const text = value == null ? '' : String(value);
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    function downloadCsv(fileName, rows) {
+      const csv = rows.map((row) => row.map(csvEscape).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    }
+
+    function openLogDetails(index) {
+      const log = logsCache[index];
+      if (!log) return;
+
+      const modal = document.getElementById('detailModal');
+      if (!modal) return;
+
+      const content = modal.querySelector('.modal-body');
+      const success = (log.result || '').toLowerCase() === 'success';
+      if (content) {
+        content.innerHTML = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+              <p style="margin: 0 0 4px; font-size: 12px; color: var(--gray-500);">Log ID</p>
+              <p style="margin: 0; font-weight: 600; font-family: monospace;">#${log.id || ''}</p>
+            </div>
+            <div>
+              <p style="margin: 0 0 4px; font-size: 12px; color: var(--gray-500);">Operation Time</p>
+              <p style="margin: 0; font-weight: 600;">${log.time || ''}</p>
+            </div>
+            <div>
+              <p style="margin: 0 0 4px; font-size: 12px; color: var(--gray-500);">Operator</p>
+              <p style="margin: 0; font-weight: 600;">${log.userName || ''} (${log.userId || ''}) [${log.role || ''}]</p>
+            </div>
+            <div>
+              <p style="margin: 0 0 4px; font-size: 12px; color: var(--gray-500);">Result</p>
+              <p style="margin: 0;"><span class="result-badge ${success ? 'result-success' : 'result-failed'}">${success ? '✓ Success' : '✗ Failed'}</span></p>
+            </div>
+          </div>
+
+          <div>
+            <p style="margin: 0 0 8px; font-size: 12px; color: var(--gray-500);">Operation Type</p>
+            <p style="margin: 0 0 16px;"><span class="operation-type">${log.action || ''}</span></p>
+
+            <p style="margin: 0 0 8px; font-size: 12px; color: var(--gray-500);">Operation Details</p>
+            <p style="margin: 0 0 16px; color: var(--gray-600);">${log.detail || ''}</p>
+          </div>
+        `;
+      }
+
+      taSystem.openModal('detailModal');
+    }
+
+    function exportLogs(onlySelected) {
+      const rows = [['logId', 'time', 'userId', 'userName', 'role', 'action', 'detail', 'result']];
+
+      let exportItems = logsCache;
+      if (onlySelected) {
+        const selectedIndexes = Array.from(document.querySelectorAll('.log-checkbox:checked'))
+          .map((cb) => Number(cb.getAttribute('data-index')))
+          .filter((n) => !Number.isNaN(n));
+
+        if (!selectedIndexes.length) {
+          taSystem.showMessage('请先选择要导出的日志', 'warning');
+          return;
+        }
+        exportItems = selectedIndexes.map((i) => logsCache[i]).filter(Boolean);
+      }
+
+      if (!exportItems.length) {
+        taSystem.showMessage('暂无可导出的日志', 'warning');
+        return;
+      }
+
+      exportItems.forEach((log) => {
+        rows.push([
+          log.id || '',
+          log.time || '',
+          log.userId || '',
+          log.userName || '',
+          log.role || '',
+          log.action || '',
+          log.detail || '',
+          log.result || ''
+        ]);
+      });
+
+      const suffix = onlySelected ? 'selected' : 'all';
+      downloadCsv(`admin-logs-${suffix}.csv`, rows);
+      taSystem.showMessage('日志导出成功', 'success');
+    }
+
+    async function loadLogs() {
+      try {
+        const result = await API.adminLogs();
+        const logs = result && result.logs ? result.logs : [];
+        logsCache = Array.isArray(logs) ? logs : [];
+
+        const totalStrong = document.querySelector('.table-toolbar strong');
+        if (totalStrong) {
+          totalStrong.textContent = String(logsCache.length);
+        }
+
+        const tbody = document.querySelector('.table-container tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = logsCache.map((log, index) => {
+          const success = (log.result || '').toLowerCase() === 'success';
+          return `
+            <tr>
+              <td><input type="checkbox" class="log-checkbox" data-index="${index}"></td>
+              <td><span class="log-id">#${log.id || ''}</span></td>
+              <td>
+                <div class="operation-user">
+                  <span class="user-name">${log.userName || ''}</span>
+                  <span class="user-id">${log.userId || ''}</span>
+                  <span class="user-role">${log.role || ''}</span>
+                </div>
+              </td>
+              <td><span class="operation-type">${log.action || ''}</span></td>
+              <td><span class="operation-content">${log.detail || ''}</span></td>
+              <td>${log.time || ''}</td>
+              <td><span class="result-badge ${success ? 'result-success' : 'result-failed'}">${success ? '✓ Success' : '✗ Failed'}</span></td>
+              <td><button class="btn btn-outline btn-action" onclick="openLogDetails(${index})">Details</button></td>
+            </tr>
+          `;
+        }).join('');
+      } catch (error) {
+        taSystem.showMessage(error.message || '日志加载失败', 'danger');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Bind menu click event
+      document.querySelectorAll('.sidebar-menu-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const menuText = this.textContent.trim();
+          const page = adminMenuMap[menuText];
+          if (page) {
+            window.location.href = page;
+          }
+        });
+      });
+
+      // Set the active menu of the current page
+      const currentPage = window.location.pathname.split('/').pop() || 'admin-logs.html';
+      document.querySelectorAll('.sidebar-menu-item').forEach(item => {
+        const menuText = item.textContent.trim();
+        if (adminMenuMap[menuText] === currentPage) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+
+      await loadLogs();
+    });
+  </script>
+</body>
+</html>
+
+
+
