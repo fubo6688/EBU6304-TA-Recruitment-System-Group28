@@ -39,6 +39,14 @@ $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $backendDir = Join-Path $projectRoot "backend"
 $backendWebInf = Join-Path $backendDir "WEB-INF"
 $rootWebInf = Join-Path $projectRoot "WEB-INF"
+$persistentDataDir = Join-Path $projectRoot "data"
+
+if (-not (Test-Path $persistentDataDir)) {
+    New-Item -ItemType Directory -Path $persistentDataDir | Out-Null
+}
+
+# Force application runtime data to stay in workspace data/ so restart/deploy won't reset records.
+$env:TA_DATA_DIR = $persistentDataDir
 
 Write-Step "Checking Java and Tomcat"
 if (-not (Get-Command javac -ErrorAction SilentlyContinue)) {
@@ -54,6 +62,7 @@ if (-not (Test-Path $startupBat)) {
 
 Write-Host "Project: $projectRoot"
 Write-Host "Tomcat : $tomcatHome"
+Write-Host "Data   : $persistentDataDir"
 
 Write-Step "Compiling backend Java sources"
 $classesDir = Join-Path $backendWebInf "classes"
@@ -111,7 +120,7 @@ $robocopyArgs = @(
     "/E",
     "/R:2",
     "/W:1",
-    "/XD", ".git", ".vscode", "target", "backend", "Page Design(Version 1)",
+    "/XD", ".git", ".vscode", "target", "backend", "data", "Page Design(Version 1)",
     "/XF", "*.ps1", "*.bat"
 )
 robocopy @robocopyArgs | Out-Null

@@ -272,6 +272,53 @@
     .requirement-icon.unmet {
       color: var(--gray-400);
     }
+
+    .approval-list {
+      max-height: 360px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .approval-item {
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .approval-item-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .approval-meta {
+      font-size: 12px;
+      color: var(--gray-500);
+      line-height: 1.5;
+      margin-bottom: 10px;
+      word-break: break-all;
+    }
+
+    .approval-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .approval-empty {
+      padding: 18px;
+      text-align: center;
+      color: var(--gray-500);
+      border: 1px dashed var(--gray-300);
+      border-radius: 8px;
+      background: var(--gray-100);
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -283,6 +330,7 @@
     </div>
     <div class="topbar-nav">
       <a href="#" class="topbar-back" onclick="goBackToHome(); return false;">← Back</a>
+      <a href="#" id="approvalBtn" class="topbar-link" style="display:none;">Registration Approvals</a>
       <div class="topbar-avatar">👤</div>
       <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
     </div>
@@ -391,6 +439,10 @@
                   <span class="requirement-icon unmet" id="req-number">✓</span>
                   <span>Contains numbers (0-9)</span>
                 </div>
+                <div class="requirement-item">
+                  <span class="requirement-icon unmet" id="req-alnum">✓</span>
+                  <span>Letters and digits only (no symbols)</span>
+                </div>
               </div>
             </div>
             <div class="form-group">
@@ -403,6 +455,22 @@
           </form>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="approvalModal">
+    <div class="modal-content" style="max-width: 760px;">
+      <div class="modal-header">
+        <h2>Pending Registrations</h2>
+        <button type="button" class="modal-close" id="approvalCloseBtn">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="approvalList" class="approval-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="approvalRefreshBtn">Refresh</button>
+        <button type="button" class="btn btn-primary" id="approvalCloseFooterBtn">Close</button>
       </div>
     </div>
   </div>
@@ -437,11 +505,12 @@
         length: password.length >= 8,
         uppercase: /[A-Z]/.test(password),
         lowercase: /[a-z]/.test(password),
-        number: /[0-9]/.test(password)
+        number: /[0-9]/.test(password),
+        alnumOnly: /^[A-Za-z0-9]*$/.test(password)
       };
 
       const requirementsList = document.querySelectorAll('.requirement-item .requirement-icon');
-      const icons = ['length', 'uppercase', 'lowercase', 'number'];
+      const icons = ['length', 'uppercase', 'lowercase', 'number', 'alnumOnly'];
       
       let metCount = 0;
       icons.forEach((key, index) => {
@@ -459,9 +528,9 @@
       const strengthDiv = document.getElementById('passwordStrength');
       if (password.length === 0) {
         strengthDiv.innerHTML = '';
-      } else if (metCount === 4) {
+      } else if (metCount === 5) {
         strengthDiv.innerHTML = '<div class="password-strength strong">Password strength: Strong ✓</div>';
-      } else if (metCount >= 2) {
+      } else if (metCount >= 3) {
         strengthDiv.innerHTML = '<div class="password-strength medium">Password strength: Medium</div>';
       } else {
         strengthDiv.innerHTML = '<div class="password-strength weak">Password strength: Weak</div>';
@@ -484,7 +553,66 @@
       if (!/[0-9]/.test(password)) {
         return { valid: false, message: 'Password must include at least one number' };
       }
+      if (!/^[A-Za-z0-9]+$/.test(password)) {
+        return { valid: false, message: 'Password can contain only letters and numbers (no symbols)' };
+      }
       return { valid: true, message: 'Password meets all requirements' };
+    }
+
+    function escapeHtml(text) {
+      return (text || '').replace(/[&<>"]/g, (ch) => {
+        if (ch === '&') return '&amp;';
+        if (ch === '<') return '&lt;';
+        if (ch === '>') return '&gt;';
+        return '&quot;';
+      });
+    }
+
+    async function loadPendingRegistrations() {
+      const list = document.getElementById('approvalList');
+      list.innerHTML = '<div class="approval-empty">Loading pending registrations...</div>';
+      try {
+        const result = await API.getPendingRegistrations();
+        const users = (result && result.users) ? result.users : [];
+        if (!users.length) {
+          list.innerHTML = '<div class="approval-empty">No pending registrations.</div>';
+          return;
+        }
+
+        list.innerHTML = users.map((u) => `
+          <div class="approval-item" data-user-id="${escapeHtml(u.userId || '')}">
+            <div class="approval-item-head">
+              <span>${escapeHtml(u.userName || 'Unknown')}</span>
+              <span>${escapeHtml(u.role || '')}</span>
+            </div>
+            <div class="approval-meta">
+              Account: ${escapeHtml(u.userId || '')}<br>
+              Email: ${escapeHtml(u.email || '')}<br>
+              QM ID: ${escapeHtml(u.qmId || '')}
+            </div>
+            <div class="approval-actions">
+              <button class="btn btn-success" data-action="approve" data-user-id="${escapeHtml(u.userId || '')}">Approve</button>
+              <button class="btn btn-danger" data-action="reject" data-user-id="${escapeHtml(u.userId || '')}">Reject</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        list.innerHTML = `<div class="approval-empty">${escapeHtml(error.message || 'Failed to load pending registrations')}</div>`;
+      }
+    }
+
+    async function handleApprovalAction(userId, decision) {
+      try {
+        const result = await API.approveRegistration(userId, decision);
+        if (!result || !result.success) {
+          taSystem.showMessage((result && result.message) || 'Approval operation failed', 'danger');
+          return;
+        }
+        taSystem.showMessage(`Registration ${decision}d: ${userId}`, 'success');
+        await loadPendingRegistrations();
+      } catch (error) {
+        taSystem.showMessage(error.message || 'Approval operation failed', 'danger');
+      }
     }
 
     // Initialize user information
@@ -492,6 +620,8 @@
       const userRole = localStorage.getItem('userRole') || 'TA';
       const userId = localStorage.getItem('userId') || '';
       const userName = localStorage.getItem('userName') || '';
+      const approvalBtn = document.getElementById('approvalBtn');
+      const approvalModal = document.getElementById('approvalModal');
 
       document.getElementById('userName').textContent = userName || 'Not logged in';
       document.getElementById('userRole').textContent = userRole;
@@ -515,6 +645,10 @@
 
           if (profile.avatarUrl) {
             setAvatarImage(profile.avatarUrl);
+          }
+
+          if ((profile.role || '').toLowerCase() === 'admin' && approvalBtn) {
+            approvalBtn.style.display = 'inline-flex';
           }
 
           const personalInputs = document.querySelectorAll('#personalForm input.form-control');
@@ -678,6 +812,28 @@
           window.location.href = 'login.html';
         }
       });
+
+      if (approvalBtn && approvalModal) {
+        approvalBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          approvalModal.classList.add('show');
+          await loadPendingRegistrations();
+        });
+
+        const closeModal = () => approvalModal.classList.remove('show');
+        document.getElementById('approvalCloseBtn')?.addEventListener('click', closeModal);
+        document.getElementById('approvalCloseFooterBtn')?.addEventListener('click', closeModal);
+        document.getElementById('approvalRefreshBtn')?.addEventListener('click', loadPendingRegistrations);
+
+        document.getElementById('approvalList')?.addEventListener('click', async (e) => {
+          const btn = e.target.closest('button[data-action][data-user-id]');
+          if (!btn) return;
+          const action = btn.getAttribute('data-action');
+          const targetUserId = btn.getAttribute('data-user-id');
+          if (!action || !targetUserId) return;
+          await handleApprovalAction(targetUserId, action);
+        });
+      }
     });
   </script>
 </body>

@@ -158,3 +158,9 @@ log1774267682755|2026-03-23 20:08:02|20210001|张三|TA|SUBMIT_APPLICATION|pos17
 log1774267690709|2026-03-23 20:08:10|20210001|张三|TA|LOGOUT|logout|success
 log1774267702767|2026-03-23 20:08:22|ADM001|管理员|Admin|LOGIN|login|success
 log1774267758127|2026-03-23 20:09:18|ADM001|管理员|Admin|LOGOUT|logout|success
+log1775575522676|2026-04-07 23:25:22|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775575558939|2026-04-07 23:25:58|ta_alice|Alice Zhang|TA|UPDATE_PROFILE|profile|success
+log1775575564164|2026-04-07 23:26:04|ta_alice|Alice Zhang|TA|UPDATE_PROFILE|profile|success
+log1775575574097|2026-04-07 23:26:14|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775575637540|2026-04-07 23:27:17|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775575644470|2026-04-07 23:27:24|ta_alice|Alice Zhang|TA|LOGOUT|logout|success

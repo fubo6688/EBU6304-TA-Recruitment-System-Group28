@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      inset: auto;
+      pointer-events: none;
+      border-radius: 50%;
+      filter: blur(18px);
+      opacity: 0.35;
+      z-index: 0;
+    }
+
+    body::before {
+      width: 240px;
+      height: 240px;
+      top: -90px;
+      right: -90px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    body::after {
+      width: 220px;
+      height: 220px;
+      left: -90px;
+      bottom: -90px;
+      background: rgba(79, 70, 229, 0.16);
+    }
+
+    body {
+      position: relative;
+      overflow: auto;
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.10), transparent 20%),
+        radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.08), transparent 18%),
+        linear-gradient(135deg, #4f46e5 0%, #5b67d2 42%, #6d28d9 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .register-container {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-topbar {
+      display: flex;
+      justify-content: center;
+      padding: 2px 0 6px;
+      color: var(--white);
+    }
+
+    .login-topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 0;
+    }
+
+    .login-topbar-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+    }
+
+    .login-topbar-text {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--white);
+    }
+
+    .register-card {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 22px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 18px 46px rgba(15, 23, 42, 0.18);
+      backdrop-filter: blur(16px);
+      width: 100%;
+    }
+
+    .register-title {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-align: center;
+      color: #1f2937;
+      letter-spacing: -0.02em;
+    }
+
+    .register-subtitle {
+      text-align: center;
+      color: var(--gray-500);
+      font-size: 13px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    .password-rule {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--gray-500);
+      line-height: 1.5;
+      padding: 8px;
+      background: var(--gray-100);
+      border-radius: 6px;
+    }
+
+    .bottom-links {
+      margin-top: 16px;
+      text-align: center;
+      border-top: 1px solid rgba(148, 163, 184, 0.35);
+      padding-top: 12px;
+    }
+
+    .bottom-links a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .bottom-links a:hover {
+      text-decoration: underline;
+    }
+
+    .register-footer {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.88);
+      margin-top: 4px;
+      font-size: 12px;
+      letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <div class="login-topbar">
+      <div class="login-topbar-logo">
+        <div class="login-topbar-icon">TA</div>
+        <div class="login-topbar-text">TARecruitment system</div>
+      </div>
+    </div>
+
+    <div class="register-card">
+      <h1 class="register-title">Register</h1>
+      <p class="register-subtitle">TA and MO registration requires admin approval before login.</p>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label class="form-label required">Register as</label>
+          <select id="registerRole" class="form-control" required>
+            <option value="">-- Select role --</option>
+            <option value="TA">TA</option>
+            <option value="MO">MO</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">Account ID</label>
+          <input type="text" id="registerUserId" class="form-control" placeholder="e.g. 20218888 or M008" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">Full Name</label>
+          <input type="text" id="registerUserName" class="form-control" placeholder="Enter your full name" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">Email</label>
+          <input type="email" id="registerEmail" class="form-control" placeholder="Enter your email" required>
+        </div>
+
+        <div id="taExtraFields">
+          <div class="form-group">
+            <label class="form-label required">Major (TA only)</label>
+            <select id="registerMajor" class="form-control">
+              <option value="">-- Select major --</option>
+              <option value="Computer Science and Technology">Computer Science and Technology</option>
+              <option value="Software Engineering">Software Engineering</option>
+              <option value="Cybersecurity">Cybersecurity</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Skills (TA only)</label>
+            <input type="text" id="registerSkills" class="form-control" placeholder="e.g. Python, Java, SQL">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Available Time (TA only)</label>
+            <textarea id="registerAvailableTime" class="form-control" placeholder="e.g. Mon 9:00-12:00; Tue 13:00-17:00"></textarea>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">QM ID (optional)</label>
+          <input type="text" id="registerQmId" class="form-control" placeholder="Student or staff QM ID">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">Password</label>
+          <input type="password" id="registerPassword" class="form-control" placeholder="Create a strong password" required>
+          <div class="password-rule">At least 8 characters, include uppercase, lowercase and number, letters/numbers only.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">Confirm Password</label>
+          <input type="password" id="registerConfirmPassword" class="form-control" placeholder="Re-enter password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Submit Registration</button>
+      </form>
+
+      <div class="bottom-links">
+        <a href="login.html">Back to Login</a>
+      </div>
+    </div>
+
+    <div class="register-footer">
+      <p>©2025-26 EBU6304 Software Engineering Group28</p>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    function toggleTaExtraFields() {
+      const role = document.getElementById('registerRole').value;
+      const isTa = role === 'TA';
+      const extra = document.getElementById('taExtraFields');
+      const major = document.getElementById('registerMajor');
+      const skills = document.getElementById('registerSkills');
+      const availableTime = document.getElementById('registerAvailableTime');
+      if (extra) {
+        extra.style.display = isTa ? '' : 'none';
+      }
+      if (major) {
+        major.required = isTa;
+      }
+      if (skills) {
+        skills.required = isTa;
+      }
+      if (availableTime) {
+        availableTime.required = isTa;
+      }
+    }
+
+    function isStrongPassword(password) {
+      return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
+    }
+
+    document.getElementById('registerRole').addEventListener('change', toggleTaExtraFields);
+    toggleTaExtraFields();
+
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const role = document.getElementById('registerRole').value;
+      const userId = document.getElementById('registerUserId').value.trim();
+      const userName = document.getElementById('registerUserName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const major = document.getElementById('registerMajor').value.trim();
+      const skills = document.getElementById('registerSkills').value.trim();
+      const availableTime = document.getElementById('registerAvailableTime').value.trim();
+      const qmId = document.getElementById('registerQmId').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+      if (!role || !userId || !userName || !email || !password || !confirmPassword) {
+        alert('Please complete all required fields.');
+        return;
+      }
+
+      if (role === 'TA' && (!major || !skills || !availableTime)) {
+        alert('Please complete Major, Skills and Available Time for TA registration.');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        alert('The two passwords do not match.');
+        return;
+      }
+
+      if (!isStrongPassword(password)) {
+        alert('Password must be at least 8 chars with uppercase, lowercase, digit, and letters/digits only.');
+        return;
+      }
+
+      try {
+        const data = await API.register({ role, userId, userName, email, major, skills, availableTime, qmId, password });
+        if (!data.success) {
+          alert(data.message || 'Registration failed');
+          return;
+        }
+        alert(data.message || 'Registration submitted. Please wait for admin approval.');
+        window.location.href = 'login.html';
+      } catch (error) {
+        alert(error.message || 'Registration request failed.');
+      }
+    });
+  </script>
+</body>
+</html>

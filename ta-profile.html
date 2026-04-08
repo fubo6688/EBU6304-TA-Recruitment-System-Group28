@@ -511,8 +511,12 @@
               <span class="confirm-value" id="confirmEmail">-</span>
             </div>
             <div class="confirm-row">
-              <span class="confirm-label">Skill</span>
+              <span class="confirm-label">Skills</span>
               <span class="confirm-value" id="confirmSkills">-</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">Available Time</span>
+              <span class="confirm-value" id="confirmAvailableTime">-</span>
             </div>
             <div class="confirm-row">
               <span class="confirm-label">CV</span>
@@ -686,6 +690,12 @@
       const userId = localStorage.getItem('userId') || '';
       if (userId) {
         if (typeof API !== 'undefined' && typeof API.getResumePreviewUrl === 'function') {
+          if (typeof API.openResume === 'function') {
+            API.openResume(userId).catch((error) => {
+              taSystem.showMessage(error.message || 'Resume not found', 'warning');
+            });
+            return;
+          }
           window.open(API.getResumePreviewUrl(userId), '_blank');
           return;
         }
@@ -727,9 +737,8 @@
       document.getElementById('confirmMajor').textContent = profileData.major;
       document.getElementById('confirmGPA').textContent = profileData.gpa;
       document.getElementById('confirmEmail').textContent = profileData.email;
-      document.getElementById('confirmSkills').textContent = profileData.skills.join(', ');
-      const timeText = profileData.availableTime.length ? profileData.availableTime.join('; ') : '-';
-      document.getElementById('confirmSkills').textContent += ` | Available: ${timeText}`;
+      document.getElementById('confirmSkills').textContent = profileData.skills.length ? profileData.skills.join(', ') : '-';
+      document.getElementById('confirmAvailableTime').textContent = profileData.availableTime.length ? profileData.availableTime.join('; ') : '-';
       document.getElementById('confirmResume').textContent = profileData.resume ? profileData.resume.name : (profileData.existingResumeName || '-');
     }
 
