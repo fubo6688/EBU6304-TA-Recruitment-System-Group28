@@ -1,0 +1,443 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TARecruitment system - Project index</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .header {
+      text-align: center;
+      color: var(--white);
+      padding: 40px 20px;
+    }
+
+    .header-logo {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .header-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header-subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-icon {
+      font-size: 28px;
+    }
+
+    .pages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .page-card {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border-top: 4px solid var(--primary-color);
+    }
+
+    .page-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .page-card.ta {
+      border-top-color: #1e40af;
+    }
+
+    .page-card.mo {
+      border-top-color: #10b981;
+    }
+
+    .page-card.admin {
+      border-top-color: #f59e0b;
+    }
+
+    .page-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .page-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .page-description {
+      font-size: 13px;
+      color: var(--gray-500);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .page-link {
+      display: inline-block;
+      background-color: var(--primary-color);
+      color: var(--white);
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .page-link:hover {
+      background-color: #1e40af;
+      transform: translateX(4px);
+    }
+
+    .page-card.mo .page-link {
+      background-color: var(--success-color);
+    }
+
+    .page-card.mo .page-link:hover {
+      background-color: #059669;
+    }
+
+    .page-card.admin .page-link {
+      background-color: var(--warning-color);
+    }
+
+    .page-card.admin .page-link:hover {
+      background-color: #d97706;
+    }
+
+    .info-box {
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+      color: var(--white);
+      margin-bottom: 40px;
+    }
+
+    .info-box h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+    }
+
+    .info-box ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .info-box li {
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .role-badge.ta {
+      background-color: #e0e7ff;
+      color: #1e40af;
+    }
+
+    .role-badge.mo {
+      background-color: #d1fae5;
+      color: var(--success-color);
+    }
+
+    .role-badge.admin {
+      background-color: #fef3c7;
+      color: #d97706;
+    }
+
+    .role-badge.common {
+      background-color: #e5e7eb;
+      color: var(--gray-600);
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--white);
+      padding: 40px 20px;
+      opacity: 0.8;
+    }
+
+    .quick-start {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+
+    .quick-start h3 {
+      margin: 0 0 16px;
+      color: var(--primary-color);
+    }
+
+    .quick-start ol {
+      margin: 0;
+      padding-left: 20px;
+      color: #333;
+      line-height: 1.8;
+    }
+
+    .tutorial-note {
+      margin-top: 16px;
+      padding: 12px;
+      background-color: var(--primary-light);
+      border-radius: 6px;
+      color: var(--primary-color);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top -->
+  <div class="header">
+    <div class="header-logo">📋</div>
+    <h1 class="header-title">TA Recruitment system</h1>
+    <p class="header-subtitle">Complete frontend demo project - includes 10 pages and supports 3 roles</p>
+  </div>
+
+  <!-- Content -->
+  <div class="container">
+    <!-- Quick Start -->
+    <div class="quick-start">
+      <h3>🚀 Quick Start</h3>
+      <ol>
+        <li>Click the"System Login"button (login.html)</li>
+        <li>Select anyRole: TA / MO / Admin</li>
+        <li>Enter anyAccountandPasswordconductLogin</li>
+        <li>Based on selectedRole，Entercorresponding functional module</li>
+      </ol>
+      <div class="tutorial-note">
+        💡 Tip：3Second-rateLoginFailedwill lockAccount5minutes；all pages are prefilled with demo data for testing
+      </div>
+    </div>
+
+    <!-- Commonpage -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-icon">🌐</span>
+        Common Pages (All Roles)
+      </div>
+      <div class="pages-grid">
+        <div class="page-card">
+          <div class="page-icon">🔐</div>
+          <div class="page-title">System Login</div>
+          <span class="role-badge common">Common</span>
+          <p class="page-description">
+            completeLogininterface，supportRolechoose、AccountPasswordenter、Passworddisplay toggle、mistakeTip、AccountLock function。
+          </p>
+          <a href="login.html" class="page-link">Open Page →</a>
+        </div>
+
+        <div class="page-card">
+          <div class="page-icon">👤</div>
+          <div class="page-title">Profile</div>
+          <span class="role-badge common">Common</span>
+          <p class="page-description">
+            A two-column personal information center. You can edit profile info, change password, and view/manage notifications.
+          </p>
+          <a href="profile.html" class="page-link">Open Page →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TA Dedicated Pages -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-icon">👨‍🎓</span>
+        TA Dedicated Pages
+      </div>
+      <div class="pages-grid">
+        <div class="page-card ta">
+          <div class="page-icon">📝</div>
+          <div class="page-title">Create Personal Profile</div>
+          <span class="role-badge ta">TA</span>
+          <p class="page-description">
+            4-step form：Basic Information → Skills & Availability → Resume Upload → Confirm & Submit。Supports back/next navigation and data validation.
+          </p>
+          <a href="ta-profile.html" class="page-link">Open Page →</a>
+        </div>
+
+        <div class="page-card ta">
+          <div class="page-icon">📌</div>
+          <div class="page-title">Browse Positions</div>
+          <span class="role-badge ta">TA</span>
+          <p class="page-description">
+            Includes AI recommendations, a left filter panel, and position list. Supports filtering by course, major, skills, and other conditions.
+          </p>
+          <a href="ta-positions.html" class="page-link">Open Page →</a>
+        </div>
+
+        <div class="page-card ta">
+          <div class="page-icon">📋</div>
+          <div class="page-title">My Applicationscenter</div>
+          <span class="role-badge ta">TA</span>
+          <p class="page-description">
+            Manage all application records with status filters, detail view, deletion, and priority settings.
+          </p>
+          <a href="ta-applications.html" class="page-link">Open Page →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- MO Dedicated Pages -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-icon">👨‍🏫</span>
+        MO Dedicated Pages（Teacher）
+      </div>
+      <div class="pages-grid">
+        <div class="page-card mo">
+          <div class="page-icon">💼</div>
+          <div class="page-title">Position Management</div>
+          <span class="role-badge mo">MO</span>
+          <p class="page-description">
+            Post and manage jobs。Support creation、edit、Close Position，View Applicantslist of people，Manage RecruitmentStatus。
+          </p>
+          <a href="mo-positions.html" class="page-link">Open Page →</a>
+        </div>
+
+        <div class="page-card mo">
+          <div class="page-icon">✅</div>
+          <div class="page-title">Application Reviewcenter</div>
+          <span class="role-badge mo">MO</span>
+          <p class="page-description">
+            Job selection on the left，right sideApplicant List。supportAIfilter、View Resumefile、Approve/Rejectreview。
+          </p>
+          <a href="mo-review.html" class="page-link">Open Page →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Dedicated Pages -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-icon">🛡️</span>
+        Admin Dedicated Pages（systemAdmin）
+      </div>
+      <div class="pages-grid">
+        <div class="page-card admin">
+          <div class="page-icon">📊</div>
+          <div class="page-title">Analyticsand monitoring</div>
+          <span class="role-badge admin">Admin</span>
+          <p class="page-description">
+            System overview and visual analytics including 4 stat cards, 3 Chart.js charts, and 2 data tables.
+          </p>
+          <a href="admin-analytics.html" class="page-link">Open Page →</a>
+        </div>
+
+        <div class="page-card admin">
+          <div class="page-icon">👥</div>
+          <div class="page-title">User Management & Data export</div>
+          <span class="role-badge admin">Admin</span>
+          <p class="page-description">
+            userAccountManagement and data export capabilities。Support usersDisabled/Enable、Various data exports、Export HistoryRecord。
+          </p>
+          <a href="admin-users.html" class="page-link">Open Page →</a>
+        </div>
+
+        <div class="page-card admin">
+          <div class="page-icon">📝</div>
+          <div class="page-title">System Logsand audit</div>
+          <span class="role-badge admin">Admin</span>
+          <p class="page-description">
+            System operation logs with advanced filters, detail view, export, and pagination.
+          </p>
+          <a href="admin-logs.html" class="page-link">Open Page →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project Information -->
+    <div class="info-box">
+      <h3>📚 Project Information</h3>
+      <ul>
+        <li><strong>Total Pages：</strong>10core pages + 1index pages = 11page</li>
+        <li><strong>supportRole：</strong>TA（student teaching assistant）、MO（Teacher）、Admin（systemAdmin）</li>
+        <li><strong>Lines of Code：</strong>CSSabout1500OK、JavaScriptabout300OK、HTMLeach200-600OK</li>
+        <li><strong>Tech Stack：</strong>HTML5 + CSS3 + Vanilla JavaScript + Chart.js</li>
+        <li><strong>Features：</strong>modal box、formValidation、Data filtering、Chart display、File uploadPreviewwait</li>
+      </ul>
+    </div>
+
+    <div class="info-box">
+      <h3>🎨 Design System</h3>
+      <ul>
+        <li><strong>Color Scheme：</strong>dark blue#1e3a8a、green#10b981、orange color#f59e0b、red#ef4444</li>
+        <li><strong>Component Library：</strong>button、card、form、sheet、modal box、tab page、step bar、Badges etc.</li>
+        <li><strong>Layout System：</strong>CSS Grid、Flexbox、Responsive design、Sidebar+hostContentlayout</li>
+        <li><strong>Interaction Design：</strong>hover animation、transition effect、loadStatus、mistakeTip、Successfeedback</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>TA Recruitment system © 2025 EBU6304 Software Engineering Group28 | Complete front-end demo project</p>
+  </div>
+
+  <script>
+    // Quick navigation
+    document.addEventListener('DOMContentLoaded', () => {
+      const cards = document.querySelectorAll('.page-card');
+      cards.forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.classList.contains('page-link') || e.target.closest('.page-link')) {
+            return;
+          }
+          const link = card.querySelector('.page-link');
+          if (link) {
+            window.location.href = link.href;
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+
+
