@@ -595,6 +595,7 @@
     let allPositions = [];
     let currentPositions = [];
     let selectedPositionId = '';
+    let appliedPositionIds = new Set();
 
     function normalizeText(value) {
       return String(value || '').toLowerCase();
@@ -602,6 +603,10 @@
 
     function isClosedPosition(position) {
       return normalizeText(position && position.status) === 'closed';
+    }
+
+    function hasApplied(positionId) {
+      return !!positionId && appliedPositionIds.has(String(positionId));
     }
 
     function escapeHtml(value) {
@@ -661,6 +666,16 @@
     function buildDynamicFilterOptions(positions) {
       const majorSet = new Set();
       const skillSet = new Set();
+      const defaultMajors = [
+        'School of Computer Science',
+        'Software Engineering',
+        'Data Science',
+        'Artificial Intelligence',
+        'Information Systems',
+        'Electrical Engineering',
+        'Mathematics',
+        'Statistics'
+      ];
 
       (positions || []).forEach((p) => {
         const dept = String(p.department || '').trim();
@@ -674,6 +689,8 @@
           }
         });
       });
+
+      defaultMajors.forEach((m) => majorSet.add(m));
 
       const majors = Array.from(majorSet).sort((a, b) => a.localeCompare(b, 'en'));
       const skills = Array.from(skillSet).sort((a, b) => a.localeCompare(b, 'en')).slice(0, 20);
@@ -770,8 +787,11 @@
 
       container.innerHTML = list.map((p) => {
         const closed = isClosedPosition(p);
-        const applyLabel = closed ? 'Closed' : 'Apply Now';
-        const applyDisabledAttr = closed ? 'disabled title="Closed positions cannot be applied"' : '';
+        const applied = hasApplied(p.id);
+        const applyLabel = closed ? 'Closed' : (applied ? 'Applied' : 'Apply Now');
+        const applyDisabledAttr = closed
+          ? 'disabled title="Closed positions cannot be applied"'
+          : (applied ? 'disabled title="You already applied for this position"' : '');
         return `
         <div class="position-card">
           <div class="position-header">
@@ -826,9 +846,12 @@
       const applyInModal = document.querySelector('#detailModal .modal-footer .btn-primary');
       if (applyInModal) {
         const closed = isClosedPosition(p);
-        applyInModal.disabled = closed;
-        applyInModal.textContent = closed ? 'Closed' : 'Apply Now';
-        applyInModal.title = closed ? 'Closed positions cannot be applied' : '';
+        const applied = hasApplied(p.id);
+        applyInModal.disabled = closed || applied;
+        applyInModal.textContent = closed ? 'Closed' : (applied ? 'Applied' : 'Apply Now');
+        applyInModal.title = closed
+          ? 'Closed positions cannot be applied'
+          : (applied ? 'You already applied for this position' : '');
       }
       taSystem.openModal('detailModal');
     }
@@ -839,12 +862,17 @@
         taSystem.showMessage('Closed positions cannot be applied', 'warning');
         return;
       }
+      if (hasApplied(positionId)) {
+        taSystem.showMessage('You already applied for this position', 'info');
+        return;
+      }
 
       try {
         const result = await API.submitApplication(positionId, 'first');
         if (result.success) {
+          appliedPositionIds.add(String(positionId));
           taSystem.showMessage('Application has been submitted', 'success');
-          loadPositions();
+          await loadPositions();
         } else {
           taSystem.showMessage(result.message || 'Submission failed', 'danger');
         }
@@ -855,7 +883,19 @@
 
     async function loadPositions() {
       try {
-        const list = await API.getPositions();
+        const [list, myAppsResult] = await Promise.all([
+          API.getPositions(),
+          API.getMyApplications().catch(() => ({ applications: [] }))
+        ]);
+
+        const myApps = Array.isArray(myAppsResult && myAppsResult.applications) ? myAppsResult.applications : [];
+        appliedPositionIds = new Set(
+          myApps
+            .filter((a) => normalizeText(a.status) !== 'canceled')
+            .map((a) => String(a.positionId || ''))
+            .filter(Boolean)
+        );
+
         allPositions = Array.isArray(list) ? list : [];
         buildDynamicFilterOptions(allPositions);
         currentPositions = allPositions.slice();

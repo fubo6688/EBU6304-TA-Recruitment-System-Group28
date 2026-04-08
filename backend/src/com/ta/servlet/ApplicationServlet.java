@@ -57,6 +57,40 @@ public class ApplicationServlet extends HttpServlet {
             return;
         }
 
+        if ("/my-list".equalsIgnoreCase(path)) {
+            if (!isRole(user, "TA", "Admin")) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print(new JSONObject().put("success", false).put("message", "No permission").toString());
+                return;
+            }
+
+            String targetUserId = value(req.getParameter("userId"));
+            if (targetUserId.isEmpty()) {
+                targetUserId = user.getUserId();
+            }
+            if (!"Admin".equalsIgnoreCase(user.getRole()) && !targetUserId.equalsIgnoreCase(user.getUserId())) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print(new JSONObject().put("success", false).put("message", "No permission").toString());
+                return;
+            }
+
+            List<Map<String, String>> apps = dataManager.getApplicationsByUser(targetUserId);
+            List<Map<String, String>> enriched = new ArrayList<>();
+            for (Map<String, String> app : apps) {
+                Map<String, String> item = new java.util.LinkedHashMap<>(app);
+                Map<String, String> p = dataManager.getPositionById(value(app.get("positionId")));
+                if (p != null) {
+                    item.put("positionStatus", value(p.get("status")));
+                    item.put("positionDeadline", value(p.get("deadline")));
+                    item.put("positionDepartment", value(p.get("department")));
+                }
+                enriched.add(item);
+            }
+
+            out.print(new JSONObject().put("success", true).put("applications", new JSONArray(enriched)).toString());
+            return;
+        }
+
         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
@@ -116,6 +150,63 @@ public class ApplicationServlet extends HttpServlet {
             return;
         }
 
+        if ("/review".equalsIgnoreCase(path)) {
+            if (!isRole(user, "MO", "Admin")) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print(new JSONObject().put("success", false).put("message", "No permission").toString());
+                return;
+            }
+
+            String applicationId = value(req.getParameter("applicationId"));
+            String decision = value(req.getParameter("decision"));
+            String feedback = value(req.getParameter("feedback"));
+            if (applicationId.isEmpty() || decision.isEmpty()) {
+                out.print(new JSONObject().put("success", false).put("message", "Missing applicationId or decision").toString());
+                return;
+            }
+
+            Map<String, String> app = dataManager.getApplicationById(applicationId);
+            if (app == null) {
+                out.print(new JSONObject().put("success", false).put("message", "Application not found").toString());
+                return;
+            }
+            if (!isRole(user, "Admin") && !isMoOwner(user, app.get("moId"))) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print(new JSONObject().put("success", false).put("message", "No permission for this application").toString());
+                return;
+            }
+
+            String normalizedDecision = decision.toLowerCase();
+            if (!("accept".equals(normalizedDecision) || "accepted".equals(normalizedDecision) || "approve".equals(normalizedDecision)
+                    || "approved".equals(normalizedDecision) || "reject".equals(normalizedDecision) || "rejected".equals(normalizedDecision))) {
+                out.print(new JSONObject().put("success", false).put("message", "Invalid decision").toString());
+                return;
+            }
+
+            boolean ok = dataManager.processApplication(applicationId, decision, feedback);
+            if (!ok) {
+                out.print(new JSONObject().put("success", false).put("message", "Failed to update application").toString());
+                return;
+            }
+
+            Map<String, String> updated = dataManager.getApplicationById(applicationId);
+            String taUserId = value(app.get("userId"));
+            if (!taUserId.isEmpty()) {
+                String actionText = "Application reviewed";
+                String status = value(updated == null ? "" : updated.get("status"));
+                if ("approved".equalsIgnoreCase(status)) {
+                    actionText = "Your application has been accepted";
+                } else if ("rejected".equalsIgnoreCase(status)) {
+                    actionText = "Your application has been rejected";
+                }
+                dataManager.saveNotification(taUserId, "application", "Application Result", actionText);
+            }
+            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "REVIEW_APPLICATION", applicationId + " -> " + decision, "success");
+
+            out.print(new JSONObject().put("success", true).put("message", "Application updated").put("application", new JSONObject(updated)).toString());
+            return;
+        }
+
         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
@@ -124,11 +215,15 @@ public class ApplicationServlet extends HttpServlet {
         List<Map<String, String>> result = new ArrayList<>();
         for (Map<String, String> app : all) {
             String moId = app.get("moId");
-            if (eq(moId, user.getUserId()) || eq(moId, user.getQmId())) {
+            if (isMoOwner(user, moId)) {
                 result.add(app);
             }
         }
         return result;
+    }
+
+    private boolean isMoOwner(User user, String moId) {
+        return eq(moId, user.getUserId()) || eq(moId, user.getQmId());
     }
 
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {

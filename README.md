@@ -14,25 +14,25 @@ A lightweight web-based TA recruitment system using static HTML/CSS/JavaScript o
 
 ## Current Delivery Mode
 
-This repository is currently configured for **Sprint 1 (Core MVP)**.
+This repository is currently configured for **Sprint 2 (Enhanced Workflow)**.
 
 Build and deployment mode is now **single-path only**:
 1. Only the `backend` script flow is supported (`start-dev.*`, `stop-dev.*`, `restart-dev.*`, `backend/build.bat`)
 2. Maven build path has been removed from this branch
 
-Enabled Sprint 1 workflow:
+Enabled Sprint 2 workflow:
 1. User authentication (login/logout)
-2. TA profile creation and resume upload
-3. MO job posting
-4. TA browse open jobs and submit applications
-5. MO view applicants for their own jobs
+2. TA profile wizard with step recovery based on profile completeness
+3. TA browse open jobs and submit applications
+4. TA view own application status list (`ta-applications.html`)
+5. MO create/edit positions, close/reopen positions, and publish notices
+6. MO review applications and process Accept/Reject decisions
+7. Admin dashboard for overall positions and TA workload monitoring
+8. Admin registration approval page in Admin sidebar
 
-Temporarily disabled in Sprint 1 mode:
-1. MO approve/reject actions
-2. TA application status tracking and priority updates
-3. MO job status editing/closing/reopening
-4. Admin analytics, user management, and logs pages
-5. Notification center pages
+Partially implemented / placeholder:
+1. MO notification page UI exists (`mo-notifications.html`), business logic pending
+2. Legacy `admin-analytics/admin-users/admin-logs` pages are replaced by current admin pages
 
 ## Project Structure
 
@@ -40,16 +40,16 @@ Temporarily disabled in Sprint 1 mode:
 .
 |- login.html
 |- register.html
+|- index.html
 |- profile.html
 |- ta-profile.html
 |- ta-positions.html
 |- ta-applications.html
 |- mo-positions.html
+|- mo-notifications.html
 |- mo-review.html
-|- admin-analytics.html
-|- admin-users.html
-|- admin-logs.html
-|- notification.html
+|- admin-dashboard.html
+|- admin-approvals.html
 |- css/
 |- js/
 |  |- script.js
@@ -165,10 +165,9 @@ Main endpoint groups:
 2. `/api/user/*`
 3. `/api/position/*`
 4. `/api/application/*`
-5. `/api/notification/*`
-6. `/api/admin/*`
+5. `/api/admin/*`
 
-Detailed Sprint 1 API endpoints:
+Detailed Sprint 2 API endpoints:
 
 Authentication:
 1. `POST /api/login`
@@ -184,6 +183,24 @@ User:
 6. `GET /api/user/pending-registrations` (Admin only)
 7. `POST /api/user/approve-registration` (Admin only, decision=`approve|reject`)
 
+Position:
+1. `GET /api/position/list`
+2. `POST /api/position/create`
+3. `POST /api/position/update`
+4. `POST /api/position/status` (open/closed, includes reopen)
+5. `POST /api/position/publish` (publish notice + TA notifications)
+
+Application:
+1. `GET /api/application/review-list`
+2. `GET /api/application/my-list`
+3. `POST /api/application/submit`
+4. `POST /api/application/review` (MO/Admin accept or reject)
+
+Admin:
+1. `GET /api/admin/dashboard`
+2. `GET /api/admin/positions`
+3. `GET /api/admin/ta-workload`
+
 ## Registration and Password Policy
 
 1. TA and MO users can register on the login page.
@@ -192,18 +209,11 @@ User:
 4. Admin can approve/reject from API:
    - `GET /api/user/pending-registrations`
    - `POST /api/user/approve-registration`
-5. Password complexity (registration and password change):
+5. Registration no longer requires TA-only fields in register page (skills/available time).
+6. Password complexity (registration and password change):
    - At least 8 characters
    - Must contain uppercase + lowercase + digit
    - Letters and digits only (no symbols)
-
-Position:
-1. `GET /api/position/list`
-2. `POST /api/position/create`
-
-Application:
-1. `GET /api/application/review-list`
-2. `POST /api/application/submit`
 
 ## Backend Build and Deployment Details
 
@@ -245,15 +255,17 @@ Runtime data files:
 5. `data/logs.txt`
 6. `data/resumes/*.pdf` (TA resume files, fixed name: `userId.pdf`)
 
-## Sprint 1 Demonstration Path
+## Sprint 2 Demonstration Path
 
 Use this order during demo/viva:
 1. Login as TA -> open `ta-profile.html`
 2. Complete TA profile and upload resume
 3. Login as MO -> open `mo-positions.html`
-4. Post a new position
+4. Post and publish a new position
 5. Login as TA -> browse positions and apply
-6. Login as MO -> open `mo-review.html` and verify applicants are visible
+6. Login as TA -> open `ta-applications.html` and check status is pending
+7. Login as MO -> open `mo-review.html` and Accept/Reject applicants
+8. Login as Admin -> open `admin-dashboard.html` and `admin-approvals.html`
 
 ## Troubleshooting
 

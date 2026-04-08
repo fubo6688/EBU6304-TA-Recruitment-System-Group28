@@ -85,6 +85,7 @@ class TARecruitmentSystem {
     const taMenuMap = {
       'My Profile': 'ta-profile.html',
       'Browse Positions': 'ta-positions.html',
+      'My Applications': 'ta-applications.html',
       'Profile': 'profile.html'
     };
 
@@ -92,17 +93,24 @@ class TARecruitmentSystem {
     const moMenuMap = {
       'Position Management': 'mo-positions.html',
       'Application Review': 'mo-review.html',
+      'Notifications': 'mo-notifications.html',
       'Profile': 'profile.html'
     };
 
     // AdminMenu mapping
     const adminMenuMap = {
+      'Admin Dashboard': 'admin-dashboard.html',
+      'Registration Approvals': 'admin-approvals.html',
       'Profile': 'profile.html'
     };
 
     // Get userRole
     const userRole = localStorage.getItem('userRole') || 'TA';
     const menuMap = userRole === 'TA' ? taMenuMap : (userRole === 'MO' ? moMenuMap : adminMenuMap);
+
+    if (userRole === 'Admin') {
+      this.ensureAdminSidebarMenu(adminMenuMap);
+    }
 
     // Add menu item click event
     document.addEventListener('click', (e) => {
@@ -119,7 +127,7 @@ class TARecruitmentSystem {
           
           // Navigate to page
           window.location.href = page;
-        } else if (userRole === 'TA' && (menuText === 'My Applications' || menuText === 'Notifications')) {
+        } else if (userRole === 'TA' && menuText === 'Notifications') {
           this.showMessage('This page is not available yet.', 'info');
         }
       }
@@ -127,6 +135,25 @@ class TARecruitmentSystem {
 
     // Set the active menu of the current page
     this.setActiveMenu(menuMap);
+  }
+
+  ensureAdminSidebarMenu(adminMenuMap) {
+    const titleEl = document.querySelector('.sidebar-title');
+    const menuEl = document.querySelector('.sidebar-menu');
+    if (!titleEl || !menuEl) {
+      return;
+    }
+
+    const titleText = (titleEl.textContent || '').toLowerCase();
+    if (!titleText.includes('admin')) {
+      return;
+    }
+
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    menuEl.innerHTML = Object.entries(adminMenuMap).map(([label, page]) => {
+      const activeClass = page === currentPage ? ' active' : '';
+      return `<li class="sidebar-menu-item${activeClass}">${label}</li>`;
+    }).join('');
   }
 
   // Set the active menu of the current page

@@ -330,7 +330,7 @@
     </div>
     <div class="topbar-nav">
       <a href="#" class="topbar-back" onclick="goBackToHome(); return false;">← Back</a>
-      <a href="#" id="approvalBtn" class="topbar-link" style="display:none;">Registration Approvals</a>
+      <a href="admin-dashboard.html" id="adminDashboardBtn" class="topbar-link" style="display:none;">Admin Dashboard</a>
       <div class="topbar-avatar">👤</div>
       <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
     </div>
@@ -484,7 +484,7 @@
       const rolePageMap = {
         'TA': 'ta-profile.html',
         'MO': 'mo-positions.html',
-        'Admin': 'profile.html'
+        'Admin': 'admin-dashboard.html'
       };
       window.location.href = rolePageMap[userRole] || 'ta-profile.html';
     }
@@ -622,6 +622,7 @@
       const userName = localStorage.getItem('userName') || '';
       const approvalBtn = document.getElementById('approvalBtn');
       const approvalModal = document.getElementById('approvalModal');
+      const adminDashboardBtn = document.getElementById('adminDashboardBtn');
 
       document.getElementById('userName').textContent = userName || 'Not logged in';
       document.getElementById('userRole').textContent = userRole;
@@ -649,6 +650,9 @@
 
           if ((profile.role || '').toLowerCase() === 'admin' && approvalBtn) {
             approvalBtn.style.display = 'inline-flex';
+            if (adminDashboardBtn) {
+              adminDashboardBtn.style.display = 'inline-flex';
+            }
           }
 
           const personalInputs = document.querySelectorAll('#personalForm input.form-control');

@@ -130,6 +130,28 @@
       border-radius: 6px;
     }
 
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: rgba(30, 58, 138, 0.08);
+      border: 1px solid rgba(30, 58, 138, 0.08);
+      cursor: pointer;
+      color: var(--gray-500);
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .bottom-links {
       margin-top: 16px;
       text-align: center;
@@ -195,28 +217,6 @@
           <input type="email" id="registerEmail" class="form-control" placeholder="Enter your email" required>
         </div>
 
-        <div id="taExtraFields">
-          <div class="form-group">
-            <label class="form-label required">Major (TA only)</label>
-            <select id="registerMajor" class="form-control">
-              <option value="">-- Select major --</option>
-              <option value="Computer Science and Technology">Computer Science and Technology</option>
-              <option value="Software Engineering">Software Engineering</option>
-              <option value="Cybersecurity">Cybersecurity</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label required">Skills (TA only)</label>
-            <input type="text" id="registerSkills" class="form-control" placeholder="e.g. Python, Java, SQL">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label required">Available Time (TA only)</label>
-            <textarea id="registerAvailableTime" class="form-control" placeholder="e.g. Mon 9:00-12:00; Tue 13:00-17:00"></textarea>
-          </div>
-        </div>
-
         <div class="form-group">
           <label class="form-label">QM ID (optional)</label>
           <input type="text" id="registerQmId" class="form-control" placeholder="Student or staff QM ID">
@@ -224,13 +224,19 @@
 
         <div class="form-group">
           <label class="form-label required">Password</label>
-          <input type="password" id="registerPassword" class="form-control" placeholder="Create a strong password" required>
+          <div class="password-wrapper">
+            <input type="password" id="registerPassword" class="form-control" placeholder="Create a strong password" required style="padding-right: 44px;">
+            <button type="button" class="password-toggle" id="registerPasswordToggle" aria-label="Show password">👁️</button>
+          </div>
           <div class="password-rule">At least 8 characters, include uppercase, lowercase and number, letters/numbers only.</div>
         </div>
 
         <div class="form-group">
           <label class="form-label required">Confirm Password</label>
-          <input type="password" id="registerConfirmPassword" class="form-control" placeholder="Re-enter password" required>
+          <div class="password-wrapper">
+            <input type="password" id="registerConfirmPassword" class="form-control" placeholder="Re-enter password" required style="padding-right: 44px;">
+            <button type="button" class="password-toggle" id="registerConfirmPasswordToggle" aria-label="Show confirm password">👁️</button>
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary btn-lg btn-block">Submit Registration</button>
@@ -249,33 +255,30 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
-    function toggleTaExtraFields() {
-      const role = document.getElementById('registerRole').value;
-      const isTa = role === 'TA';
-      const extra = document.getElementById('taExtraFields');
-      const major = document.getElementById('registerMajor');
-      const skills = document.getElementById('registerSkills');
-      const availableTime = document.getElementById('registerAvailableTime');
-      if (extra) {
-        extra.style.display = isTa ? '' : 'none';
-      }
-      if (major) {
-        major.required = isTa;
-      }
-      if (skills) {
-        skills.required = isTa;
-      }
-      if (availableTime) {
-        availableTime.required = isTa;
-      }
-    }
-
     function isStrongPassword(password) {
       return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
     }
 
-    document.getElementById('registerRole').addEventListener('change', toggleTaExtraFields);
-    toggleTaExtraFields();
+    function bindPasswordToggle(inputId, toggleId) {
+      const input = document.getElementById(inputId);
+      const toggle = document.getElementById(toggleId);
+      if (!input || !toggle) {
+        return;
+      }
+
+      toggle.addEventListener('click', () => {
+        if (input.type === 'password') {
+          input.type = 'text';
+          toggle.textContent = '🙈';
+        } else {
+          input.type = 'password';
+          toggle.textContent = '👁️';
+        }
+      });
+    }
+
+    bindPasswordToggle('registerPassword', 'registerPasswordToggle');
+    bindPasswordToggle('registerConfirmPassword', 'registerConfirmPasswordToggle');
 
     document.getElementById('registerForm').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -284,20 +287,12 @@
       const userId = document.getElementById('registerUserId').value.trim();
       const userName = document.getElementById('registerUserName').value.trim();
       const email = document.getElementById('registerEmail').value.trim();
-      const major = document.getElementById('registerMajor').value.trim();
-      const skills = document.getElementById('registerSkills').value.trim();
-      const availableTime = document.getElementById('registerAvailableTime').value.trim();
       const qmId = document.getElementById('registerQmId').value.trim();
       const password = document.getElementById('registerPassword').value;
       const confirmPassword = document.getElementById('registerConfirmPassword').value;
 
       if (!role || !userId || !userName || !email || !password || !confirmPassword) {
         alert('Please complete all required fields.');
-        return;
-      }
-
-      if (role === 'TA' && (!major || !skills || !availableTime)) {
-        alert('Please complete Major, Skills and Available Time for TA registration.');
         return;
       }
 
@@ -312,7 +307,7 @@
       }
 
       try {
-        const data = await API.register({ role, userId, userName, email, major, skills, availableTime, qmId, password });
+        const data = await API.register({ role, userId, userName, email, qmId, password });
         if (!data.success) {
           alert(data.message || 'Registration failed');
           return;

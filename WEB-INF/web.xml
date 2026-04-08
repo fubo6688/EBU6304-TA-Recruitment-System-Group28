@@ -60,4 +60,13 @@
     <url-pattern>/api/application/*</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>AdminServlet</servlet-name>
+    <servlet-class>com.ta.servlet.AdminServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AdminServlet</servlet-name>
+    <url-pattern>/api/admin/*</url-pattern>
+  </servlet-mapping>
+
 </web-app>
