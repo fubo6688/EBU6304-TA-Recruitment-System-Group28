@@ -193,9 +193,46 @@ class API {
     });
   }
 
+  static updatePosition(payload) {
+    return API.request("/position/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody(payload)
+    });
+  }
+
+  static updatePositionStatus(positionId, status) {
+    return API.request("/position/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody({ positionId, status })
+    });
+  }
+
+  static publishPosition(positionId) {
+    return API.request("/position/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody({ positionId })
+    });
+  }
+
   static getReviewApplications(positionId) {
     const qs = positionId ? `?positionId=${encodeURIComponent(positionId)}` : "";
     return API.request(`/application/review-list${qs}`);
+  }
+
+  static getMyApplications(userId) {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : "";
+    return API.request(`/application/my-list${qs}`);
+  }
+
+  static reviewApplication(applicationId, decision, feedback = "") {
+    return API.request("/application/review", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody({ applicationId, decision, feedback })
+    });
   }
 
   static submitApplication(positionId, priority = "first") {
@@ -204,5 +241,9 @@ class API {
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
       body: API.formBody({ positionId, priority })
     });
+  }
+
+  static getAdminDashboard() {
+    return API.request("/admin/dashboard");
   }
 }

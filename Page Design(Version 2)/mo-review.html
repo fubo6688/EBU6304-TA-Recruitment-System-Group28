@@ -1,0 +1,681 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Review - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: var(--gray-100);
+      padding: 20px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .sidebar-menu-item:hover {
+      background-color: var(--gray-200);
+      color: var(--primary-color);
+    }
+
+    .sidebar-menu-item.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      padding: 0;
+    }
+
+    .left-panel {
+      width: 200px;
+      background-color: var(--gray-100);
+      border-right: 1px solid var(--gray-200);
+      padding: 20px 0;
+      overflow-y: auto;
+    }
+
+    .left-panel-title {
+      padding: 0 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .position-list-left {
+      list-style: none;
+    }
+
+    .position-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      font-size: 13px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .position-item:hover {
+      background-color: var(--gray-200);
+      color: var(--primary-color);
+    }
+
+    .position-item.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .right-panel {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .ai-filter-bar {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .ai-filter-bar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-500);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .filter-options {
+      display: flex;
+      gap: 6px;
+    }
+
+    .filter-btn {
+      padding: 6px 12px;
+      background-color: var(--gray-200);
+      border: 1px solid var(--gray-300);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background-color: var(--primary-color);
+      color: var(--white);
+      border-color: var(--primary-color);
+    }
+
+    .applicants-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .applicant-card {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border-left: 4px solid var(--primary-color);
+      transition: box-shadow 0.2s;
+    }
+
+    .applicant-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .applicant-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .applicant-info {
+      flex: 1;
+    }
+
+    .applicant-name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .applicant-major {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    .applicant-priority {
+      display: inline-block;
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .applicant-body {
+      margin: 12px 0;
+    }
+
+    .match-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .match-label {
+      color: var(--gray-500);
+      min-width: 70px;
+    }
+
+    .match-value {
+      color: #333;
+      font-weight: 600;
+    }
+
+    .match-score {
+      color: var(--success-color);
+      font-weight: 600;
+    }
+
+    .skills-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-radius: 3px;
+      font-size: 11px;
+      margin-right: 4px;
+    }
+
+    .skills-badge.highlighted {
+      background-color: #fee2e2;
+      color: var(--danger-color);
+    }
+
+    .applicant-footer {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .applicant-footer .btn {
+      flex: 1;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state-text {
+      color: var(--gray-500);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- TopNavbar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">📋</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a href="profile.html">Profile</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- left menu -->
+    <div class="sidebar">
+      <div class="sidebar-title">MO Function</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item">Position Management</li>
+        <li class="sidebar-menu-item active">Application Review</li>
+        <li class="sidebar-menu-item">Profile</li>
+        <li class="sidebar-menu-item">Notifications</li>
+      </ul>
+    </div>
+
+    <!-- right sideContent -->
+    <div class="content">
+      <!-- Job selection on the left -->
+      <div class="left-panel">
+        <div class="left-panel-title">Position List</div>
+        <ul class="position-list-left">
+          <li class="position-item active" onclick="selectPosition(this)">
+            <div>📌 Data Structures</div>
+            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">8 applications / 2 alreadyApprove</div>
+          </li>
+          <li class="position-item" onclick="selectPosition(this)">
+            <div>📌 Algorithm Design</div>
+            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">5 applications / 1 alreadyApprove</div>
+          </li>
+          <li class="position-item" onclick="selectPosition(this)">
+            <div>📌 Operating Systems</div>
+            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">3 applications / 1 alreadyApprove</div>
+          </li>
+          <li class="position-item" onclick="selectPosition(this)">
+            <div>📌 database system</div>
+            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">6 applications / 0 alreadyApprove</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Application list on the right -->
+      <div class="right-panel">
+        <!-- AI Filter Bar -->
+        <div class="ai-filter-bar">
+          <div class="ai-filter-bar-title">🤖 AI filter</div>
+          <div class="filter-group">
+            <span style="font-size: 12px; color: var(--gray-500);">Match Score:</span>
+            <div class="filter-options">
+              <button class="filter-btn active">high</button>
+              <button class="filter-btn">middle</button>
+              <button class="filter-btn">Low</button>
+            </div>
+          </div>
+          <div class="filter-group">
+            <span style="font-size: 12px; color: var(--gray-500);">Application priority:</span>
+            <div class="filter-options">
+              <button class="filter-btn active">First Choice</button>
+              <button class="filter-btn">All</button>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-primary" style="margin-left: auto;">filter</button>
+        </div>
+
+        <!-- Applicant List -->
+        <div class="applicants-grid">
+          <!-- Applicant card 1 -->
+          <div class="applicant-card">
+            <div class="applicant-header">
+              <div class="applicant-info">
+                <div class="applicant-name">Zhang San</div>
+                <div class="applicant-major">QM ID: 20210001 · Computer Science and Technology</div>
+              </div>
+              <span class="applicant-priority">🥇 First Choice</span>
+            </div>
+
+            <div class="applicant-body">
+              <div class="match-row">
+                <span class="match-label">📊 Match Score:</span>
+                <span class="match-score">95%</span>
+              </div>
+              <div class="match-row">
+                <span class="match-label">🎯 Matched Skills:</span>
+                <div>
+                  <span class="skills-badge highlighted">Python</span>
+                  <span class="skills-badge">Data Structures</span>
+                  <span class="skills-badge">Object-Oriented</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="applicant-footer">
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
+              <button class="btn btn-sm btn-success" onclick="acceptApplicant()">Approve</button>
+              <button class="btn btn-sm btn-danger" onclick="rejectApplicant()">Reject</button>
+            </div>
+          </div>
+
+          <!-- Applicant card 2 -->
+          <div class="applicant-card" style="border-left-color: #f59e0b;">
+            <div class="applicant-header">
+              <div class="applicant-info">
+                <div class="applicant-name">Li Si</div>
+                <div class="applicant-major">QM ID: 20210002 · Computer Science and Technology</div>
+              </div>
+              <span class="applicant-priority" style="background-color: #dbeafe; color: #1e40af;">🥈 Second Choice</span>
+            </div>
+
+            <div class="applicant-body">
+              <div class="match-row">
+                <span class="match-label">📊 Match Score:</span>
+                <span class="match-score" style="color: #f59e0b;">78%</span>
+              </div>
+              <div class="match-row">
+                <span class="match-label">🎯 Matched Skills:</span>
+                <div>
+                  <span class="skills-badge">Python</span>
+                  <span class="skills-badge highlighted">Object-Oriented</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="applicant-footer">
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
+              <button class="btn btn-sm btn-success" onclick="acceptApplicant()">Approve</button>
+              <button class="btn btn-sm btn-danger" onclick="rejectApplicant()">Reject</button>
+            </div>
+          </div>
+
+          <!-- Applicant card 3 -->
+          <div class="applicant-card" style="border-left-color: #ef4444;">
+            <div class="applicant-header">
+              <div class="applicant-info">
+                <div class="applicant-name">Wang Wu</div>
+                <div class="applicant-major">QM ID: 20210003 · Software Engineering</div>
+              </div>
+              <span class="applicant-priority" style="background-color: #fee2e2; color: var(--danger-color);">🥉 Third Choice</span>
+            </div>
+
+            <div class="applicant-body">
+              <div class="match-row">
+                <span class="match-label">📊 Match Score:</span>
+                <span class="match-score" style="color: #ef4444;">45%</span>
+              </div>
+              <div class="match-row">
+                <span class="match-label">🎯 Matched Skills:</span>
+                <div>
+                  <span class="skills-badge">Java</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="applicant-footer">
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
+              <button class="btn btn-sm btn-success" onclick="acceptApplicant()">Approve</button>
+              <button class="btn btn-sm btn-danger" onclick="rejectApplicant()">Reject</button>
+            </div>
+          </div>
+
+          <!-- Applicant card 4 -->
+          <div class="applicant-card" style="border-left-color: var(--success-color);">
+            <div class="applicant-header">
+              <div class="applicant-info">
+                <div class="applicant-name">Zhao Liu</div>
+                <div class="applicant-major">QM ID: 20210004 · Computer Science and Technology</div>
+              </div>
+              <span class="applicant-priority">🥇 First Choice</span>
+            </div>
+
+            <div class="applicant-body">
+              <div class="match-row">
+                <span class="match-label">📊 Match Score:</span>
+                <span class="match-score">88%</span>
+              </div>
+              <div class="match-row">
+                <span class="match-label">🎯 Matched Skills:</span>
+                <div>
+                  <span class="skills-badge highlighted">Python</span>
+                  <span class="skills-badge">Data Structures</span>
+                  <span class="skills-badge">C++</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="applicant-footer">
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
+              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
+              <button class="btn btn-sm btn-success" onclick="acceptApplicant()">Approve</button>
+              <button class="btn btn-sm btn-danger" onclick="rejectApplicant()">Reject</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    let currentPositionId = '';
+    let applicantProfileMap = {};
+
+    function ensureProfileModal() {
+      if (document.getElementById('applicantProfileModal')) return;
+      const modal = document.createElement('div');
+      modal.id = 'applicantProfileModal';
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modal-content" style="max-width: 720px;">
+          <div class="modal-header">
+            <h2>Applicant Profile</h2>
+            <button class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body" id="applicantProfileBody"></div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="taSystem.closeModal('applicantProfileModal')">Close</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    function renderPositions(positions) {
+      const list = document.querySelector('.position-list-left');
+      if (!list) return;
+
+      list.innerHTML = positions.map((p, index) => `
+        <li class="position-item ${index === 0 ? 'active' : ''}" onclick="selectPosition('${p.id}', this)">
+          <div>📌 ${p.title || ''}</div>
+          <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">${p.appliedCount || 0} applications / ${p.acceptedCount || 0} alreadyApprove</div>
+        </li>
+      `).join('');
+
+      if (positions.length) {
+        currentPositionId = positions[0].id;
+      }
+    }
+
+    function renderApplicants(apps) {
+      const grid = document.querySelector('.applicants-grid');
+      if (!grid) return;
+
+      if (!apps.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">暂无申请</div></div>';
+        return;
+      }
+
+      grid.innerHTML = apps.map((app) => `
+        <div class="applicant-card">
+          <div class="applicant-header">
+            <div class="applicant-info">
+              <div class="applicant-name">${app.userName || app.userId}</div>
+              <div class="applicant-major">QM ID: ${app.userId || ''} · ${(applicantProfileMap[app.userId]?.profile?.major || 'Major not provided')}</div>
+            </div>
+            <span class="applicant-priority">${app.priority || 'first'}</span>
+          </div>
+          <div class="applicant-body">
+            <div class="match-row"><span class="match-label">申请职位:</span><span class="match-value">${app.positionTitle || ''}</span></div>
+            <div class="match-row"><span class="match-label">状态:</span><span class="match-value">${app.status || 'pending'}</span></div>
+            <div class="match-row"><span class="match-label">技能:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.skills || '未填写').toString()}</span></div>
+            <div class="match-row"><span class="match-label">可用时间:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.availableTime || '未填写').toString()}</span></div>
+          </div>
+          <div class="applicant-footer">
+            <button class="btn btn-sm btn-outline" onclick="openResume('${app.userId}')">View Resume</button>
+            <button class="btn btn-sm btn-outline" onclick="showApplicantProfile('${app.userId}')">View Profile</button>
+            <button class="btn btn-sm btn-success" onclick="acceptApplicant('${app.id}')">Approve</button>
+            <button class="btn btn-sm btn-danger" onclick="rejectApplicant('${app.id}')">Reject</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function preloadApplicantProfiles(apps) {
+      const ids = [...new Set((apps || []).map((a) => a.userId).filter(Boolean))];
+      applicantProfileMap = {};
+
+      await Promise.all(ids.map(async (id) => {
+        try {
+          const result = await API.getTaProfile(id);
+          if (result && result.success && result.profile) {
+            applicantProfileMap[id] = result;
+          }
+        } catch (error) {
+        }
+      }));
+    }
+
+    async function loadApplications() {
+      try {
+        const result = await API.getReviewApplications(currentPositionId);
+        const list = result && result.applications ? result.applications : [];
+        const apps = Array.isArray(list) ? list : [];
+        await preloadApplicantProfiles(apps);
+        renderApplicants(apps);
+      } catch (error) {
+        taSystem.showMessage(error.message || '加载申请失败', 'danger');
+      }
+    }
+
+    function openResume(userId) {
+      if (!userId) return;
+      window.open(API.getResumePreviewUrl(userId), '_blank');
+    }
+
+    function showApplicantProfile(userId) {
+      const result = applicantProfileMap[userId];
+      const p = result && result.profile ? result.profile : null;
+      if (!p) {
+        taSystem.showMessage('未找到该申请人的详细资料', 'warning');
+        return;
+      }
+
+      ensureProfileModal();
+      const body = document.getElementById('applicantProfileBody');
+      if (!body) return;
+
+      body.innerHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div><strong>Name:</strong> ${p.userName || ''}</div>
+          <div><strong>QM ID:</strong> ${p.userId || ''}</div>
+          <div><strong>Grade:</strong> ${p.grade || ''}</div>
+          <div><strong>Major:</strong> ${p.major || ''}</div>
+          <div><strong>GPA:</strong> ${p.gpa || ''}</div>
+          <div><strong>Email:</strong> ${p.email || ''}</div>
+          <div style="grid-column:1 / span 2;"><strong>Skills:</strong> ${p.skills || ''}</div>
+          <div style="grid-column:1 / span 2;"><strong>Available Time:</strong> ${p.availableTime || ''}</div>
+          <div style="grid-column:1 / span 2;"><strong>Resume:</strong> <a href="${API.getResumePreviewUrl(userId)}" target="_blank">${p.resumeFileName || 'Open PDF'}</a></div>
+        </div>
+      `;
+
+      taSystem.openModal('applicantProfileModal');
+    }
+
+    function selectPosition(positionId, element) {
+      currentPositionId = positionId;
+      document.querySelectorAll('.position-item').forEach(item => item.classList.remove('active'));
+      if (element) {
+        element.classList.add('active');
+      }
+      loadApplications();
+    }
+
+    async function acceptApplicant(applicationId) {
+      try {
+        const result = await API.processApplication(applicationId, 'approved', '审核通过');
+        if (result.success) {
+          taSystem.showMessage('Application has beenApprove', 'success');
+          await loadApplications();
+        } else {
+          taSystem.showMessage(result.message || '处理失败', 'danger');
+        }
+      } catch (error) {
+        taSystem.showMessage(error.message || '处理失败', 'danger');
+      }
+    }
+
+    async function rejectApplicant(applicationId) {
+      const reason = prompt('Please enterRejectreason：') || '审核不通过';
+      try {
+        const result = await API.processApplication(applicationId, 'rejected', reason);
+        if (result.success) {
+          taSystem.showMessage('RejectSent', 'info');
+          await loadApplications();
+        } else {
+          taSystem.showMessage(result.message || '处理失败', 'danger');
+        }
+      } catch (error) {
+        taSystem.showMessage(error.message || '处理失败', 'danger');
+      }
+    }
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const group = this.parentElement;
+        group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      ensureProfileModal();
+      try {
+        const positions = await API.getPositions();
+        const list = Array.isArray(positions) ? positions : [];
+        renderPositions(list);
+        await loadApplications();
+      } catch (error) {
+        taSystem.showMessage(error.message || '加载失败', 'danger');
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+

@@ -291,6 +291,7 @@
       <ul class="sidebar-menu">
         <li class="sidebar-menu-item">Position Management</li>
         <li class="sidebar-menu-item active">Application Review</li>
+        <li class="sidebar-menu-item">Notifications</li>
         <li class="sidebar-menu-item">Profile</li>
       </ul>
     </div>
@@ -520,7 +521,7 @@
         </li>
       `).join('');
 
-      if (positions.length) {
+      if (positions.length && !currentPositionId) {
         currentPositionId = positions[0].id;
       }
     }
@@ -537,8 +538,8 @@
       grid.innerHTML = apps.map((app) => `
         ${(() => {
           const s = normalizeStatus(app.status);
-          const lockApprove = s === 'rejected';
-          const lockReject = s === 'approved';
+          const lockApprove = s === 'approved' || s === 'canceled';
+          const lockReject = s === 'rejected' || s === 'canceled';
           const lockBoth = s === 'canceled';
           return `
         <div class="applicant-card">
@@ -552,12 +553,15 @@
           <div class="applicant-body">
             <div class="match-row"><span class="match-label">Position:</span><span class="match-value">${app.positionTitle || ''}</span></div>
             <div class="match-row"><span class="match-label">Status:</span><span class="match-value">${statusText(app.status)}</span></div>
+            <div class="match-row"><span class="match-label">Feedback:</span><span class="match-value">${app.feedback || 'No feedback yet'}</span></div>
             <div class="match-row"><span class="match-label">Skills:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.skills || '').toString().trim() || 'Not provided'}</span></div>
             <div class="match-row"><span class="match-label">Availability:</span><span class="match-value">${formatAvailability(applicantProfileMap[app.userId]?.profile?.availableTime)}</span></div>
           </div>
           <div class="applicant-footer">
             <button class="btn btn-sm btn-outline" onclick="openResume('${app.userId}')">View Resume</button>
             <button class="btn btn-sm btn-outline" onclick="showApplicantProfile('${app.userId}')">View Profile</button>
+            <button class="btn btn-sm btn-primary" onclick="reviewApplication('${app.id}', 'accept')" ${lockApprove ? 'disabled' : ''}>Accept</button>
+            <button class="btn btn-sm btn-danger" onclick="reviewApplication('${app.id}', 'reject')" ${lockReject ? 'disabled' : ''}>Reject</button>
           </div>
         </div>
       `;
@@ -650,6 +654,51 @@
       loadApplications();
     }
 
+    async function reloadPositionsAndKeepSelection() {
+      const positions = await API.getPositions();
+      const list = Array.isArray(positions) ? positions : [];
+
+      const initialFromQuery = new URLSearchParams(window.location.search).get('positionId');
+      if (!currentPositionId && initialFromQuery) {
+        currentPositionId = initialFromQuery;
+      }
+
+      renderPositions(list);
+      if (!list.length) {
+        currentPositionId = '';
+        return;
+      }
+
+      if (!list.some((p) => p.id === currentPositionId)) {
+        currentPositionId = list[0].id;
+      }
+
+      const activeElement = Array.from(document.querySelectorAll('.position-item')).find((el) => {
+        return (el.getAttribute('onclick') || '').includes(`'${currentPositionId}'`);
+      });
+      document.querySelectorAll('.position-item').forEach((el) => el.classList.remove('active'));
+      if (activeElement) {
+        activeElement.classList.add('active');
+      }
+    }
+
+    async function reviewApplication(applicationId, decision) {
+      if (!applicationId) return;
+      const feedback = window.prompt('Optional feedback for applicant:', '') || '';
+      try {
+        const result = await API.reviewApplication(applicationId, decision, feedback);
+        if (!result || !result.success) {
+          taSystem.showMessage((result && result.message) || 'Failed to update application', 'danger');
+          return;
+        }
+        taSystem.showMessage('Application status updated', 'success');
+        await reloadPositionsAndKeepSelection();
+        await loadApplications();
+      } catch (error) {
+        taSystem.showMessage(error.message || 'Failed to update application', 'danger');
+      }
+    }
+
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         const group = this.parentElement;
@@ -661,9 +710,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       ensureProfileModal();
       try {
-        const positions = await API.getPositions();
-        const list = Array.isArray(positions) ? positions : [];
-        renderPositions(list);
+        await reloadPositionsAndKeepSelection();
         await loadApplications();
       } catch (error) {
         taSystem.showMessage(error.message || 'Failed to load data', 'danger');

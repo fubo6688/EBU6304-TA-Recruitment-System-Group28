@@ -285,6 +285,53 @@ public class DataManager {
         return found;
     }
 
+    public synchronized boolean updatePosition(String positionId,
+                                               String title,
+                                               String department,
+                                               String salary,
+                                               String description,
+                                               String requirements,
+                                               String openings,
+                                               String deadline) {
+        List<Map<String, String>> positions = getAllPositions();
+        boolean found = false;
+        List<String> lines = new ArrayList<>();
+
+        for (Map<String, String> p : positions) {
+            if (positionId.equals(p.get("id"))) {
+                if (title != null && !title.trim().isEmpty()) {
+                    p.put("title", safe(title));
+                }
+                if (department != null && !department.trim().isEmpty()) {
+                    p.put("department", safe(department));
+                }
+                if (salary != null && !salary.trim().isEmpty()) {
+                    p.put("salary", safe(salary));
+                }
+                if (description != null && !description.trim().isEmpty()) {
+                    p.put("description", safe(description));
+                }
+                if (requirements != null && !requirements.trim().isEmpty()) {
+                    p.put("requirements", safe(requirements));
+                }
+                if (deadline != null && !deadline.trim().isEmpty()) {
+                    p.put("deadline", safe(deadline));
+                }
+                if (openings != null && !openings.trim().isEmpty()) {
+                    int n = parseIntSafe(openings, parseIntSafe(p.get("openings"), 1));
+                    p.put("openings", String.valueOf(Math.max(1, n)));
+                }
+                found = true;
+            }
+            lines.add(toPositionLine(p));
+        }
+
+        if (found) {
+            writeLinesSafe(resolve(POSITIONS_FILE), lines);
+        }
+        return found;
+    }
+
     private String toPositionLine(Map<String, String> p) {
         return String.join("|",
                 safe(p.get("id")),
@@ -433,11 +480,11 @@ public class DataManager {
             if ("approved".equalsIgnoreCase(status) && !"approved".equalsIgnoreCase(oldStatus) && positionId != null) {
                 incrementPositionCounter(positionId, "acceptedCount", 1);
             }
+            if (!"approved".equalsIgnoreCase(status) && "approved".equalsIgnoreCase(oldStatus) && positionId != null) {
+                incrementPositionCounter(positionId, "acceptedCount", -1);
+            }
             if ("canceled".equalsIgnoreCase(status) && !"canceled".equalsIgnoreCase(oldStatus) && positionId != null) {
                 incrementPositionCounter(positionId, "appliedCount", -1);
-                if ("approved".equalsIgnoreCase(oldStatus)) {
-                    incrementPositionCounter(positionId, "acceptedCount", -1);
-                }
             }
         }
         return found;
@@ -705,6 +752,66 @@ public class DataManager {
         summary.put("positions", positions);
         summary.put("applications", apps);
         return summary;
+    }
+
+    public synchronized List<Map<String, Object>> getTaWorkloadSummary() {
+        List<Map<String, Object>> workload = new ArrayList<>();
+        List<Map<String, String>> apps = getAllApplications();
+
+        for (User user : getAllUsers()) {
+            if (!"TA".equalsIgnoreCase(user.getRole())) {
+                continue;
+            }
+
+            int total = 0;
+            int pending = 0;
+            int approved = 0;
+            int rejected = 0;
+            int canceled = 0;
+
+            for (Map<String, String> app : apps) {
+                if (!user.getUserId().equalsIgnoreCase(safe(app.get("userId")))) {
+                    continue;
+                }
+                total++;
+                String status = safe(app.get("status")).toLowerCase(Locale.ROOT);
+                if ("approved".equals(status)) {
+                    approved++;
+                } else if ("rejected".equals(status)) {
+                    rejected++;
+                } else if ("canceled".equals(status)) {
+                    canceled++;
+                } else {
+                    pending++;
+                }
+            }
+
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("userId", user.getUserId());
+            item.put("userName", user.getUserName());
+            item.put("qmId", user.getQmId());
+            item.put("status", user.getStatus());
+            item.put("totalApplications", total);
+            item.put("pending", pending);
+            item.put("approved", approved);
+            item.put("rejected", rejected);
+            item.put("canceled", canceled);
+            item.put("currentLoad", approved);
+            workload.add(item);
+        }
+
+        workload.sort((a, b) -> {
+            int ca = (Integer) a.get("currentLoad");
+            int cb = (Integer) b.get("currentLoad");
+            if (cb != ca) {
+                return cb - ca;
+            }
+            String na = String.valueOf(a.get("userName"));
+            String nb = String.valueOf(b.get("userName"));
+            return na.compareToIgnoreCase(nb);
+        });
+
+        return workload;
     }
 
     private int parseIntSafe(String value, int defaultValue) {
