@@ -584,6 +584,9 @@
 
     function collectPublishForm() {
       const normalizedDeadline = normalizeDeadlineInput(document.getElementById('publishDeadline')?.value || '');
+      // Consolidate inputs from all publish steps into one payload object.
+      // This keeps validation, confirmation rendering, and final submission
+      // reading from the same normalized source (single source of truth).
       return {
         title: (document.getElementById('publishTitle')?.value || '').trim(),
         openings: (document.getElementById('publishOpenings')?.value || '1').trim(),
@@ -644,6 +647,10 @@
 
     function validatePublishStep() {
       const data = collectPublishForm();
+      // Step-specific blocking checks:
+      // - step 1 ensures core posting identity exists (course + openings),
+      // - step 2 ensures recruitment requirements are not empty.
+      // Deeper checks (e.g., date format) are deferred to submit stage.
       if (publishStep === 1) {
         if (!data.title) {
           taSystem.showMessage('Course Name required', 'warning');
@@ -687,6 +694,9 @@
         return;
       }
       try {
+        // API.createPosition -> POST /api/position/create.
+        // Backend is responsible for generating unique positionId, setting default
+        // status=open, and persisting to positions.txt via DataManager.
         const result = await API.createPosition({
           title: data.title,
           department: data.department || 'School of Computer Science',
@@ -807,6 +817,9 @@
 
     async function togglePositionStatus(positionId, status) {
       try {
+        // Status toggle path (POST /position/status):
+        // this is operational status management only (open/closed), no broadcast.
+        // Useful when MO wants to pause/reopen recruitment quietly.
         const result = await API.updatePositionStatus(positionId, status);
         if (!result || !result.success) {
           taSystem.showMessage((result && result.message) || 'Failed to update status', 'danger');
@@ -821,6 +834,9 @@
 
     async function publishPosition(positionId) {
       try {
+        // Publish path (POST /position/publish):
+        // backend normalizes status to open and sends TA notifications.
+        // This is the "announce recruitment" action, not just local state toggle.
         const result = await API.publishPosition(positionId);
         if (!result || !result.success) {
           taSystem.showMessage((result && result.message) || 'Failed to publish position', 'danger');

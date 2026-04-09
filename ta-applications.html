@@ -212,6 +212,9 @@
       const tbody = document.querySelector('#applicationsTable tbody');
       if (!tbody) return;
 
+      // Keep status filtering on client side so the TA can switch between
+      // all/pending/approved/rejected instantly after one fetch.
+      // No extra round-trip is needed unless data is reloaded.
       const list = currentStatus === 'all'
         ? allApplications
         : allApplications.filter((a) => normalizeStatus(a.status) === currentStatus);
@@ -238,6 +241,9 @@
 
     async function loadMyApplications() {
       try {
+        // API contract: /application/my-list returns application status + feedback
+        // and enriched position metadata (department/deadline/status), which allows
+        // this page to render a complete status table without additional calls.
         const result = await API.getMyApplications();
         allApplications = Array.isArray(result && result.applications) ? result.applications : [];
         applyFilter();

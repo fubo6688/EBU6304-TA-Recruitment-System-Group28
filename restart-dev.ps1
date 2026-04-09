@@ -31,7 +31,14 @@ if ($ForceKill) {
 
 & powershell @stopArgs
 if ($LASTEXITCODE -ne 0) {
-    throw "stop-dev.ps1 failed with exit code $LASTEXITCODE"
+    if (-not $ForceKill) {
+        Write-Host "`n==> stop-dev.ps1 did not fully release the port; retrying with -ForceKill" -ForegroundColor Yellow
+        & powershell -ExecutionPolicy Bypass -File $stopScript -Port $Port -ForceKill
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "stop-dev.ps1 failed with exit code $LASTEXITCODE"
+    }
 }
 
 Write-Step "Starting service again"

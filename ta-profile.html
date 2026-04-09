@@ -590,6 +590,10 @@
     }
 
     function validateCurrentStep() {
+      // Wizard-level gate:
+      // Step 1 must have identity/academic fields, Step 2 must have at least
+      // one skill + one time slot, Step 3 must have an uploaded or existing resume.
+      // This mirrors the feature acceptance criteria before data is submitted.
       if (currentStep === 1) {
         const grade = document.getElementById('grade').value;
         const major = document.getElementById('major').value;
@@ -652,6 +656,10 @@
     function handleFileUpload(input) {
       const file = input.files[0];
       if (file) {
+        // Frontend pre-checks before hitting backend:
+        // 1) only PDF is accepted (UserServlet also validates),
+        // 2) max 10MB to avoid oversized multipart uploads.
+        // Doing this here gives immediate user feedback.
         if (!file.name.toLowerCase().endsWith('.pdf')) {
           taSystem.showMessage('Only PDF files are supported', 'danger');
           input.value = '';
@@ -748,6 +756,9 @@
       }
 
       try {
+        // Field names in FormData intentionally match UserServlet:/profile params
+        // so both normal fields and multipart file can be processed in one request.
+        // This is the single write path for TA profile create/update.
         const form = new FormData();
         form.append('userName', localStorage.getItem('userName') || '');
         form.append('email', profileData.email || '');
@@ -763,6 +774,8 @@
 
         const result = await uploadProfileRequest(form);
         if (result.success) {
+          // Use backend-confirmed filename as source of truth after save.
+          // This keeps "view/edit profile" stable across refreshes and revisits.
           profileData.existingResumeName = result.resumeFileName || profileData.existingResumeName;
           profileData.resume = null;
           currentStep = 4;
@@ -880,6 +893,9 @@
 
     async function loadExistingProfile() {
       try {
+        // Read persisted profile from backend and hydrate the wizard state.
+        // The page then behaves as "edit existing profile" instead of "new profile",
+        // including restoring selected skills, available-time grid, and resume preview.
         const profile = await API.getProfile();
         if (!profile || !profile.userId) return;
 

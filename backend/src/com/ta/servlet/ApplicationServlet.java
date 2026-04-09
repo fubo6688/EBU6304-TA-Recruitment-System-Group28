@@ -76,6 +76,9 @@ public class ApplicationServlet extends HttpServlet {
 
             List<Map<String, String>> apps = dataManager.getApplicationsByUser(targetUserId);
             List<Map<String, String>> enriched = new ArrayList<>();
+            // Build TA "my applications" view model:
+            // attach position status/deadline/department to each application record
+            // so frontend can render status table directly from one response.
             for (Map<String, String> app : apps) {
                 Map<String, String> item = new java.util.LinkedHashMap<>(app);
                 Map<String, String> p = dataManager.getPositionById(value(app.get("positionId")));
@@ -115,6 +118,9 @@ public class ApplicationServlet extends HttpServlet {
                 return;
             }
 
+            // Submission rule for TA flow:
+            // only allow apply when target position exists and is not closed,
+            // then create pending application + related notifications.
             String positionId = value(req.getParameter("positionId"));
             String priority = value(req.getParameter("priority"));
             if (positionId.isEmpty()) {
