@@ -559,6 +559,7 @@
     });
 
     let currentStep = 1;
+    // In-memory wizard state; submitted as multipart form in submitProfile().
     let profileData = {
       grade: '',
       major: '',
@@ -571,6 +572,7 @@
     };
 
     function nextStep() {
+      // Move forward only when current step validation passes.
       if (validateCurrentStep()) {
         currentStep++;
         if (currentStep <= 4) {
@@ -583,6 +585,7 @@
     }
 
     function prevStep() {
+      // Allow users to go back without losing in-memory selections.
       currentStep--;
       if (currentStep >= 1) {
         updateStepView();
@@ -629,6 +632,7 @@
     }
 
     function updateStepView() {
+      // Sync both the content section and stepper UI with currentStep.
       document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.form-section[data-section="' + currentStep + '"]').forEach(s => s.classList.add('active'));
 
@@ -643,11 +647,13 @@
     }
 
     function toggleSkill(element) {
+      // Multi-select skills and keep profileData.skills in sync with selected tags.
       element.classList.toggle('selected');
       profileData.skills = Array.from(document.querySelectorAll('.skill-tag.selected')).map(e => e.textContent);
     }
 
     function collectAvailableTime() {
+      // Convert selected timetable cells into stable slot keys for persistence.
       profileData.availableTime = Array.from(document.querySelectorAll('.time-cell.selected'))
         .map((cell) => cell.getAttribute('data-slot'))
         .filter(Boolean);
@@ -689,6 +695,7 @@
     }
 
     function previewResume() {
+      // Preview order: newly uploaded file -> backend stored resume -> fallback URL path.
       if (profileData.resume) {
         const url = URL.createObjectURL(profileData.resume);
         window.open(url, '_blank');
@@ -714,6 +721,7 @@
     }
 
     async function uploadProfileRequest(formData) {
+      // Prefer centralized API helper; fallback keeps page runnable in standalone deployments.
       if (typeof API !== 'undefined' && typeof API.uploadProfile === 'function') {
         return API.uploadProfile(formData);
       }
@@ -741,6 +749,7 @@
     }
 
     function populateConfirmData() {
+      // Render step-4 summary from current wizard state before final submit.
       document.getElementById('confirmGrade').textContent = profileData.grade;
       document.getElementById('confirmMajor').textContent = profileData.major;
       document.getElementById('confirmGPA').textContent = profileData.gpa;
@@ -812,6 +821,7 @@
     });
 
     function initTimeCells() {
+      // Build deterministic slot identifiers (e.g., "Mon 9:00-12:00") for each cell.
       document.querySelectorAll('.time-table tbody tr').forEach((row) => {
         const slotLabel = row.querySelector('td')?.textContent?.trim() || '';
         const dayHeaders = Array.from(document.querySelectorAll('.time-table thead th')).map((th) => th.textContent.trim());
@@ -836,6 +846,7 @@
     }
 
     function restoreAvailableTime(raw) {
+      // Rehydrate timetable selections from persisted semicolon-delimited slots.
       const slots = String(raw || '').split(';').map((s) => s.trim()).filter(Boolean);
 
       document.querySelectorAll('.time-cell').forEach((cell) => {
@@ -865,6 +876,7 @@
     }
 
     function resolveCurrentStepByCompleteness() {
+      // Resume wizard at the first incomplete step to support edit/resume workflow.
       if (!isStep1Complete()) {
         return 1;
       }
@@ -878,6 +890,7 @@
     }
 
     function ensureSelectOption(selectId, value) {
+      // Backward compatibility: add unknown option values from old profile records.
       const select = document.getElementById(selectId);
       const v = String(value || '').trim();
       if (!select || !v) return;
@@ -946,6 +959,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Guard page access by role, then initialize interactive controls and saved profile.
       const allowed = await taSystem.enforceSessionGuard(['TA']);
       if (!allowed) {
         return;

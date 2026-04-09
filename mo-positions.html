@@ -520,10 +520,12 @@
     let currentEditPositionId = '';
 
     function normalizeStatus(status) {
+      // Normalize backend status values for consistent UI comparisons.
       return String(status || '').toLowerCase();
     }
 
     function normalizeDeadlineInput(raw) {
+      // Accept common user date inputs and normalize to YYYY-MM-DD-like format.
       const value = String(raw || '').trim();
       if (!value) return '';
       return value
@@ -537,6 +539,7 @@
     }
 
     function isValidIsoDate(value) {
+      // Strictly validate real calendar dates to prevent invalid deadline writes.
       if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
         return false;
       }
@@ -549,6 +552,7 @@
     }
 
     function bindDatePicker(displayId, pickerId) {
+      // Keep text input and native date picker synchronized bidirectionally.
       const display = document.getElementById(displayId);
       const picker = document.getElementById(pickerId);
       if (!display || !picker) {
@@ -569,6 +573,7 @@
     }
 
     function openDatePicker(pickerId) {
+      // Trigger native picker where supported, with graceful fallback.
       const picker = document.getElementById(pickerId);
       if (!picker) {
         return;
@@ -603,6 +608,7 @@
     }
 
     function updatePublishStepUI() {
+      // Single renderer for publish wizard: sections, progress indicator, and footer buttons.
       document.querySelectorAll('#publishModal .form-section').forEach((section, index) => {
         section.classList.toggle('active', index + 1 === publishStep);
       });
@@ -669,6 +675,7 @@
     }
 
     function nextPublishStep() {
+      // Advance wizard or submit final payload at last step.
       if (!validatePublishStep()) {
         return;
       }
@@ -681,6 +688,7 @@
     }
 
     function prevPublishStep() {
+      // Navigate backward inside publish wizard.
       if (publishStep > 1) {
         publishStep -= 1;
         updatePublishStepUI();
@@ -721,6 +729,7 @@
     }
 
     function applyCurrentFilter() {
+      // Apply toolbar status filter to locally cached position list.
       const list = currentFilterStatus === 'all'
         ? allPositions
         : allPositions.filter((p) => normalizeStatus(p.status || 'open') === currentFilterStatus);
@@ -728,6 +737,7 @@
     }
 
     function renderPositions(positions) {
+      // Render position table rows with action buttons bound to each position record.
       const tbody = document.querySelector('#positionsTable tbody');
       if (!tbody) return;
 
@@ -757,6 +767,7 @@
     }
 
     function openEditModal(positionId) {
+      // Load selected row data into edit modal controls.
       const position = allPositions.find((p) => p.id === positionId);
       if (!position) {
         taSystem.showMessage('Position not found', 'warning');
@@ -780,6 +791,7 @@
     }
 
     async function saveEditPosition() {
+      // Validate and send edit payload to backend update endpoint.
       if (!currentEditPositionId) {
         taSystem.showMessage('No position selected', 'warning');
         return;
@@ -850,6 +862,7 @@
     }
 
     async function loadPositions() {
+      // Read current MO-visible positions from backend and re-render table.
       try {
         const list = await API.getPositions();
         allPositions = Array.isArray(list) ? list : [];
@@ -860,6 +873,7 @@
     }
 
     function filterStatus(element, status) {
+      // Update active filter chip and refresh filtered table.
       document.querySelectorAll('.filter-tag').forEach(tag => tag.classList.remove('active'));
       if (element) {
         element.classList.add('active');
@@ -869,6 +883,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Restrict page to MO role, then initialize date inputs and load initial data.
       const allowed = await taSystem.enforceSessionGuard(['MO']);
       if (!allowed) {
         return;
