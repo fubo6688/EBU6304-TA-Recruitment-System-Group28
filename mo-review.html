@@ -708,6 +708,10 @@
     });
 
     document.addEventListener('DOMContentLoaded', async () => {
+      const allowed = await taSystem.enforceSessionGuard(['MO']);
+      if (!allowed) {
+        return;
+      }
       ensureProfileModal();
       try {
         await reloadPositionsAndKeepSelection();

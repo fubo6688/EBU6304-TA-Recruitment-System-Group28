@@ -16,9 +16,10 @@ A lightweight web-based TA recruitment system using static HTML/CSS/JavaScript o
 
 This repository is currently configured for **Sprint 2 (Enhanced Workflow)**.
 
-Build and deployment mode is now **single-path only**:
-1. Only the `backend` script flow is supported (`start-dev.*`, `stop-dev.*`, `restart-dev.*`, `backend/build.bat`)
-2. Maven build path has been removed from this branch
+Build and deployment mode in this branch:
+1. Recommended: `backend` script flow (`start-dev.*`, `stop-dev.*`, `restart-dev.*`, `backend/build.bat`)
+2. Supported as fallback: manual Tomcat drag-and-drop deployment (legacy workflow)
+3. Maven build path has been removed from this branch
 
 Enabled Sprint 2 workflow:
 1. User authentication (login/logout)
@@ -33,6 +34,122 @@ Enabled Sprint 2 workflow:
 Partially implemented / placeholder:
 1. MO notification page UI exists (`mo-notifications.html`), business logic pending
 2. Legacy `admin-analytics/admin-users/admin-logs` pages are replaced by current admin pages
+
+## Detailed Implemented Features (Current)
+
+This section summarizes all currently implemented and testable features in this branch.
+
+### 1. Authentication, Registration, and Security
+
+1. Account/password login with backend session creation.
+2. Role auto-detection on login page:
+   - Enter account first, then login button label changes to TA Login / MO Login / Admin Login.
+3. Logout support through API and frontend state cleanup.
+4. TA/MO self-registration:
+   - New TA/MO accounts are created with `pending` status.
+   - Pending users cannot log in before admin approval.
+5. Admin registration approval flow:
+   - Admin can approve/reject pending TA/MO accounts.
+6. Password policy enforcement for registration and password change:
+   - Minimum 8 characters.
+   - Must contain uppercase + lowercase + digit.
+   - Letters and digits only.
+7. Server-side failed login lockout:
+   - Same account fails 3 times -> account is locked for 60 seconds.
+   - Lock is enforced by backend (not client-only), so page refresh cannot bypass it.
+8. Unified session/role guard on protected pages:
+   - TA, MO, Admin pages perform session and role validation before loading content.
+   - Direct URL access without valid session/role redirects to login page.
+9. Legacy login compatibility:
+   - `MyRecruitmentSystem/login.jsp` redirects to `login.html` in same context.
+
+### 2. TA Features
+
+1. TA profile wizard with step recovery:
+   - Personal details, skills/available time, resume upload, confirmation.
+   - Existing profile data is auto-loaded when returning.
+2. Profile and account management:
+   - Update personal info.
+   - Change password with validation.
+   - Upload/update avatar image.
+3. Resume management:
+   - Upload PDF resume.
+   - Preview resume through backend endpoint.
+4. Browse positions (`ta-positions.html`):
+   - View all available positions with details.
+   - Multi-condition filtering (course/major/skill/status).
+   - Closed positions are not appliable.
+   - Duplicate application for same position is prevented.
+5. Submit applications:
+   - TA can apply to open positions.
+   - Application records are persisted and shown in TA list.
+6. My Applications (`ta-applications.html`):
+   - View own applications with status/priority/feedback.
+   - Filter by status.
+
+### 3. MO Features
+
+1. Position management (`mo-positions.html`):
+   - Create position.
+   - Edit position details.
+   - Open/Close/Reopen position.
+   - Publish position.
+2. Position publish behavior:
+   - Publishing triggers TA notifications for active TA accounts.
+3. Application review (`mo-review.html`):
+   - View applications for MO-owned positions.
+   - Accept/Reject with optional feedback.
+   - Review updates TA-side status and counters.
+4. Ownership boundaries:
+   - MO can manage/review only positions/applications belonging to self (or own QM ID mapping).
+5. MO notification page:
+   - Page entry and access control are available.
+   - Full notification center business workflow remains pending.
+
+### 4. Admin Features
+
+1. Admin dashboard (`admin-dashboard.html`):
+   - Summary cards: total/open/closed positions, total/pending/approved applications.
+   - All positions table with fields:
+     - ID, Title, Course Name, MO, Status, Openings, Applied, Accepted.
+   - Dashboard filters:
+     - Filter by position status.
+     - Filter by course name.
+2. TA workload monitoring:
+   - Per-TA total apps, pending, approved, rejected, and current load.
+3. Registration approvals (`admin-approvals.html`):
+   - List all pending TA/MO registrations.
+   - Approve/Reject actions with immediate refresh.
+
+### 5. Data, Notification, and Audit
+
+1. Text-file data persistence (under workspace `data/`):
+   - users, positions, applications, profiles, logs, notification files.
+2. Position counters are maintained by backend logic:
+   - `appliedCount` and `acceptedCount` are updated during submit/review/cancel flows.
+3. Notification persistence:
+   - Application submitted/review result notifications.
+   - Published position notifications.
+4. Operation audit logging:
+   - Login/logout, profile updates, password changes, position operations, review operations, approval operations.
+
+### 6. API and Permission Enforcement
+
+1. API groups:
+   - `/api/login`, `/api/user/*`, `/api/position/*`, `/api/application/*`, `/api/admin/*`.
+2. Backend permission checks are role-aware:
+   - Admin-only endpoints for admin operations.
+   - MO/Admin checks for position/review management.
+   - TA checks for apply flows.
+3. Unauthorized/forbidden requests return proper failure responses (`401/403` style behavior with JSON message).
+
+### 7. Runtime and Deployment Behavior
+
+1. Scripted startup compiles backend and deploys to Tomcat webapps.
+2. Current startup script deploys to both contexts:
+   - `/ta-system` (recommended daily entry)
+   - `/MyRecruitmentSystem` (legacy compatibility entry)
+3. Runtime data directory is pinned to workspace `data/` to avoid data reset during redeploy.
 
 ## Project Structure
 
@@ -82,7 +199,7 @@ Run from repository root:
 What this does:
 1. Compiles backend Java sources
 2. Syncs runtime `WEB-INF`
-3. Deploys project to Tomcat `webapps/ta-system`
+3. Deploys project to Tomcat `webapps/ta-system` and `webapps/MyRecruitmentSystem`
 4. Starts Tomcat if not already running
 5. Opens the login page in browser
 
@@ -95,6 +212,67 @@ Default URL:
 ```text
 http://localhost:8080/ta-system/login.html
 ```
+
+Compatibility URL (legacy bookmark, now redirected to new login page):
+
+```text
+http://localhost:8080/MyRecruitmentSystem/login.jsp
+```
+
+Recommendation:
+1. Prefer `ta-system` URL for daily testing.
+2. If you open `MyRecruitmentSystem/login.jsp`, it will redirect to `login.html` in the same context.
+
+## Legacy Manual Startup (Drag to Tomcat)
+
+If you want the original manual startup workflow, use the following steps.
+
+### Step 1: Build backend classes
+
+From repository root:
+
+```powershell
+cd .\backend
+.\build.bat
+cd ..
+```
+
+### Step 2: Sync root WEB-INF
+
+From repository root:
+
+```powershell
+.\sync-webinf.bat
+```
+
+This copies compiled classes and `web.xml` into root `WEB-INF`, which is needed for direct Tomcat webapp deployment.
+
+### Step 3: Drag/copy project to Tomcat webapps
+
+1. Open Tomcat `webapps` folder.
+2. Create or replace one app folder:
+   - `ta-system` (recommended)
+   - or `MyRecruitmentSystem` (legacy URL compatibility)
+3. Copy project web files into that folder:
+   - `*.html`, `*.jsp`, `css/`, `js/`, `WEB-INF/`
+
+### Step 4: Start Tomcat manually
+
+1. Run Tomcat startup script:
+   - `CATALINA_HOME\bin\startup.bat`
+2. Open login page in browser:
+   - `http://localhost:8080/ta-system/login.html`
+   - or `http://localhost:8080/MyRecruitmentSystem/login.html`
+
+### Optional: Keep runtime data in workspace
+
+To avoid data writing to unexpected locations, set environment variable before starting Tomcat:
+
+```powershell
+setx TA_DATA_DIR "D:\MyRecruitmentSystem\data"
+```
+
+Then restart Tomcat.
 
 ## Stop / Restart
 

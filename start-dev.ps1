@@ -108,22 +108,32 @@ if ($jsonLib) {
     Copy-Item -Path $jsonLib.FullName -Destination (Join-Path $rootWebInf "lib/$($jsonLib.Name)") -Force
 }
 
-Write-Step "Deploying to Tomcat webapps/ta-system"
-$appDir = Join-Path $tomcatHome "webapps/ta-system"
-if (-not (Test-Path $appDir)) {
-    New-Item -ItemType Directory -Path $appDir | Out-Null
-}
+Write-Step "Deploying to Tomcat webapps contexts"
+$contexts = @("ta-system", "MyRecruitmentSystem")
 
-$robocopyArgs = @(
-    $projectRoot,
-    $appDir,
-    "/E",
-    "/R:2",
-    "/W:1",
-    "/XD", ".git", ".vscode", "target", "backend", "data", "Page Design(Version 1)",
-    "/XF", "*.ps1", "*.bat"
-)
-robocopy @robocopyArgs | Out-Null
+foreach ($contextName in $contexts) {
+    $appDir = Join-Path $tomcatHome "webapps/$contextName"
+    if (-not (Test-Path $appDir)) {
+        New-Item -ItemType Directory -Path $appDir | Out-Null
+    }
+
+    Write-Host "Deploying context: /$contextName"
+    $robocopyArgs = @(
+        $projectRoot,
+        $appDir,
+        "/MIR",
+        "/R:2",
+        "/W:1",
+        "/XD", ".git", ".vscode", "target", "backend", "data", "Page Design(Version 1)",
+        "/XF", "*.ps1", "*.bat"
+    )
+
+    robocopy @robocopyArgs | Out-Null
+    $rc = $LASTEXITCODE
+    if ($rc -gt 7) {
+        throw "robocopy failed for context $contextName with exit code $rc"
+    }
+}
 
 Write-Step "Starting Tomcat"
 $portInUse = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue

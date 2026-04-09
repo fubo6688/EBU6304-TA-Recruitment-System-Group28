@@ -78,6 +78,11 @@ class API {
     return API.request("/login");
   }
 
+  static getLoginRoleHint(userId) {
+    const qs = `?action=role-hint&userId=${encodeURIComponent(userId || "")}`;
+    return API.request(`/login${qs}`);
+  }
+
   static logout() {
     return API.request("/login?action=logout");
   }

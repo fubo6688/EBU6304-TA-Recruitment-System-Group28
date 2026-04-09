@@ -16,3 +16,4 @@ ta_charlie|Charlie Brown|ta_charlie@example.com|Qmta2026A|TA|ta_charlie|active
 ta_david|David Wang|ta_david@example.com|Qmta2026A|TA|ta_david|active
 ta_emma|Emma Wilson|ta_emma@example.com|Qmta2026A|TA|ta_emma|active
 ta_alice|Alice Zhang|ta_alice@qq.com|Qmta2026A|TA|ta_alice|active
+2023213247|Junyi Yan|jp2023213247@qmul.ac.uk|Qmta2026A|TA|2023213247|active

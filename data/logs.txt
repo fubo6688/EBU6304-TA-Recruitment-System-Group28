@@ -164,3 +164,135 @@ log1775575564164|2026-04-07 23:26:04|ta_alice|Alice Zhang|TA|UPDATE_PROFILE|prof
 log1775575574097|2026-04-07 23:26:14|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
 log1775575637540|2026-04-07 23:27:17|ta_alice|Alice Zhang|TA|LOGIN|login|success
 log1775575644470|2026-04-07 23:27:24|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775647376227|2026-04-08 19:22:56|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775647484623|2026-04-08 19:24:44|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775647510536|2026-04-08 19:25:10|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775647626467|2026-04-08 19:27:06|mo_smith|Dr. Smith (Java Module)|MO|CREATE_POSITION|A|success
+log1775647647095|2026-04-08 19:27:27|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775647660927|2026-04-08 19:27:40|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775647667262|2026-04-08 19:27:47|ta_alice|Alice Zhang|TA|SUBMIT_APPLICATION|pos1775647626466|success
+log1775647671536|2026-04-08 19:27:51|ta_alice|Alice Zhang|TA|SUBMIT_APPLICATION|pos1775647626466|success
+log1775647683202|2026-04-08 19:28:03|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775647690108|2026-04-08 19:28:10|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775647718970|2026-04-08 19:28:38|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775647667256 -> accept|success
+log1775647730390|2026-04-08 19:28:50|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775647667256 -> reject|success
+log1775647737916|2026-04-08 19:28:57|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775647667256 -> accept|success
+log1775647839574|2026-04-08 19:30:39|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775647844547|2026-04-08 19:30:44|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775647853382|2026-04-08 19:30:53|ta_alice|Alice Zhang|TA|SUBMIT_APPLICATION|pos1775647626466|success
+log1775647866401|2026-04-08 19:31:06|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775647892303|2026-04-08 19:31:32|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775647905084|2026-04-08 19:31:45|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775647917960|2026-04-08 19:31:57|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775648210034|2026-04-08 19:36:50|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775648213884|2026-04-08 19:36:53|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775648230423|2026-04-08 19:37:10|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775648234809|2026-04-08 19:37:14|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775648235673|2026-04-08 19:37:15|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775648236611|2026-04-08 19:37:16|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775648244548|2026-04-08 19:37:24|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775648246215|2026-04-08 19:37:26|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775648247692|2026-04-08 19:37:27|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775648248370|2026-04-08 19:37:28|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775648250727|2026-04-08 19:37:30|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775648252077|2026-04-08 19:37:32|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775648252911|2026-04-08 19:37:32|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775648253978|2026-04-08 19:37:33|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775648254556|2026-04-08 19:37:34|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775648255313|2026-04-08 19:37:35|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775648256757|2026-04-08 19:37:36|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775648348570|2026-04-08 19:39:08|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775648352393|2026-04-08 19:39:12|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775648362684|2026-04-08 19:39:22|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775648376352|2026-04-08 19:39:36|admin001|管理员|Admin|LOGIN|login|success
+log1775648884872|2026-04-08 19:48:04|admin001|管理员|Admin|LOGIN|login|success
+log1775648917518|2026-04-08 19:48:37|admin001|管理员|Admin|LOGIN|login|success
+log1775648983656|2026-04-08 19:49:43|admin001|管理员|Admin|LOGOUT|logout|success
+log1775650465024|2026-04-08 20:14:25|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775650532658|2026-04-08 20:15:32|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775650537859|2026-04-08 20:15:37|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775651574935|2026-04-08 20:32:54|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775651576745|2026-04-08 20:32:56|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775651577334|2026-04-08 20:32:57|mo_smith|Dr. Smith (Java Module)|MO|PUBLISH_POSITION|pos1775647626466 -> open, notified=8|success
+log1775651588404|2026-04-08 20:33:08|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775651592394|2026-04-08 20:33:12|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775651603057|2026-04-08 20:33:23|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775651635272|2026-04-08 20:33:55|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775652121751|2026-04-08 20:42:01|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775652124058|2026-04-08 20:42:04|mo_smith|Dr. Smith (Java Module)|MO|PUBLISH_POSITION|pos1775647626466 -> open, notified=8|success
+log1775652125395|2026-04-08 20:42:05|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775652126351|2026-04-08 20:42:06|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775652133330|2026-04-08 20:42:13|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775652135092|2026-04-08 20:42:15|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775652152240|2026-04-08 20:42:32|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775652163321|2026-04-08 20:42:43|admin001|管理员|Admin|LOGIN|login|success
+log1775652182188|2026-04-08 20:43:02|admin001|管理员|Admin|LOGOUT|logout|success
+log1775652193871|2026-04-08 20:43:13|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775652223838|2026-04-08 20:43:43|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775652601279|2026-04-08 20:50:01|admin001|管理员|Admin|LOGIN|login|success
+log1775652671709|2026-04-08 20:51:11|admin001|管理员|Admin|LOGOUT|logout|success
+log1775652684015|2026-04-08 20:51:24|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775654175117|2026-04-08 21:16:15|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775654179258|2026-04-08 21:16:19|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775654184270|2026-04-08 21:16:24|admin001|管理员|Admin|LOGIN|login|success
+log1775654191458|2026-04-08 21:16:31|admin001|管理员|Admin|LOGOUT|logout|success
+log1775654259883|2026-04-08 21:17:39|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775654314587|2026-04-08 21:18:34|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775655424036|2026-04-08 21:37:04|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775655432645|2026-04-08 21:37:12|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775655809572|2026-04-08 21:43:29|2023213247|Junyi Yan|TA|REGISTER|pending approval|success
+log1775655816738|2026-04-08 21:43:36|admin001|管理员|Admin|LOGIN|login|success
+log1775655821951|2026-04-08 21:43:41|admin001|管理员|Admin|APPROVE_REGISTRATION|2023213247 -> active|success
+log1775655826423|2026-04-08 21:43:46|admin001|管理员|Admin|LOGOUT|logout|success
+log1775656678347|2026-04-08 21:57:58|jp2023213247||TA|LOGIN|login|failed
+log1775656687681|2026-04-08 21:58:07|2023213247|Junyi Yan|TA|LOGIN|login|success
+log1775658071852|2026-04-08 22:21:11|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775658077101|2026-04-08 22:21:17|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775658088488|2026-04-08 22:21:28|2023213247|Junyi Yan|TA|LOGIN|login|success
+log1775658097743|2026-04-08 22:21:37|2023213247|Junyi Yan|TA|LOGOUT|logout|success
+log1775706017709|2026-04-09 11:40:17|mo_smith||MO|LOGIN|login|failed
+log1775706020820|2026-04-09 11:40:20|mo_smith||MO|LOGIN|login|failed
+log1775706023291|2026-04-09 11:40:23|mo_smith||MO|LOGIN|login|failed
+log1775706025282|2026-04-09 11:40:25|mo_smith||MO|LOGIN|login|failed
+log1775706027386|2026-04-09 11:40:27|mo_smith||MO|LOGIN|login|failed
+log1775706031527|2026-04-09 11:40:31|mo_smith||MO|LOGIN|login|failed
+log1775706035193|2026-04-09 11:40:35|mo_smith||MO|LOGIN|login|failed
+log1775706039871|2026-04-09 11:40:39|mo_smith||MO|LOGIN|login|failed
+log1775706042386|2026-04-09 11:40:42|mo_smith||MO|LOGIN|login|failed
+log1775706044174|2026-04-09 11:40:44|mo_smith||MO|LOGIN|login|failed
+log1775706129459|2026-04-09 11:42:09|admin001||Admin|LOGIN|login|failed
+log1775706129608|2026-04-09 11:42:09|admin001||Admin|LOGIN|login|failed
+log1775706129615|2026-04-09 11:42:09|admin001||Admin|LOGIN|login|failed
+log1775706129627|2026-04-09 11:42:09|admin001||Admin|LOGIN|login|failed
+log1775706309101|2026-04-09 11:45:09|admin001||Admin|LOGIN|login|failed
+log1775706309212|2026-04-09 11:45:09|admin001||Admin|LOGIN|login|failed
+log1775706309218|2026-04-09 11:45:09|admin001||Admin|LOGIN|login|failed
+log1775706309224|2026-04-09 11:45:09|admin001||Admin|LOGIN|login|failed
+log1775706429314|2026-04-09 11:47:09|admin001||Admin|LOGIN|login|failed
+log1775706429379|2026-04-09 11:47:09|admin001||Admin|LOGIN|login|failed
+log1775706429386|2026-04-09 11:47:09|admin001||Admin|LOGIN|login|failed
+log1775706429405|2026-04-09 11:47:09|admin001|管理员|Admin|LOGIN|login|success
+log1775707405235|2026-04-09 12:03:25|ta_alice||TA|LOGIN|login|failed
+log1775707425459|2026-04-09 12:03:45|ta_alice||TA|LOGIN|login|failed
+log1775707425485|2026-04-09 12:03:45|ta_alice||TA|LOGIN|login|failed
+log1775707425510|2026-04-09 12:03:45|ta_alice||TA|LOGIN|login|failed
+log1775707425534|2026-04-09 12:03:45|ta_alice||TA|LOGIN|login|failed
+log1775707607491|2026-04-09 12:06:47|ta_alice||TA|LOGIN|login|failed
+log1775707607540|2026-04-09 12:06:47|ta_alice||TA|LOGIN|login|failed
+log1775707607579|2026-04-09 12:06:47|ta_alice||TA|LOGIN|login|failed
+log1775707649673|2026-04-09 12:07:29|admin001|管理员|Admin|LOGIN|login|success
+log1775707749597|2026-04-09 12:09:09|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775707895629|2026-04-09 12:11:35|ta_alice||TA|LOGIN|login|failed
+log1775707898053|2026-04-09 12:11:38|ta_alice||TA|LOGIN|login|failed
+log1775707900244|2026-04-09 12:11:40|ta_alice||TA|LOGIN|login|failed
+log1775707961397|2026-04-09 12:12:41|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775708246224|2026-04-09 12:17:26|mo_smith||MO|LOGIN|login|failed
+log1775708246266|2026-04-09 12:17:26|mo_smith||MO|LOGIN|login|failed
+log1775708246301|2026-04-09 12:17:26|mo_smith||MO|LOGIN|login|failed
+log1775708246372|2026-04-09 12:17:26|admin001|管理员|Admin|LOGIN|login|success
+log1775708598680|2026-04-09 12:23:18|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775708606220|2026-04-09 12:23:26|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775709740266|2026-04-09 12:42:20|admin001|管理员|Admin|LOGIN|login|success
+log1775709753949|2026-04-09 12:42:33|admin001|管理员|Admin|LOGOUT|logout|success
+log1775709776618|2026-04-09 12:42:56|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775709926540|2026-04-09 12:45:26|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success

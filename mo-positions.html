@@ -853,6 +853,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      const allowed = await taSystem.enforceSessionGuard(['MO']);
+      if (!allowed) {
+        return;
+      }
       bindDatePicker('publishDeadline', 'publishDeadlinePicker');
       bindDatePicker('editDeadline', 'editDeadlinePicker');
       await loadPositions();

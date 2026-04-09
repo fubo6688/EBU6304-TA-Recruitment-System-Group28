@@ -906,6 +906,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      const allowed = await taSystem.enforceSessionGuard(['TA']);
+      if (!allowed) {
+        return;
+      }
       await loadPositions();
 
       const filterConfirmBtn = document.getElementById('filterConfirmBtn');
