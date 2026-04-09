@@ -99,5 +99,11 @@
   </div>
 
   <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await taSystem.enforceSessionGuard(['MO']);
+    });
+  </script>
 </body>
 </html>

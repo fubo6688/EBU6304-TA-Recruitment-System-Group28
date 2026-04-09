@@ -98,6 +98,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     .panel-title {
@@ -133,6 +134,23 @@
       text-align: center;
       color: var(--gray-500);
     }
+
+    .position-filters {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .position-filters .form-control {
+      min-width: 130px;
+      height: 34px;
+      font-size: 12px;
+    }
+
+    .position-filters .course-input {
+      min-width: 200px;
+    }
   </style>
 </head>
 <body>
@@ -164,7 +182,16 @@
       <div class="panel">
         <div class="panel-header">
           <h3 class="panel-title">All Positions</h3>
-          <button class="btn btn-sm btn-secondary" id="refreshBtn">Refresh</button>
+          <div class="position-filters">
+            <select id="statusFilter" class="form-control" aria-label="Filter by status">
+              <option value="all">All Status</option>
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+            </select>
+            <input type="text" id="courseFilter" class="form-control course-input" placeholder="Filter by course name" aria-label="Filter by course name">
+            <button class="btn btn-sm btn-secondary" id="clearFiltersBtn">Clear</button>
+            <button class="btn btn-sm btn-secondary" id="refreshBtn">Refresh</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table class="table" id="positionsTable">
@@ -172,6 +199,7 @@
               <tr>
                 <th>ID</th>
                 <th>Title</th>
+                <th>Course Name</th>
                 <th>MO</th>
                 <th>Status</th>
                 <th>Openings</th>
@@ -180,7 +208,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td colspan="7" style="text-align:center;color:var(--gray-500);">Loading...</td></tr>
+              <tr><td colspan="8" style="text-align:center;color:var(--gray-500);">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -215,6 +243,12 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
+    let allPositions = [];
+
+    function normalizeText(value) {
+      return (value || '').toString().trim().toLowerCase();
+    }
+
     function renderSummary(summary) {
       const cards = document.getElementById('summaryCards');
       if (!cards) return;
@@ -238,13 +272,14 @@
       const tbody = document.querySelector('#positionsTable tbody');
       if (!tbody) return;
       if (!positions.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty">No positions available</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty">No positions available</td></tr>';
         return;
       }
       tbody.innerHTML = positions.map((p) => `
         <tr>
           <td>${p.id || '-'}</td>
           <td>${p.title || '-'}</td>
+          <td>${p.department || '-'}</td>
           <td>${p.moId || '-'}</td>
           <td>${p.status || '-'}</td>
           <td>${p.openings || 0}</td>
@@ -252,6 +287,33 @@
           <td>${p.acceptedCount || 0}</td>
         </tr>
       `).join('');
+    }
+
+    function applyPositionFilters() {
+      const status = normalizeText(document.getElementById('statusFilter')?.value || 'all');
+      const course = normalizeText(document.getElementById('courseFilter')?.value || '');
+
+      const filtered = allPositions.filter((p) => {
+        const pStatus = normalizeText(p.status || 'open');
+        const pCourse = normalizeText(p.department || '');
+        if (status !== 'all' && pStatus !== status) {
+          return false;
+        }
+        if (course && !pCourse.includes(course)) {
+          return false;
+        }
+        return true;
+      });
+
+      renderPositions(filtered);
+    }
+
+    function clearPositionFilters() {
+      const statusEl = document.getElementById('statusFilter');
+      const courseEl = document.getElementById('courseFilter');
+      if (statusEl) statusEl.value = 'all';
+      if (courseEl) courseEl.value = '';
+      applyPositionFilters();
     }
 
     function renderWorkload(items) {
@@ -282,7 +344,8 @@
           return;
         }
         renderSummary(result.summary || {});
-        renderPositions(Array.isArray(result.positions) ? result.positions : []);
+        allPositions = Array.isArray(result.positions) ? result.positions : [];
+        applyPositionFilters();
         renderWorkload(Array.isArray(result.taWorkload) ? result.taWorkload : []);
       } catch (error) {
         taSystem.showMessage(error.message || 'Failed to load dashboard', 'danger');
@@ -290,16 +353,15 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      const role = (localStorage.getItem('userRole') || '').toLowerCase();
-      if (role !== 'admin') {
-        taSystem.showMessage('Admin only page', 'warning');
-        setTimeout(() => {
-          window.location.href = 'login.html';
-        }, 900);
+      const allowed = await taSystem.enforceSessionGuard(['Admin']);
+      if (!allowed) {
         return;
       }
       await loadDashboard();
       document.getElementById('refreshBtn')?.addEventListener('click', loadDashboard);
+      document.getElementById('statusFilter')?.addEventListener('change', applyPositionFilters);
+      document.getElementById('courseFilter')?.addEventListener('input', applyPositionFilters);
+      document.getElementById('clearFiltersBtn')?.addEventListener('click', clearPositionFilters);
     });
   </script>
 </body>

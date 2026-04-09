@@ -311,6 +311,60 @@ class TARecruitmentSystem {
     }
   }
 
+  normalizeRole(role) {
+    const value = (role || '').toString().trim().toLowerCase();
+    if (value === 'ta') return 'TA';
+    if (value === 'mo') return 'MO';
+    if (value === 'admin') return 'Admin';
+    return '';
+  }
+
+  async enforceSessionGuard(requiredRoles = []) {
+    const allowed = (Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles])
+      .map((r) => this.normalizeRole(r))
+      .filter(Boolean);
+
+    const redirectToLogin = () => {
+      try {
+        localStorage.clear();
+      } catch (error) {
+      }
+      window.location.href = 'login.html';
+    };
+
+    if (typeof API === 'undefined' || !API.session) {
+      const localRole = this.normalizeRole(localStorage.getItem('userRole') || '');
+      const localUserId = (localStorage.getItem('userId') || '').trim();
+      if (!localUserId || (allowed.length && !allowed.includes(localRole))) {
+        redirectToLogin();
+        return false;
+      }
+      return true;
+    }
+
+    try {
+      const session = await API.session();
+      if (!session || !session.loggedIn || !session.user) {
+        redirectToLogin();
+        return false;
+      }
+
+      const role = this.normalizeRole(session.user.userRole || session.user.role || '');
+      if (!role || (allowed.length && !allowed.includes(role))) {
+        redirectToLogin();
+        return false;
+      }
+
+      localStorage.setItem('userRole', role);
+      localStorage.setItem('userId', session.user.userId || '');
+      localStorage.setItem('userName', session.user.userName || '');
+      return true;
+    } catch (error) {
+      redirectToLogin();
+      return false;
+    }
+  }
+
   // Initialize search function（With anti-shake）
   initSearch(searchInputId, tableId) {
     const searchInput = document.getElementById(searchInputId);

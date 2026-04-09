@@ -209,12 +209,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      const role = (localStorage.getItem('userRole') || '').toLowerCase();
-      if (role !== 'admin') {
-        taSystem.showMessage('Admin only page', 'warning');
-        setTimeout(() => {
-          window.location.href = 'login.html';
-        }, 1000);
+      const allowed = await taSystem.enforceSessionGuard(['Admin']);
+      if (!allowed) {
         return;
       }
 
