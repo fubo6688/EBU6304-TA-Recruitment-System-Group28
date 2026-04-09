@@ -930,6 +930,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      const allowed = await taSystem.enforceSessionGuard(['TA']);
+      if (!allowed) {
+        return;
+      }
       initTimeCells();
       await loadExistingProfile();
     });

@@ -221,22 +221,11 @@
       <div class="lock-info" id="lockInfo"></div>
 
       <form id="loginForm">
-        <!-- Rolechoose -->
-        <div class="form-group">
-          <label class="form-label required">Role</label>
-          <select id="roleSelect" class="form-control" required>
-            <option value="">-- Select a role --</option>
-            <option value="TA">TA</option>
-            <option value="MO">MO</option>
-            <option value="Admin">Admin</option>
-          </select>
-          <div class="form-error-inline"></div>
-        </div>
-
         <!-- Accountenter -->
         <div class="form-group">
           <label class="form-label required">Account</label>
           <input type="text" id="username" class="form-control" placeholder="Enter your QM student or staff ID" required>
+          <div id="roleHint" style="margin-top:6px;font-size:12px;color:var(--gray-500);">Role will be identified automatically</div>
           <div class="form-error-inline"></div>
         </div>
 
@@ -251,7 +240,7 @@
         </div>
 
         <!-- Loginbutton -->
-        <button type="submit" class="btn btn-primary btn-lg btn-block">Login</button>
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="loginBtn">Login</button>
       </form>
 
       <div class="forgot-password">
@@ -272,59 +261,17 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
-    const ATTEMPT_KEY = 'loginAttempts';
-    const LOCK_KEY = 'lockTime';
-    const MAX_ATTEMPTS = 3;
-    const LOCK_MILLIS = 5 * 60 * 1000;
-
-    let loginAttempts = parseInt(localStorage.getItem(ATTEMPT_KEY) || '0');
-    let lockTime = parseInt(localStorage.getItem(LOCK_KEY) || '0');
-
-    function resetLockState() {
-      loginAttempts = 0;
-      lockTime = 0;
-      localStorage.setItem(ATTEMPT_KEY, '0');
-      localStorage.removeItem(LOCK_KEY);
-      document.getElementById('lockInfo').classList.remove('show');
-      document.getElementById('loginForm').style.opacity = '1';
-      document.getElementById('loginForm').style.pointerEvents = 'auto';
-    }
-
-    function registerFailedAttempt() {
-      loginAttempts += 1;
-      if (loginAttempts >= MAX_ATTEMPTS) {
-        lockTime = Date.now() + LOCK_MILLIS;
-        localStorage.setItem(LOCK_KEY, String(lockTime));
-        localStorage.setItem(ATTEMPT_KEY, '0');
-        alert('LoginFailedtoo many times，Accountlocked5minutes');
-        location.reload();
+    function setLockInfo(message) {
+      const lockInfo = document.getElementById('lockInfo');
+      if (!lockInfo) return;
+      if (!message) {
+        lockInfo.textContent = '';
+        lockInfo.classList.remove('show');
         return;
       }
-      localStorage.setItem(ATTEMPT_KEY, String(loginAttempts));
+      lockInfo.textContent = message;
+      lockInfo.classList.add('show');
     }
-
-    // Check whether account is locked
-    function checkLock() {
-      const now = Date.now();
-      if (lockTime && now >= lockTime) {
-        resetLockState();
-        return;
-      }
-
-      if (lockTime && now < lockTime) {
-        const remainSeconds = Math.ceil((lockTime - now) / 1000);
-        document.getElementById('lockInfo').textContent = `Account locked. Please try again in ${remainSeconds} seconds.`;
-        document.getElementById('lockInfo').classList.add('show');
-        document.getElementById('loginForm').style.opacity = '0.5';
-        document.getElementById('loginForm').style.pointerEvents = 'none';
-        
-        setTimeout(checkLock, 1000);
-      }
-    }
-
-    // For demo/testing stability: reset client-side lock state on page load to avoid stale lock records.
-    resetLockState();
-    checkLock();
 
     // Passwordshow/hide
     document.getElementById('passwordToggle').addEventListener('click', function() {
@@ -339,10 +286,82 @@
     });
 
     // Form Submission
+    let detectedRole = '';
+    let roleHintTimer = null;
+
+    function normalizeRole(role) {
+      const r = (role || '').toString().trim().toLowerCase();
+      if (r === 'ta') return 'TA';
+      if (r === 'mo') return 'MO';
+      if (r === 'admin') return 'Admin';
+      return '';
+    }
+
+    function setLoginButtonByRole(role) {
+      const btn = document.getElementById('loginBtn');
+      if (!btn) return;
+      const normalized = normalizeRole(role);
+      if (normalized === 'TA') {
+        btn.textContent = 'TA Login';
+      } else if (normalized === 'MO') {
+        btn.textContent = 'MO Login';
+      } else if (normalized === 'Admin') {
+        btn.textContent = 'Admin Login';
+      } else {
+        btn.textContent = 'Login';
+      }
+    }
+
+    function setRoleHintText(text, isWarning = false) {
+      const roleHint = document.getElementById('roleHint');
+      if (!roleHint) return;
+      roleHint.textContent = text;
+      roleHint.style.color = isWarning ? 'var(--danger-color)' : 'var(--gray-500)';
+    }
+
+    async function detectRoleByAccount(userId) {
+      const account = (userId || '').trim();
+      if (!account) {
+        detectedRole = '';
+        setLoginButtonByRole('');
+        setRoleHintText('Role will be identified automatically');
+        return;
+      }
+
+      try {
+        const result = await API.getLoginRoleHint(account);
+        const role = normalizeRole(result && result.role);
+        if (!role) {
+          detectedRole = '';
+          setLoginButtonByRole('');
+          setRoleHintText('Role could not be identified', true);
+          return;
+        }
+
+        detectedRole = role;
+        setLoginButtonByRole(role);
+        setRoleHintText(`Detected role: ${role}`);
+      } catch (error) {
+        detectedRole = '';
+        setLoginButtonByRole('');
+        setRoleHintText('Account not found', true);
+      }
+    }
+
+    document.getElementById('username').addEventListener('input', function() {
+      const value = this.value || '';
+      if (roleHintTimer) {
+        clearTimeout(roleHintTimer);
+      }
+      roleHintTimer = setTimeout(() => {
+        detectRoleByAccount(value);
+      }, 250);
+    });
+
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      setLockInfo('');
 
-      const role = document.getElementById('roleSelect').value;
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
@@ -350,46 +369,35 @@
       let hasError = false;
       const errorDivs = document.querySelectorAll('.form-error-inline');
 
-      if (!role) {
-        errorDivs[0].textContent = 'Please select a role';
+      if (!username) {
+        errorDivs[0].textContent = 'Please enter account';
         errorDivs[0].classList.add('show');
         hasError = true;
       } else {
         errorDivs[0].classList.remove('show');
       }
 
-      if (!username) {
-        errorDivs[1].textContent = 'Please enter account';
+      if (!password) {
+        errorDivs[1].textContent = 'Please enter password';
         errorDivs[1].classList.add('show');
         hasError = true;
       } else {
         errorDivs[1].classList.remove('show');
       }
 
-      if (!password) {
-        errorDivs[2].textContent = 'Please enter password';
-        errorDivs[2].classList.add('show');
-        hasError = true;
-      } else {
-        errorDivs[2].classList.remove('show');
-      }
-
       if (hasError) return;
 
-      if (lockTime && Date.now() < lockTime) {
-        checkLock();
-        return;
-      }
-
       try {
-        const data = await API.login(username, password, role);
+        const data = await API.login(username, password, detectedRole || '');
         if (!data.success) {
-          registerFailedAttempt();
+          if (data.locked) {
+            setLockInfo(data.message || 'Account is temporarily locked.');
+          }
           alert(data.message || 'Login failed');
           return;
         }
 
-        resetLockState();
+        setLockInfo('');
         localStorage.setItem('userRole', data.user.userRole);
         localStorage.setItem('userId', data.user.userId);
         localStorage.setItem('userName', data.user.userName);
@@ -402,7 +410,6 @@
           window.location.href = 'admin-dashboard.html';
         }
       } catch (error) {
-        registerFailedAttempt();
         alert(error.message || 'Network error. Please check the backend service.');
       }
     });

@@ -12,9 +12,19 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LoginServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
+    private static final int MAX_FAILED_ATTEMPTS = 3;
+    private static final long LOCK_DURATION_MILLIS = 60 * 1000L;
+    private static final Map<String, LoginAttemptState> LOGIN_ATTEMPTS = new ConcurrentHashMap<>();
+
+    private static class LoginAttemptState {
+        private int failedAttempts;
+        private long lockUntil;
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -22,6 +32,24 @@ public class LoginServlet extends HttpServlet {
         PrintWriter out = resp.getWriter();
 
         String action = req.getParameter("action");
+        if ("role-hint".equalsIgnoreCase(action)) {
+            String userId = value(req.getParameter("userId"));
+            if (userId.isEmpty()) {
+                out.print(new JSONObject().put("success", false).put("message", "Account is empty").toString());
+                return;
+            }
+            User user = dataManager.getUserById(userId);
+            if (user == null) {
+                out.print(new JSONObject().put("success", false).put("message", "Account not found").toString());
+                return;
+            }
+            out.print(new JSONObject()
+                    .put("success", true)
+                    .put("role", user.getRole())
+                    .toString());
+            return;
+        }
+
         if ("logout".equalsIgnoreCase(action)) {
             HttpSession session = req.getSession(false);
             if (session != null) {
@@ -69,9 +97,21 @@ public class LoginServlet extends HttpServlet {
         String userId = value(req.getParameter("userId"));
         String password = value(req.getParameter("password"));
         String role = value(req.getParameter("role"));
+        String lockKey = normalizeLockKey(userId);
 
         if (userId.isEmpty() || password.isEmpty()) {
             out.print(new JSONObject().put("success", false).put("message", "Account or password is empty").toString());
+            return;
+        }
+
+        long remaining = getRemainingLockSeconds(lockKey);
+        if (remaining > 0) {
+            out.print(new JSONObject()
+                    .put("success", false)
+                    .put("locked", true)
+                    .put("remainingSeconds", remaining)
+                    .put("message", "Account locked. Please try again in " + remaining + " seconds")
+                    .toString());
             return;
         }
 
@@ -87,16 +127,30 @@ public class LoginServlet extends HttpServlet {
 
         User user = dataManager.validateLogin(userId, password);
         if (user == null) {
+            registerFailedAttempt(lockKey);
+            long remainingAfterFail = getRemainingLockSeconds(lockKey);
             dataManager.writeLog(userId, "", role, "LOGIN", "login", "failed");
-            out.print(new JSONObject().put("success", false).put("message", "Invalid account or password").toString());
+            if (remainingAfterFail > 0) {
+                out.print(new JSONObject()
+                        .put("success", false)
+                        .put("locked", true)
+                        .put("remainingSeconds", remainingAfterFail)
+                        .put("message", "Account locked. Please try again in " + remainingAfterFail + " seconds")
+                        .toString());
+            } else {
+                out.print(new JSONObject().put("success", false).put("message", "Invalid account or password").toString());
+            }
             return;
         }
 
         if (!role.isEmpty() && !user.getRole().equalsIgnoreCase(role)) {
+            registerFailedAttempt(lockKey);
             dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "LOGIN", "role mismatch", "failed");
             out.print(new JSONObject().put("success", false).put("message", "Role mismatch").toString());
             return;
         }
+
+        clearFailedAttempts(lockKey);
 
         HttpSession session = req.getSession(true);
         session.setMaxInactiveInterval(30 * 60);
@@ -176,5 +230,59 @@ public class LoginServlet extends HttpServlet {
 
     private String value(String s) {
         return s == null ? "" : s.trim();
+    }
+
+    private String normalizeLockKey(String userId) {
+        return value(userId).toLowerCase(Locale.ROOT);
+    }
+
+    private long getRemainingLockSeconds(String lockKey) {
+        if (lockKey.isEmpty()) {
+            return 0;
+        }
+        LoginAttemptState state = LOGIN_ATTEMPTS.get(lockKey);
+        if (state == null) {
+            return 0;
+        }
+        synchronized (state) {
+            if (state.lockUntil <= 0) {
+                return 0;
+            }
+            long now = System.currentTimeMillis();
+            if (state.lockUntil <= now) {
+                state.lockUntil = 0;
+                state.failedAttempts = 0;
+                LOGIN_ATTEMPTS.remove(lockKey, state);
+                return 0;
+            }
+            return Math.max(1, (state.lockUntil - now + 999) / 1000);
+        }
+    }
+
+    private void registerFailedAttempt(String lockKey) {
+        if (lockKey.isEmpty()) {
+            return;
+        }
+
+        LoginAttemptState state = LOGIN_ATTEMPTS.computeIfAbsent(lockKey, k -> new LoginAttemptState());
+        synchronized (state) {
+            long now = System.currentTimeMillis();
+            if (state.lockUntil > now) {
+                return;
+            }
+
+            state.failedAttempts += 1;
+            if (state.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+                state.failedAttempts = 0;
+                state.lockUntil = now + LOCK_DURATION_MILLIS;
+            }
+        }
+    }
+
+    private void clearFailedAttempts(String lockKey) {
+        if (lockKey.isEmpty()) {
+            return;
+        }
+        LOGIN_ATTEMPTS.remove(lockKey);
     }
 }

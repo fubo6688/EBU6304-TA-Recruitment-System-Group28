@@ -1,0 +1,8 @@
+ntf1775647667259|application|Application Submitted|Your application was submitted.|2026-04-08 19:27:47|0
+ntf1775647671535|application|Application Submitted|Your application was submitted.|2026-04-08 19:27:51|0
+ntf1775647718967|application|Application Result|Your application has been accepted|2026-04-08 19:28:38|0
+ntf1775647730389|application|Application Result|Your application has been rejected|2026-04-08 19:28:50|0
+ntf1775647737916|application|Application Result|Your application has been accepted|2026-04-08 19:28:57|0
+ntf1775647853380|application|Application Submitted|Your application was submitted.|2026-04-08 19:30:53|0
+ntf1775651577333|position|New Position Published|A position has been published: A|2026-04-08 20:32:57|0
+ntf1775652124057|position|New Position Published|A position has been published: A|2026-04-08 20:42:04|0

@@ -247,6 +247,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      const allowed = await taSystem.enforceSessionGuard(['TA']);
+      if (!allowed) {
+        return;
+      }
       await loadMyApplications();
       document.querySelectorAll('.status-filter').forEach((btn) => {
         btn.addEventListener('click', () => {
