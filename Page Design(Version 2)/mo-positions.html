@@ -470,6 +470,7 @@
   <script src="js/api.js"></script>
   <script>
     function mapStatusClass(status) {
+      // Map backend status values to visual badge classes.
       const s = (status || '').toLowerCase();
       if (s === 'closed') return 'status-closed';
       if (s === 'pending') return 'status-pending';
@@ -478,6 +479,7 @@
     }
 
     function mapStatusText(status) {
+      // Map backend status values to user-facing status labels.
       const s = (status || '').toLowerCase();
       if (s === 'closed') return 'Closed';
       if (s === 'pending') return 'Pending review';
@@ -486,6 +488,7 @@
     }
 
     function renderPositions(positions) {
+      // Render current position list and bind row-level actions.
       const tbody = document.querySelector('#positionsTable tbody');
       if (!tbody) return;
 
@@ -514,6 +517,7 @@
     }
 
     async function loadPositions() {
+      // Fetch MO-visible positions from backend and refresh the table.
       try {
         const list = await API.getPositions();
         renderPositions(Array.isArray(list) ? list : []);
@@ -523,6 +527,7 @@
     }
 
     function filterStatus(element, status) {
+      // Apply local row filtering by status without extra API calls.
       document.querySelectorAll('.filter-tag').forEach(tag => tag.classList.remove('active'));
       element.classList.add('active');
 
@@ -539,6 +544,7 @@
     }
 
     async function changeStatus(positionId, status) {
+      // Update position open/closed status via backend endpoint and reload table.
       try {
         const result = await API.updatePositionStatus(positionId, status);
         if (result.success) {
@@ -561,11 +567,13 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Initial page load: fetch list and wire publish button submit behavior.
       await loadPositions();
 
       const publishBtn = document.querySelector('#publishModal .modal-footer .btn.btn-primary');
       if (publishBtn) {
         publishBtn.onclick = async function() {
+          // Minimal publish modal flow: collect key fields and create a position.
           const title = document.querySelector('#publishModal #step1 input[type="text"]')?.value || '';
           const openings = document.querySelector('#publishModal #step1 input[type="number"]')?.value || '1';
           const desc = document.querySelector('#publishModal #step1 .form-two-col input[type="text"]')?.value || '';

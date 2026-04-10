@@ -186,6 +186,9 @@ public class UserServlet extends HttpServlet {
             return;
         }
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
+            // GET /api/user/profile
+            // Returns the logged-in user's profile aggregate (account fields + profile fields)
+            // used by TA profile page to prefill and continue the multi-step form.
             JSONObject result = toUserJson(user);
             Map<String, String> profile = dataManager.getProfile(user.getUserId());
             if (profile != null) {
@@ -207,6 +210,9 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("/ta-profile".equalsIgnoreCase(path)) {
+            // GET /api/user/ta-profile?userId=...
+            // Cross-user read endpoint for MO/Admin review scenarios:
+            // returns TA profile data plus resume preview URL.
             String targetUserId = value(req.getParameter("userId"));
             if (targetUserId.isEmpty()) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -315,6 +321,9 @@ public class UserServlet extends HttpServlet {
 
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
             req.setCharacterEncoding("UTF-8");
+            // POST /api/user/profile
+            // Accepts multipart form from TA profile wizard; supports partial updates
+            // by falling back to old stored values when a field is omitted.
             String userName = value(req.getParameter("userName"));
             String email = value(req.getParameter("email"));
             String grade = value(req.getParameter("grade"));
@@ -383,6 +392,9 @@ public class UserServlet extends HttpServlet {
 
                     Part part = req.getPart("resumeFile");
                     if (part != null && part.getSize() > 0) {
+                        // Storage strategy:
+                        // - physical file name is normalized to {userId}.pdf for deterministic overwrite,
+                        // - original uploaded file name is preserved for UI display.
                         String submitted = value(part.getSubmittedFileName());
                         String lower = submitted.toLowerCase();
                         if (!lower.endsWith(".pdf")) {

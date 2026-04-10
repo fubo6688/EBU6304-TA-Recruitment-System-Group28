@@ -197,10 +197,12 @@
     let currentStatus = 'all';
 
     function normalizeStatus(status) {
+      // Normalize status text from backend to simplify filtering and styling.
       return String(status || 'pending').toLowerCase();
     }
 
     function statusClass(status) {
+      // Map normalized status to semantic badge style class.
       const s = normalizeStatus(status);
       if (s === 'approved') return 'status-approved';
       if (s === 'rejected') return 'status-rejected';
@@ -212,6 +214,9 @@
       const tbody = document.querySelector('#applicationsTable tbody');
       if (!tbody) return;
 
+      // Keep status filtering on client side so the TA can switch between
+      // all/pending/approved/rejected instantly after one fetch.
+      // No extra round-trip is needed unless data is reloaded.
       const list = currentStatus === 'all'
         ? allApplications
         : allApplications.filter((a) => normalizeStatus(a.status) === currentStatus);
@@ -238,6 +243,9 @@
 
     async function loadMyApplications() {
       try {
+        // API contract: /application/my-list returns application status + feedback
+        // and enriched position metadata (department/deadline/status), which allows
+        // this page to render a complete status table without additional calls.
         const result = await API.getMyApplications();
         allApplications = Array.isArray(result && result.applications) ? result.applications : [];
         applyFilter();
@@ -247,6 +255,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // TA-only guard, then load applications and bind filter controls.
       const allowed = await taSystem.enforceSessionGuard(['TA']);
       if (!allowed) {
         return;
@@ -254,6 +263,7 @@
       await loadMyApplications();
       document.querySelectorAll('.status-filter').forEach((btn) => {
         btn.addEventListener('click', () => {
+          // Switch current filter state and re-render table immediately.
           document.querySelectorAll('.status-filter').forEach((x) => x.classList.remove('active'));
           btn.classList.add('active');
           currentStatus = btn.getAttribute('data-status') || 'all';

@@ -557,6 +557,7 @@
     });
 
     let currentStep = 1;
+    // In-memory wizard state; submitted as multipart form in submitProfile().
     let profileData = {
       grade: '',
       major: '',
@@ -569,6 +570,7 @@
     };
 
     function nextStep() {
+      // Move forward only when current step validation passes.
       if (validateCurrentStep()) {
         currentStep++;
         if (currentStep <= 4) {
@@ -581,6 +583,7 @@
     }
 
     function prevStep() {
+      // Allow users to go back without losing in-memory selections.
       currentStep--;
       if (currentStep >= 1) {
         updateStepView();
@@ -588,6 +591,9 @@
     }
 
     function validateCurrentStep() {
+      // Wizard-level gate:
+      // Step 1 requires basic profile fields, Step 2 requires skills/time,
+      // Step 3 requires a new or existing resume.
       if (currentStep === 1) {
         const grade = document.getElementById('grade').value;
         const major = document.getElementById('major').value;
@@ -623,6 +629,7 @@
     }
 
     function updateStepView() {
+      // Sync both the content section and stepper UI with currentStep.
       document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.form-section[data-section="' + currentStep + '"]').forEach(s => s.classList.add('active'));
 
@@ -637,11 +644,13 @@
     }
 
     function toggleSkill(element) {
+      // Multi-select skills and keep profileData.skills in sync with selected tags.
       element.classList.toggle('selected');
       profileData.skills = Array.from(document.querySelectorAll('.skill-tag.selected')).map(e => e.textContent);
     }
 
     function collectAvailableTime() {
+      // Convert selected timetable cells into stable slot keys for persistence.
       profileData.availableTime = Array.from(document.querySelectorAll('.time-cell.selected'))
         .map((cell) => cell.getAttribute('data-slot'))
         .filter(Boolean);
@@ -650,6 +659,8 @@
     function handleFileUpload(input) {
       const file = input.files[0];
       if (file) {
+        // Frontend pre-checks before upload request:
+        // allow PDF only and limit size to 10MB for better UX and safer multipart handling.
         if (!file.name.toLowerCase().endsWith('.pdf')) {
           taSystem.showMessage('Only PDF files are supported', 'danger');
           input.value = '';
@@ -679,6 +690,7 @@
     }
 
     function previewResume() {
+      // Preview order: newly uploaded file first, then backend-stored resume.
       if (profileData.resume) {
         const url = URL.createObjectURL(profileData.resume);
         window.open(url, '_blank');
@@ -698,6 +710,7 @@
     }
 
     async function uploadProfileRequest(formData) {
+      // Prefer centralized API helper; fallback keeps page runnable in standalone deployments.
       if (typeof API !== 'undefined' && typeof API.uploadProfile === 'function') {
         return API.uploadProfile(formData);
       }
@@ -725,6 +738,7 @@
     }
 
     function populateConfirmData() {
+      // Render step-4 summary from current wizard state before final submit.
       document.getElementById('confirmGrade').textContent = profileData.grade;
       document.getElementById('confirmMajor').textContent = profileData.major;
       document.getElementById('confirmGPA').textContent = profileData.gpa;
@@ -741,6 +755,7 @@
       }
 
       try {
+        // Field names intentionally match backend /api/user/profile parameters.
         const form = new FormData();
         form.append('userName', localStorage.getItem('userName') || '');
         form.append('email', profileData.email || '');
@@ -790,6 +805,7 @@
     });
 
     function initTimeCells() {
+      // Build deterministic slot identifiers (e.g., "Mon 9:00-12:00") for each cell.
       document.querySelectorAll('.time-table tbody tr').forEach((row) => {
         const slotLabel = row.querySelector('td')?.textContent?.trim() || '';
         const dayHeaders = Array.from(document.querySelectorAll('.time-table thead th')).map((th) => th.textContent.trim());
@@ -814,6 +830,7 @@
     }
 
     function restoreAvailableTime(raw) {
+      // Rehydrate timetable selections from persisted semicolon-delimited slots.
       if (!raw) return;
       const slots = raw.split(';').map((s) => s.trim()).filter(Boolean);
       if (!slots.length) return;
@@ -829,6 +846,7 @@
 
     async function loadExistingProfile() {
       try {
+        // Read persisted profile from backend and hydrate the wizard state.
         const profile = await API.getProfile();
         if (!profile || !profile.userId) return;
 
@@ -870,6 +888,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize interactive timetable and then preload saved profile data.
       initTimeCells();
       await loadExistingProfile();
     });
