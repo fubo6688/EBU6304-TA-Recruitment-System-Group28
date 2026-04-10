@@ -18,3 +18,4 @@ ntf1774267679633|application|Application Submitted|Your application was submitte
 ntf1774267682753|application|Application Submitted|Your application was submitted.|2026-03-23 20:08:02|0
 ntf1775651577329|position|New Position Published|A position has been published: A|2026-04-08 20:32:57|0
 ntf1775652124054|position|New Position Published|A position has been published: A|2026-04-08 20:42:04|0
+ntf1775801924874|application|Application Submitted|Your application was submitted.|2026-04-10 14:18:44|0

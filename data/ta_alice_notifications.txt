@@ -6,3 +6,7 @@ ntf1775647737916|application|Application Result|Your application has been accept
 ntf1775647853380|application|Application Submitted|Your application was submitted.|2026-04-08 19:30:53|0
 ntf1775651577333|position|New Position Published|A position has been published: A|2026-04-08 20:32:57|0
 ntf1775652124057|position|New Position Published|A position has been published: A|2026-04-08 20:42:04|0
+ntf1775802869706|application|Application Result|Your application has been rejected|2026-04-10 14:34:29|0
+ntf1775802877461|application|Application Result|Your application has been accepted|2026-04-10 14:34:37|0
+ntf1775802880372|application|Application Result|Your application has been rejected|2026-04-10 14:34:40|0
+ntf1775802882901|application|Application Result|Your application has been accepted|2026-04-10 14:34:42|0

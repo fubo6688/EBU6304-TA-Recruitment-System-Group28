@@ -296,3 +296,61 @@ log1775709740266|2026-04-09 12:42:20|admin001|管理员|Admin|LOGIN|login|succes
 log1775709753949|2026-04-09 12:42:33|admin001|管理员|Admin|LOGOUT|logout|success
 log1775709776618|2026-04-09 12:42:56|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
 log1775709926540|2026-04-09 12:45:26|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775742911351|2026-04-09 21:55:11|ta002|||LOGIN|login|failed
+log1775742957986|2026-04-09 21:55:57|ta_emma|Emma Wilson|TA|LOGIN|login|success
+log1775742968269|2026-04-09 21:56:08|ta_emma|Emma Wilson|TA|LOGOUT|logout|success
+log1775743006230|2026-04-09 21:56:46|mo_jones|Prof. Jones (Agile Module)|MO|LOGIN|login|success
+log1775743035987|2026-04-09 21:57:15|mo_jones|Prof. Jones (Agile Module)|MO|LOGIN|login|success
+log1775746137129|2026-04-09 22:48:57|ta_emma|Emma Wilson|TA|LOGIN|login|success
+log1775746146628|2026-04-09 22:49:06|ta_emma|Emma Wilson|TA|LOGOUT|logout|success
+log1775801667047|2026-04-10 14:14:27|20210001|张三|TA|LOGIN|login|success
+log1775801801821|2026-04-10 14:16:41|20210001|张三|TA|UPDATE_PROFILE|profile|success
+log1775801809387|2026-04-10 14:16:49|20210001|张三|TA|UPDATE_PROFILE|profile|success
+log1775801924885|2026-04-10 14:18:44|20210001|张三|TA|SUBMIT_APPLICATION|pos1774246445186|success
+log1775802110104|2026-04-10 14:21:50|20210001|张三|TA|LOGOUT|logout|success
+log1775802146581|2026-04-10 14:22:26|ta_emma||TA|LOGIN|login|failed
+log1775802151647|2026-04-10 14:22:31|ta_emma||TA|LOGIN|login|failed
+log1775802156560|2026-04-10 14:22:36|ta_emma||TA|LOGIN|login|failed
+log1775802315570|2026-04-10 14:25:15|admin001|管理员|Admin|LOGIN|login|success
+log1775802323948|2026-04-10 14:25:23|admin001|管理员|Admin|LOGOUT|logout|success
+log1775802344801|2026-04-10 14:25:44|admin001||Admin|LOGIN|login|failed
+log1775802461170|2026-04-10 14:27:41|2023213242|付博|TA|REGISTER|pending approval|success
+log1775802556846|2026-04-10 14:29:16|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775802869707|2026-04-10 14:34:29|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775647667256 -> reject|success
+log1775802877461|2026-04-10 14:34:37|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775647667256 -> accept|success
+log1775802880373|2026-04-10 14:34:40|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775647667256 -> reject|success
+log1775802882902|2026-04-10 14:34:42|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775647667256 -> accept|success
+log1775802929330|2026-04-10 14:35:29|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775802956790|2026-04-10 14:35:56|ta_emma|Emma Wilson|TA|LOGIN|login|success
+log1775803015497|2026-04-10 14:36:55|ta_emma|Emma Wilson|TA|UPDATE_PROFILE|profile|success
+log1775803020328|2026-04-10 14:37:00|ta_emma|Emma Wilson|TA|UPDATE_PROFILE|profile|success
+log1775803035656|2026-04-10 14:37:15|ta_emma|Emma Wilson|TA|SUBMIT_APPLICATION|pos1774246156520|success
+log1775803050651|2026-04-10 14:37:30|ta_emma|Emma Wilson|TA|SUBMIT_APPLICATION|pos1774246224278|success
+log1775803056939|2026-04-10 14:37:36|ta_emma|Emma Wilson|TA|SUBMIT_APPLICATION|pos1775647626466|success
+log1775803088339|2026-04-10 14:38:08|ta_emma|Emma Wilson|TA|UPDATE_PROFILE|profile|success
+log1775803093428|2026-04-10 14:38:13|ta_emma|Emma Wilson|TA|LOGOUT|logout|success
+log1775803119058|2026-04-10 14:38:39|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775803149603|2026-04-10 14:39:09|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775803056937 -> accept|success
+log1775803168639|2026-04-10 14:39:28|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775803266915|2026-04-10 14:41:06|admin_02|Office Coordinator|Admin|LOGIN|login|success
+log1775803277917|2026-04-10 14:41:17|admin_02|Office Coordinator|Admin|APPROVE_REGISTRATION|2023213242 -> active|success
+log1775803288176|2026-04-10 14:41:28|admin_02|Office Coordinator|Admin|LOGOUT|logout|success
+log1775803362816|2026-04-10 14:42:42|admin_02|Office Coordinator|Admin|LOGIN|login|success
+log1775803411010|2026-04-10 14:43:31|admin_02|Office Coordinator|Admin|LOGOUT|logout|success
+log1775803423198|2026-04-10 14:43:43|2023213242|付博|TA|LOGIN|login|success
+log1775803470194|2026-04-10 14:44:30|2023213242|付博|TA|UPDATE_PROFILE|profile|success
+log1775803499846|2026-04-10 14:44:59|2023213242|付博|TA|LOGOUT|logout|success
+log1775803870476|2026-04-10 14:51:10|ta001||TA|LOGIN|login|failed
+log1775803901202|2026-04-10 14:51:41|ta_emma||TA|LOGIN|login|failed
+log1775803904616|2026-04-10 14:51:44|ta_emma||TA|LOGIN|login|failed
+log1775803926600|2026-04-10 14:52:06|ta_emma||TA|LOGIN|login|failed
+log1775804177154|2026-04-10 14:56:17|20210001||TA|LOGIN|login|failed
+log1775804255507|2026-04-10 14:57:35|ta_emma||TA|LOGIN|login|failed
+log1775804259940|2026-04-10 14:57:39|ta_emma||TA|LOGIN|login|failed
+log1775804284320|2026-04-10 14:58:04|mo_smith||MO|LOGIN|login|failed
+log1775804288911|2026-04-10 14:58:08|mo_smith||MO|LOGIN|login|failed
+log1775804290931|2026-04-10 14:58:10|mo_smith||MO|LOGIN|login|failed
+log1775804305049|2026-04-10 14:58:25|admin001||Admin|LOGIN|login|failed
+log1775804308808|2026-04-10 14:58:28|admin001||Admin|LOGIN|login|failed
+log1775805253662|2026-04-10 15:14:13|M001|王老师|MO|LOGIN|login|success
+log1775805264592|2026-04-10 15:14:24|M001|王老师|MO|LOGOUT|logout|success

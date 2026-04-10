@@ -5,3 +5,7 @@ app1774259145592|pos1774246502692|aaaaaa|20210001|张三|M001|first|pending|2026
 app1774259475772|pos1774246224278|sss|20210001|张三|M001|first|pending|2026-03-23|
 app1774259476695|pos1774246156520|sss|20210001|张三|M001|first|pending|2026-03-23|
 app1775647667256|pos1775647626466|A|ta_alice|Alice Zhang|mo_smith|first|approved|2026-04-08|
+app1775801924870|pos1774246445186|Database Systems TA|20210001|张三|M001|first|pending|2026-04-10|
+app1775803035652|pos1774246156520|Software Engineering TA|ta_emma|Emma Wilson|M001|first|pending|2026-04-10|
+app1775803050647|pos1774246224278|Operating Systems TA|ta_emma|Emma Wilson|M001|first|pending|2026-04-10|
+app1775803056937|pos1775647626466|A|ta_emma|Emma Wilson|mo_smith|first|approved|2026-04-10|
