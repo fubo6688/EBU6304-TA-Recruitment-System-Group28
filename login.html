@@ -330,6 +330,14 @@
 
       try {
         const result = await API.getLoginRoleHint(account);
+        
+        if (result && !result.success) {
+          detectedRole = '';
+          setLoginButtonByRole('');
+          setRoleHintText(result.message || 'Role could not be identified', true);
+          return;
+        }
+
         const role = normalizeRole(result && result.role);
         if (!role) {
           detectedRole = '';

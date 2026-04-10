@@ -296,3 +296,75 @@ log1775709740266|2026-04-09 12:42:20|admin001|管理员|Admin|LOGIN|login|succes
 log1775709753949|2026-04-09 12:42:33|admin001|管理员|Admin|LOGOUT|logout|success
 log1775709776618|2026-04-09 12:42:56|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
 log1775709926540|2026-04-09 12:45:26|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775802495773|2026-04-10 14:28:15|admin001||Admin|LOGIN|login|failed
+log1775802511949|2026-04-10 14:28:31|admin001|管理员|Admin|LOGIN|login|success
+log1775802514892|2026-04-10 14:28:34|admin001|管理员|Admin|LOGOUT|logout|success
+log1775802525421|2026-04-10 14:28:45|ta_alice||TA|LOGIN|login|failed
+log1775802528445|2026-04-10 14:28:48|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775802532134|2026-04-10 14:28:52|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775802536791|2026-04-10 14:28:56|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775802539301|2026-04-10 14:28:59|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775811754165|2026-04-10 17:02:34|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775811892788|2026-04-10 17:04:52|ta_alice|Alice Zhang|TA|LOGOUT|logout|success
+log1775812189997|2026-04-10 17:09:50|ta002||TA|LOGIN|login|failed
+log1775812230489|2026-04-10 17:10:30|ta002||TA|LOGIN|login|failed
+log1775812259477|2026-04-10 17:10:59|admin001|管理员|Admin|LOGIN|login|success
+log1775812268594|2026-04-10 17:11:08|admin001|管理员|Admin|LOGIN|login|success
+log1775812795804|2026-04-10 17:19:55|admin001|管理员|Admin|LOGIN|login|success
+log1775812795884|2026-04-10 17:19:55|mo001|王老师|MO|LOGIN|login|success
+log1775812795908|2026-04-10 17:19:55|ta002||TA|LOGIN|login|failed
+log1775812819293|2026-04-10 17:20:19|ta_alice|Alice Zhang|TA|LOGIN|login|success
+log1775813137833|2026-04-10 17:25:37|ta_alice||TA|LOGIN|login|failed
+log1775813159873|2026-04-10 17:25:59|admin001|管理员|Admin|LOGIN|login|success
+log1775813753690|2026-04-10 17:35:53|admin001|管理员|Admin|LOGIN|login|success
+log1775813753835|2026-04-10 17:35:53|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|ta001 -> active|success
+log1775813753859|2026-04-10 17:35:53|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|ta001 -> inactive|success
+log1775813772493|2026-04-10 17:36:12|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775813772514|2026-04-10 17:36:12|admin001|管理员|Admin|LOGIN|login|success
+log1775813772534|2026-04-10 17:36:12|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|ta_bob -> inactive|success
+log1775813772567|2026-04-10 17:36:12|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|ta_bob -> active|success
+log1775813997168|2026-04-10 17:39:57|admin001|||LOGIN|login|failed
+log1775814013859|2026-04-10 17:40:13|admin001|管理员|Admin|LOGIN|login|success
+log1775814039219|2026-04-10 17:40:39|admin001|管理员|Admin|LOGOUT|logout|success
+log1775814069264|2026-04-10 17:41:09|admin001|管理员|Admin|LOGIN|login|success
+log1775814075421|2026-04-10 17:41:15|admin001|管理员|Admin|LOGOUT|logout|success
+log1775817375551|2026-04-10 18:36:15|admin001|管理员|Admin|LOGIN|login|success
+log1775817475430|2026-04-10 18:37:55|admin001|管理员|Admin|LOGIN|login|success
+log1775817636563|2026-04-10 18:40:36|admin001|管理员|Admin|LOGIN|login|success
+log1775817653914|2026-04-10 18:40:53|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|ta_alice -> inactive|success
+log1775817663681|2026-04-10 18:41:03|admin001|管理员|Admin|LOGOUT|logout|success
+log1775817667122|2026-04-10 18:41:07|ta_alice||TA|LOGIN|login|failed
+log1775817709455|2026-04-10 18:41:49|mo_smith||MO|LOGIN|login|failed
+log1775821665722|2026-04-10 19:47:45|mo_smith|||LOGIN|login|failed
+log1775821722688|2026-04-10 19:48:42|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775821754679|2026-04-10 19:49:14|ta_bob|Bob Li|TA|SUBMIT_APPLICATION|pos1775647626466|success
+log1775822311527|2026-04-10 19:58:31|ta_bob||TA|LOGIN|login|failed
+log1775822321424|2026-04-10 19:58:41|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775822334568|2026-04-10 19:58:54|ta_bob|Bob Li|TA|LOGOUT|logout|success
+log1775822336953|2026-04-10 19:58:56|mo_smith||MO|LOGIN|login|failed
+log1775822353282|2026-04-10 19:59:13|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775822373017|2026-04-10 19:59:33|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775821754673 -> reject|success
+log1775822379679|2026-04-10 19:59:39|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775822398308|2026-04-10 19:59:58|ta_bob||TA|LOGIN|login|failed
+log1775822411514|2026-04-10 20:00:11|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775822425359|2026-04-10 20:00:25|ta_bob|Bob Li|TA|LOGOUT|logout|success
+log1775822514687|2026-04-10 20:01:54|M001|王老师|MO|LOGIN|login|success
+log1775822540234|2026-04-10 20:02:20|M001|王老师|MO|UPDATE_POSITION_STATUS|pos1774246156520 -> open|success
+log1775822542694|2026-04-10 20:02:22|M001|王老师|MO|UPDATE_POSITION_STATUS|pos1774246156520 -> open|success
+log1775822811760|2026-04-10 20:06:51|M001|王老师|MO|CREATE_POSITION|B|success
+log1775822817380|2026-04-10 20:06:57|M001|王老师|MO|LOGOUT|logout|success
+log1775822861193|2026-04-10 20:07:41|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775822881049|2026-04-10 20:08:01|ta_bob|Bob Li|TA|LOGOUT|logout|success
+log1775822934150|2026-04-10 20:08:54|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775823109049|2026-04-10 20:11:49|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775823635945|2026-04-10 20:20:35|mo_smith|Dr. Smith (Java Module)|MO|CREATE_POSITION|C|success
+log1775823639622|2026-04-10 20:20:39|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775823666696|2026-04-10 20:21:06|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775823689535|2026-04-10 20:21:29|ta_bob|Bob Li|TA|LOGOUT|logout|success
+log1775823692217|2026-04-10 20:21:32|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775823992578|2026-04-10 20:26:32|ta_bob|Bob Li|TA|LOGOUT|logout|success
+log1775829707089|2026-04-10 22:01:47|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775830059551|2026-04-10 22:07:39|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775830407053|2026-04-10 22:13:27|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775831549562|2026-04-10 22:32:29|ta_bob|Bob Li|TA|LOGIN|login|success
+log1775831558061|2026-04-10 22:32:38|ta_bob|Bob Li|TA|LOGOUT|logout|success

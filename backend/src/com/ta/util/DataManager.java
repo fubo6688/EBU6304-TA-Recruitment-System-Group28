@@ -4,11 +4,14 @@ import java.io.*;
 import java.nio.file.*;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 import com.ta.model.User;
 
 public class DataManager {
+    // 统一数据目录（用户、岗位、申请、日志、资料）入口。
     private final Path dataDir;
 
     private static final String USERS_FILE = "users.txt";
@@ -21,11 +24,13 @@ public class DataManager {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     public DataManager() {
+        // 启动时解析 data 目录并确保基础文件可用。
         this.dataDir = resolveDataDir();
         ensureDataDirAndDefaults();
     }
 
     private Path resolveDataDir() {
+        // 优先读取显式配置，便于在不同部署环境下复用同一套代码。
         String custom = System.getProperty("ta.data.dir");
         if (custom == null || custom.trim().isEmpty()) {
             custom = System.getenv("TA_DATA_DIR");
@@ -39,12 +44,31 @@ public class DataManager {
             return appData;
         }
 
-        Path backendData = Paths.get("backend", "data");
-        if (Files.exists(backendData) || Files.exists(backendData.getParent())) {
-            return backendData;
+        Path workspaceData = resolveWorkspaceDataDir();
+        if (workspaceData != null) {
+            return workspaceData;
         }
 
         return Paths.get("data");
+    }
+
+    private Path resolveWorkspaceDataDir() {
+        try {
+            // 本地开发统一回到工作区根目录 data/，避免出现 backend/data 与根 data 双写。
+            Path cwd = Paths.get("").toAbsolutePath().normalize();
+            if (cwd.getFileName() != null && "backend".equalsIgnoreCase(String.valueOf(cwd.getFileName()))) {
+                Path parent = cwd.getParent();
+                if (parent != null) {
+                    return parent.resolve("data");
+                }
+            }
+
+            if (Files.exists(cwd.resolve("backend")) || Files.exists(cwd.resolve("README.md"))) {
+                return cwd.resolve("data");
+            }
+        } catch (Exception ignore) {
+        }
+        return null;
     }
 
     private Path resolveDataDirFromCodeSource() {
@@ -76,6 +100,7 @@ public class DataManager {
 
     private void ensureDataDirAndDefaults() {
         try {
+            // 首次启动自动创建目录与基础文件，降低手动部署门槛。
             Files.createDirectories(dataDir);
             ensureFile(USERS_FILE);
             ensureFile(POSITIONS_FILE);
@@ -171,6 +196,7 @@ public class DataManager {
     }
 
     public synchronized User validateLogin(String userId, String password) {
+        // 登录校验与账号状态绑定，inactive/pending 不可直接登录。
         User user = getUserById(userId);
         if (user != null && "active".equalsIgnoreCase(user.getStatus()) && user.getPassword().equals(password)) {
             return user;
@@ -204,6 +230,8 @@ public class DataManager {
     }
 
     public synchronized List<Map<String, String>> getAllPositions() {
+        // 每次读取岗位前先做一次过期关停，确保前端拿到的状态是最新的。
+        autoCloseExpiredPositions();
         List<Map<String, String>> positions = new ArrayList<>();
         for (String line : readLinesSafe(resolve(POSITIONS_FILE))) {
             if (line == null || line.trim().isEmpty()) {
@@ -232,6 +260,55 @@ public class DataManager {
         return positions;
     }
 
+    private void autoCloseExpiredPositions() {
+        // 自动将 "open 且 deadline < 今天" 的岗位改为 closed 并落盘。
+        Path file = resolve(POSITIONS_FILE);
+        List<String> lines = readLinesSafe(file);
+        if (lines.isEmpty()) {
+            return;
+        }
+
+        boolean changed = false;
+        LocalDate today = LocalDate.now();
+        List<String> updated = new ArrayList<>(lines.size());
+
+        for (String line : lines) {
+            if (line == null || line.trim().isEmpty()) {
+                updated.add(line);
+                continue;
+            }
+
+            String[] p = line.split("\\|", -1);
+            if (p.length >= 13) {
+                String status = p[10] == null ? "" : p[10].trim().toLowerCase(Locale.ROOT);
+                String deadline = p[12] == null ? "" : p[12].trim();
+                if ("open".equals(status) && isPastDeadline(deadline, today)) {
+                    p[10] = "closed";
+                    line = String.join("|", p);
+                    changed = true;
+                }
+            }
+
+            updated.add(line);
+        }
+
+        if (changed) {
+            writeLinesSafe(file, updated);
+        }
+    }
+
+    private boolean isPastDeadline(String deadline, LocalDate today) {
+        if (deadline == null || deadline.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            LocalDate d = LocalDate.parse(deadline.trim());
+            return d.isBefore(today);
+        } catch (DateTimeParseException ignore) {
+            return false;
+        }
+    }
+
     public synchronized Map<String, String> getPositionById(String positionId) {
         for (Map<String, String> item : getAllPositions()) {
             if (positionId.equals(item.get("id"))) {
@@ -249,6 +326,7 @@ public class DataManager {
                                                            String moId,
                                                            String openings,
                                                            String deadline) {
+        // 新建岗位默认 open，计数从 0 开始。
         String id = nextId("pos");
         String line = String.join("|",
                 id,
@@ -405,6 +483,7 @@ public class DataManager {
             return null;
         }
 
+        // 同一用户对同一岗位的未撤回申请只保留一条，避免重复投递。
         for (Map<String, String> app : getAllApplications()) {
             if (positionId.equals(app.get("positionId")) && userId.equals(app.get("userId")) && !"canceled".equalsIgnoreCase(app.get("status"))) {
                 return app;
@@ -460,6 +539,7 @@ public class DataManager {
     }
 
     public synchronized boolean updateApplicationStatus(String applicationId, String status, String feedback) {
+        // 申请状态变化会联动岗位计数（appliedCount / acceptedCount）。
         List<Map<String, String>> apps = getAllApplications();
         boolean found = false;
         String positionId = null;
@@ -505,6 +585,7 @@ public class DataManager {
     }
 
     private void incrementPositionCounter(String positionId, String field, int delta) {
+        // 防止计数出现负数，统一在这里做下界保护。
         List<Map<String, String>> positions = getAllPositions();
         List<String> lines = new ArrayList<>();
         for (Map<String, String> p : positions) {
@@ -522,6 +603,7 @@ public class DataManager {
     }
 
     public synchronized void saveNotification(String userId, String type, String title, String message) {
+        // 每个用户独立通知文件，读写简单且便于按用户隔离。
         String line = String.join("|",
                 nextId("ntf"),
                 safe(type),
@@ -549,6 +631,7 @@ public class DataManager {
                 item.put("time", p[4]);
                 item.put("read", p[5]);
             } else {
+                // 兼容历史旧格式（纯文本一行），读取时补齐结构化字段。
                 item.put("id", nextId("legacy"));
                 item.put("type", "system");
                 item.put("title", "系统通知");
@@ -608,6 +691,7 @@ public class DataManager {
                                          String resumeStoredName,
                                          String availableTime,
                                          String avatarStoredName) {
+        // 资料按 userId 单条覆盖写入，避免出现同一用户多条记录。
         List<String> lines = readLinesSafe(resolve(PROFILES_FILE));
         List<String> updated = new ArrayList<>();
         boolean replaced = false;
@@ -660,6 +744,7 @@ public class DataManager {
                 result.put("email", p[4]);
                 result.put("skills", p[5]);
                 result.put("resumeFileName", p[6]);
+                // 兼容历史字段版本：老数据缺 avatar/availableTime 时给默认值。
                 if (p.length >= 11) {
                     result.put("resumeStoredName", p[7]);
                     result.put("availableTime", p[8]);
@@ -688,6 +773,7 @@ public class DataManager {
                                       String action,
                                       String detail,
                                       String result) {
+        // 日志按时间追加，便于审计登录、审批、状态变更等关键动作。
         String line = String.join("|",
                 nextId("log"),
                 nowDateTime(),
@@ -800,6 +886,7 @@ public class DataManager {
             workload.add(item);
         }
 
+        // 先按当前在岗负载（approved）降序，再按姓名升序，方便 Admin 快速比较。
         workload.sort((a, b) -> {
             int ca = (Integer) a.get("currentLoad");
             int cb = (Integer) b.get("currentLoad");
@@ -826,6 +913,7 @@ public class DataManager {
         if (v == null) {
             return "";
         }
+        // 统一清洗分隔符和换行，避免破坏 txt 管道分隔格式。
         return v.replace("|", "/").replace("\n", " ").replace("\r", " ").trim();
     }
 }

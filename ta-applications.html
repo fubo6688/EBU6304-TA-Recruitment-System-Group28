@@ -163,10 +163,10 @@
       <div class="toolbar">
         <h2 style="margin:0;">My Application Status</h2>
         <div class="filters">
-          <button class="status-filter active" data-status="all">All</button>
-          <button class="status-filter" data-status="pending">Pending</button>
-          <button class="status-filter" data-status="approved">Approved</button>
-          <button class="status-filter" data-status="rejected">Rejected</button>
+          <button type="button" class="status-filter active" data-status="all">All</button>
+          <button type="button" class="status-filter" data-status="pending">Pending</button>
+          <button type="button" class="status-filter" data-status="approved">Approved</button>
+          <button type="button" class="status-filter" data-status="rejected">Rejected</button>
         </div>
       </div>
 
@@ -197,7 +197,18 @@
     let currentStatus = 'all';
 
     function normalizeStatus(status) {
-      return String(status || 'pending').toLowerCase();
+      return String(status || 'pending').trim().toLowerCase();
+    }
+
+    function normalizeStatusFilter(status) {
+      const s = String(status || '').trim().toLowerCase();
+      if (!s || s === 'all' || s.includes('all')) {
+        return 'all';
+      }
+      if (s === 'pending' || s === 'approved' || s === 'rejected' || s === 'canceled') {
+        return s;
+      }
+      return 'all';
     }
 
     function statusClass(status) {
@@ -212,9 +223,10 @@
       const tbody = document.querySelector('#applicationsTable tbody');
       if (!tbody) return;
 
-      const list = currentStatus === 'all'
+      const statusFilter = normalizeStatusFilter(currentStatus);
+      const list = statusFilter === 'all'
         ? allApplications
-        : allApplications.filter((a) => normalizeStatus(a.status) === currentStatus);
+        : allApplications.filter((a) => normalizeStatus(a.status) === statusFilter);
 
       if (!list.length) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">No applications found</td></tr>';
@@ -252,14 +264,19 @@
         return;
       }
       await loadMyApplications();
-      document.querySelectorAll('.status-filter').forEach((btn) => {
-        btn.addEventListener('click', () => {
+
+      const filterWrap = document.querySelector('.toolbar .filters');
+      if (filterWrap) {
+        filterWrap.addEventListener('click', (e) => {
+          const btn = e.target.closest('.status-filter[data-status]');
+          if (!btn) return;
+
           document.querySelectorAll('.status-filter').forEach((x) => x.classList.remove('active'));
           btn.classList.add('active');
-          currentStatus = btn.getAttribute('data-status') || 'all';
+          currentStatus = normalizeStatusFilter(btn.getAttribute('data-status') || 'all');
           applyFilter();
         });
-      });
+      }
     });
   </script>
 </body>
