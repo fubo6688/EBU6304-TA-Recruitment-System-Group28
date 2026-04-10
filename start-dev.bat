@@ -1,4 +1,4 @@
 @echo off
 setlocal
-powershell -ExecutionPolicy Bypass -File "%~dp0start-dev.ps1"
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -ExecutionPolicy Bypass -File "%~dp0start-dev.ps1"
 endlocal
