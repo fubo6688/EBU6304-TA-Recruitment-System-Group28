@@ -15,6 +15,7 @@ function Write-Step {
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $stopScript = Join-Path $projectRoot "stop-dev.ps1"
 $startScript = Join-Path $projectRoot "start-dev.ps1"
+$powershellExe = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
 
 if (-not (Test-Path $stopScript)) {
     throw "stop-dev.ps1 not found: $stopScript"
@@ -29,7 +30,7 @@ if ($ForceKill) {
     $stopArgs += "-ForceKill"
 }
 
-& powershell @stopArgs
+& $powershellExe @stopArgs
 if ($LASTEXITCODE -ne 0) {
     if (-not $ForceKill) {
         Write-Host "`n==> stop-dev.ps1 did not fully release the port; retrying with -ForceKill" -ForegroundColor Yellow
@@ -48,7 +49,7 @@ if ($NoBrowser) {
 }
 $startArgs += "-ForceRestart"
 
-& powershell @startArgs
+& $powershellExe @startArgs
 if ($LASTEXITCODE -ne 0) {
     throw "start-dev.ps1 failed with exit code $LASTEXITCODE"
 }

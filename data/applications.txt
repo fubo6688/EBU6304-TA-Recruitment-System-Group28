@@ -1,6 +1,6 @@
 app1774244690902|pos1774243599623|d|20210001|张三|M001|first|approved|2026-03-23|审核通过
 app1774255818933|pos1774246224278|sss|20210001|张三|M001|first|canceled|2026-03-23|申请已撤回
-app1774255844166|pos1774242667613|sasss|20210001|张三|M001|first|rejected|2026-03-23|111
+app1774255844166|pos1774242667613|sasss|20210001|张三|M001|first|rejected|2026-03-23|6
 app1774259145592|pos1774246502692|aaaaaa|20210001|张三|M001|first|pending|2026-03-23|
 app1774259475772|pos1774246224278|sss|20210001|张三|M001|first|pending|2026-03-23|
 app1774259476695|pos1774246156520|sss|20210001|张三|M001|first|pending|2026-03-23|
@@ -9,3 +9,7 @@ app1775801924870|pos1774246445186|Database Systems TA|20210001|张三|M001|first
 app1775803035652|pos1774246156520|Software Engineering TA|ta_emma|Emma Wilson|M001|first|pending|2026-04-10|
 app1775803050647|pos1774246224278|Operating Systems TA|ta_emma|Emma Wilson|M001|first|pending|2026-04-10|
 app1775803056937|pos1775647626466|A|ta_emma|Emma Wilson|mo_smith|first|approved|2026-04-10|
+app1775835392668|pos1774243599623|Algorithms TA|ta_emma|Emma Wilson|M001|first|pending|2026-04-10|
+app1775835395722|pos1774246445186|Database Systems TA|ta_emma|Emma Wilson|M001|first|pending|2026-04-10|
+app1775835396939|pos1774246502692|Web Development TA|ta_emma|Emma Wilson|M001|first|pending|2026-04-10|
+app1775835680752|pos1775835543560|DSD|ta_david|David Wang|mo_jones|first|approved|2026-04-10|2152315

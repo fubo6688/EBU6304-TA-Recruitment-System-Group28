@@ -11,7 +11,12 @@ function Resolve-TomcatHome {
         return $env:CATALINA_HOME
     }
 
-    $candidates = @("D:/apache-tomcat*", "C:/apache-tomcat*", "C:/Program Files/Apache Software Foundation/Tomcat*")
+    $candidates = @(
+        "D:/apache-tomcat*",
+        "C:/apache-tomcat*",
+        "C:/Program Files/Apache Software Foundation/Tomcat*",
+        "D:/Program Files/Apache Software Foundation/Tomcat*"
+    )
     foreach ($pattern in $candidates) {
         $match = Get-ChildItem -Path $pattern -Directory -ErrorAction SilentlyContinue |
             Sort-Object LastWriteTime -Descending |
@@ -28,8 +33,17 @@ if (-not (Test-Path $shutdownBat)) {
     throw ("Tomcat shutdown script not found at {0}" -f $shutdownBat)
 }
 
+$env:CATALINA_HOME = $tomcatHome
+$env:CATALINA_BASE = $tomcatHome
+
 Write-Host ("Stopping Tomcat from {0}" -f $tomcatHome)
-& $shutdownBat | Out-Null
+Push-Location (Join-Path $tomcatHome "bin")
+try {
+    & $env:ComSpec /c "`"$shutdownBat`"" | Out-Null
+}
+finally {
+    Pop-Location
+}
 Start-Sleep -Seconds 3
 
 $listeners = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
