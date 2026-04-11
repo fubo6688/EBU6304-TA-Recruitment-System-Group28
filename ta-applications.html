@@ -196,13 +196,25 @@
     let allApplications = [];
     let currentStatus = 'all';
 
+    // 功能：标准化状态值，避免大小写与空值影响判断。
     function normalizeStatus(status) {
-      // Normalize status text from backend to simplify filtering and styling.
-      return String(status || 'pending').toLowerCase();
+      return String(status || 'pending').trim().toLowerCase();
     }
 
+    // 功能：标准化筛选状态值。
+    function normalizeStatusFilter(status) {
+      const s = String(status || '').trim().toLowerCase();
+      if (!s || s === 'all' || s.includes('all')) {
+        return 'all';
+      }
+      if (s === 'pending' || s === 'approved' || s === 'rejected' || s === 'canceled') {
+        return s;
+      }
+      return 'all';
+    }
+
+    // 功能：处理 statusClass 相关逻辑。
     function statusClass(status) {
-      // Map normalized status to semantic badge style class.
       const s = normalizeStatus(status);
       if (s === 'approved') return 'status-approved';
       if (s === 'rejected') return 'status-rejected';
@@ -210,14 +222,13 @@
       return 'status-pending';
     }
 
+    // 功能：应用当前筛选条件并刷新结果。
     function applyFilter() {
       const tbody = document.querySelector('#applicationsTable tbody');
       if (!tbody) return;
 
-      // Keep status filtering on client side so the TA can switch between
-      // all/pending/approved/rejected instantly after one fetch.
-      // No extra round-trip is needed unless data is reloaded.
-      const list = currentStatus === 'all'
+      const statusFilter = normalizeStatusFilter(currentStatus);
+      const list = statusFilter === 'all'
         ? allApplications
         : allApplications.filter((a) => normalizeStatus(a.status) === statusFilter);
 
@@ -241,11 +252,9 @@
       `).join('');
     }
 
+    // 功能：加载相关数据并更新页面。
     async function loadMyApplications() {
       try {
-        // API contract: /application/my-list returns application status + feedback
-        // and enriched position metadata (department/deadline/status), which allows
-        // this page to render a complete status table without additional calls.
         const result = await API.getMyApplications();
         allApplications = Array.isArray(result && result.applications) ? result.applications : [];
         applyFilter();
@@ -255,15 +264,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // TA-only guard, then load applications and bind filter controls.
       const allowed = await taSystem.enforceSessionGuard(['TA']);
       if (!allowed) {
         return;
       }
       await loadMyApplications();
-      document.querySelectorAll('.status-filter').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          // Switch current filter state and re-render table immediately.
+
+      const filterWrap = document.querySelector('.toolbar .filters');
+      if (filterWrap) {
+        filterWrap.addEventListener('click', (e) => {
+          const btn = e.target.closest('.status-filter[data-status]');
+          if (!btn) return;
+
           document.querySelectorAll('.status-filter').forEach((x) => x.classList.remove('active'));
           btn.classList.add('active');
           currentStatus = normalizeStatusFilter(btn.getAttribute('data-status') || 'all');

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -37,17 +37,21 @@
     body {
       position: relative;
       overflow: hidden;
+      background-color: #4b5fd6;
       background:
-        linear-gradient(135deg, #4f46e5 0%, #5b67d2 42%, #6d28d9 100%);
-      background-image: url('images/g.jpg');
-      background-position: center;
-      background-size: cover;
-      background-repeat: no-repeat;
+        linear-gradient(135deg, rgba(38, 84, 218, 0.42) 0%, rgba(112, 52, 198, 0.34) 100%),
+        url('assetsauth_bg.jpg') center center / cover no-repeat fixed;
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
       padding: 24px 16px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        background-attachment: scroll;
+      }
     }
 
     .login-container {
@@ -263,6 +267,7 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
+    // 功能：设置页面状态或显示内容。
     function setLockInfo(message) {
       const lockInfo = document.getElementById('lockInfo');
       if (!lockInfo) return;
@@ -291,6 +296,7 @@
     let detectedRole = '';
     let roleHintTimer = null;
 
+    // 功能：标准化角色值，便于统一判断。
     function normalizeRole(role) {
       const r = (role || '').toString().trim().toLowerCase();
       if (r === 'ta') return 'TA';
@@ -299,6 +305,7 @@
       return '';
     }
 
+    // 功能：设置页面状态或显示内容。
     function setLoginButtonByRole(role) {
       const btn = document.getElementById('loginBtn');
       if (!btn) return;
@@ -314,6 +321,7 @@
       }
     }
 
+    // 功能：设置页面状态或显示内容。
     function setRoleHintText(text, isWarning = false) {
       const roleHint = document.getElementById('roleHint');
       if (!roleHint) return;
@@ -321,6 +329,7 @@
       roleHint.style.color = isWarning ? 'var(--danger-color)' : 'var(--gray-500)';
     }
 
+    // 功能：根据账号实时识别角色并更新提示。
     async function detectRoleByAccount(userId) {
       const account = (userId || '').trim();
       if (!account) {
@@ -354,10 +363,11 @@
       } catch (error) {
         detectedRole = '';
         setLoginButtonByRole('');
-        setRoleHintText('Account not found', true);
+        setRoleHintText('Cannot connect to server', true);
       }
     }
 
+    // 功能：处理当前回调逻辑。
     document.getElementById('username').addEventListener('input', function() {
       const value = this.value || '';
       if (roleHintTimer) {
@@ -368,6 +378,7 @@
       }, 250);
     });
 
+    // 功能：处理当前回调逻辑。
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       setLockInfo('');

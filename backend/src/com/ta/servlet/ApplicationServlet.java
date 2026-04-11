@@ -16,9 +16,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 申请流程 Servlet。
+ *
+ * <p>覆盖 TA 投递、MO/Admin 审核、TA 查询我的申请与审核列表读取，
+ * 并在关键路径中执行角色权限与归属校验。</p>
+ */
 public class ApplicationServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
+    /**
+     * 处理申请查询类 GET 接口（审核列表、我的申请）。
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -103,6 +112,9 @@ public class ApplicationServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
+    /**
+     * 处理申请写操作 POST 接口（提交、审核）。
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
@@ -228,6 +240,9 @@ public class ApplicationServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
+    /**
+     * 过滤出当前 MO 可管理的申请集合。
+     */
     private List<Map<String, String>> filterMoApplications(List<Map<String, String>> all, User user) {
         List<Map<String, String>> result = new ArrayList<>();
         for (Map<String, String> app : all) {
@@ -239,11 +254,17 @@ public class ApplicationServlet extends HttpServlet {
         return result;
     }
 
+    /**
+     * 判断申请是否归属于当前 MO（兼容 userId/qmId）。
+     */
     private boolean isMoOwner(User user, String moId) {
         // moId 既可能存用户账号，也可能存 qmId，两者都视为归属。
         return eq(moId, user.getUserId()) || eq(moId, user.getQmId());
     }
 
+    /**
+     * 统一登录态校验：要求已登录且账号 active。
+     */
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -267,6 +288,9 @@ public class ApplicationServlet extends HttpServlet {
         return user;
     }
 
+    /**
+     * 判断当前用户角色是否命中给定角色集合。
+     */
     private boolean isRole(User user, String... roles) {
         for (String role : roles) {
             if (role.equalsIgnoreCase(user.getRole())) {
@@ -276,10 +300,16 @@ public class ApplicationServlet extends HttpServlet {
         return false;
     }
 
+    /**
+     * 忽略大小写比较两个字符串是否相等。
+     */
     private boolean eq(String a, String b) {
         return a != null && b != null && a.equalsIgnoreCase(b);
     }
 
+    /**
+     * 获取投递校验所需档案，兼容 userId 与 qmId 双键。
+     */
     private Map<String, String> getProfileForApply(User user) {
         if (user == null) {
             return null;
@@ -297,6 +327,9 @@ public class ApplicationServlet extends HttpServlet {
         return null;
     }
 
+    /**
+     * 投递前档案完整性判断：基础信息、技能与可用时间、简历均需存在。
+     */
     private boolean isProfileCompleteForApply(Map<String, String> profile) {
         if (profile == null) {
             return false;
@@ -320,6 +353,9 @@ public class ApplicationServlet extends HttpServlet {
                 && (!resumeFileName.isEmpty() || !resumeStoredName.isEmpty());
     }
 
+    /**
+     * 空值安全取值并去首尾空白。
+     */
     private String value(String s) {
         return s == null ? "" : s.trim();
     }

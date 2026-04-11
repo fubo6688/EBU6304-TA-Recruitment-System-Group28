@@ -11,11 +11,23 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
+/**
+ * 全局 CORS 过滤器。
+ *
+ * <p>允许跨域访问 API，并支持带 Cookie 的会话请求；
+ * 对 OPTIONS 预检请求直接返回 200。</p>
+ */
 public class CORSFilter implements Filter {
     @Override
+    /**
+     * 过滤器初始化：当前无需额外配置。
+     */
     public void init(FilterConfig filterConfig) throws ServletException {
     }
 
+    /**
+     * 为响应注入 CORS 头并处理 OPTIONS 预检短路。
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -46,6 +58,9 @@ public class CORSFilter implements Filter {
     }
 
     @Override
+    /**
+     * 过滤器销毁：当前无资源清理逻辑。
+     */
     public void destroy() {
     }
 }

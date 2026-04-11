@@ -16,9 +16,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 管理员后台聚合接口。
+ *
+ * <p>提供 dashboard、positions、ta-workload 等只读管理视图数据，
+ * 并在入口处统一校验会话与 Admin 角色。</p>
+ */
 public class AdminServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
+    /**
+     * 处理管理员 GET 接口：dashboard、positions、ta-workload。
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -100,6 +109,9 @@ public class AdminServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
+    /**
+     * 统一 Admin 权限校验：未登录/停用/非管理员均拦截。
+     */
     private User requireAdmin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -132,6 +144,9 @@ public class AdminServlet extends HttpServlet {
         return user;
     }
 
+    /**
+     * 空值安全取值并去首尾空白。
+     */
     private String value(String s) {
         return s == null ? "" : s.trim();
     }

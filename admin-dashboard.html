@@ -246,10 +246,12 @@
   <script>
     let allPositions = [];
 
+    // 功能：标准化文本输入，便于比较与搜索。
     function normalizeText(value) {
       return (value || '').toString().trim().toLowerCase();
     }
 
+    // 功能：渲染界面内容。
     function renderSummary(summary) {
       const cards = document.getElementById('summaryCards');
       if (!cards) return;
@@ -269,6 +271,7 @@
       `).join('');
     }
 
+    // 功能：渲染岗位列表视图。
     function renderPositions(positions) {
       const tbody = document.querySelector('#positionsTable tbody');
       if (!tbody) return;
@@ -290,6 +293,7 @@
       `).join('');
     }
 
+    // 功能：应用当前设置并刷新结果。
     function applyPositionFilters() {
       const status = normalizeText(document.getElementById('statusFilter')?.value || 'all');
       const course = normalizeText(document.getElementById('courseFilter')?.value || '');
@@ -309,6 +313,7 @@
       renderPositions(filtered);
     }
 
+    // 功能：处理 clearPositionFilters 相关逻辑。
     function clearPositionFilters() {
       const statusEl = document.getElementById('statusFilter');
       const courseEl = document.getElementById('courseFilter');
@@ -317,6 +322,7 @@
       applyPositionFilters();
     }
 
+    // 功能：渲染界面内容。
     function renderWorkload(items) {
       const tbody = document.querySelector('#workloadTable tbody');
       if (!tbody) return;
@@ -337,6 +343,7 @@
       `).join('');
     }
 
+    // 功能：加载管理员仪表盘数据并渲染。
     async function loadDashboard() {
       try {
         const result = await API.getAdminDashboard();
