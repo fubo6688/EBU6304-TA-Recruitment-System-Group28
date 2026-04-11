@@ -1,0 +1,424 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Login - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      inset: auto;
+      pointer-events: none;
+      border-radius: 50%;
+      filter: blur(18px);
+      opacity: 0.35;
+      z-index: 0;
+    }
+
+    body::before {
+      width: 240px;
+      height: 240px;
+      top: -90px;
+      right: -90px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    body::after {
+      width: 220px;
+      height: 220px;
+      left: -90px;
+      bottom: -90px;
+      background: rgba(79, 70, 229, 0.16);
+    }
+
+    body {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, #4f46e5 0%, #5b67d2 42%, #6d28d9 100%);
+      background-image: url('images/g.jpg');
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-topbar {
+      display: flex;
+      justify-content: center;
+      padding: 2px 0 6px;
+      color: var(--white);
+    }
+
+    .login-topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 0;
+    }
+
+    .login-topbar-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+    }
+
+    .login-topbar-text {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 22px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 18px 46px rgba(15, 23, 42, 0.18);
+      backdrop-filter: blur(16px);
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .login-title {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-align: center;
+      color: #1f2937;
+      letter-spacing: -0.02em;
+    }
+
+    .login-subtitle {
+      text-align: center;
+      color: var(--gray-500);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    .login-footer {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.88);
+      margin-top: 4px;
+      font-size: 12px;
+      letter-spacing: 0.03em;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: rgba(30, 58, 138, 0.08);
+      border: 1px solid rgba(30, 58, 138, 0.08);
+      cursor: pointer;
+      color: var(--gray-500);
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .forgot-password {
+      text-align: right;
+      margin-top: 14px;
+    }
+
+    .forgot-password a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .forgot-password a:hover {
+      text-decoration: underline;
+    }
+
+    .form-error-inline {
+      color: var(--danger-color);
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .form-error-inline.show {
+      display: block;
+    }
+
+    .lock-info {
+      background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%);
+      color: var(--danger-color);
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      text-align: center;
+      margin-bottom: 16px;
+      display: none;
+      border: 1px solid rgba(239, 68, 68, 0.14);
+    }
+
+    .lock-info.show {
+      display: block;
+    }
+
+    .register-entry {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(148, 163, 184, 0.35);
+      text-align: center;
+    }
+
+    .register-entry p {
+      margin-bottom: 10px;
+      color: var(--gray-500);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-topbar">
+      <div class="login-topbar-logo">
+        <div class="login-topbar-icon">TA</div>
+        <div class="login-topbar-text">TARecruitment system</div>
+      </div>
+    </div>
+
+    <div class="login-card">
+      <h1 class="login-title">Login</h1>
+      
+      <div class="lock-info" id="lockInfo"></div>
+
+      <form id="loginForm">
+        <!-- Accountenter -->
+        <div class="form-group">
+          <label class="form-label required">Account</label>
+          <input type="text" id="username" class="form-control" placeholder="Enter your QM student or staff ID" required>
+          <div id="roleHint" style="margin-top:6px;font-size:12px;color:var(--gray-500);">Role will be identified automatically</div>
+          <div class="form-error-inline"></div>
+        </div>
+
+        <!-- Passwordenter -->
+        <div class="form-group">
+          <label class="form-label required">Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" class="form-control" placeholder="Enter your password" required style="padding-right: 44px;">
+            <button type="button" class="password-toggle" id="passwordToggle">👁️</button>
+          </div>
+          <div class="form-error-inline"></div>
+        </div>
+
+        <!-- Loginbutton -->
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="loginBtn">Login</button>
+      </form>
+
+      <div class="forgot-password">
+        <a href="#">Forgot your password?</a>
+      </div>
+
+      <div class="register-entry">
+        <p>New TA/MO user?</p>
+        <a href="register.html" class="btn btn-secondary btn-block">Go to Register</a>
+      </div>
+    </div>
+
+    <div class="login-footer">
+      <p>©2025-26 EBU6304 Software Engineering Group28</p>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    function setLockInfo(message) {
+      const lockInfo = document.getElementById('lockInfo');
+      if (!lockInfo) return;
+      if (!message) {
+        lockInfo.textContent = '';
+        lockInfo.classList.remove('show');
+        return;
+      }
+      lockInfo.textContent = message;
+      lockInfo.classList.add('show');
+    }
+
+    // Passwordshow/hide
+    document.getElementById('passwordToggle').addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        this.textContent = '🙈';
+      } else {
+        passwordInput.type = 'password';
+        this.textContent = '👁️';
+      }
+    });
+
+    // Form Submission
+    let detectedRole = '';
+    let roleHintTimer = null;
+
+    function normalizeRole(role) {
+      const r = (role || '').toString().trim().toLowerCase();
+      if (r === 'ta') return 'TA';
+      if (r === 'mo') return 'MO';
+      if (r === 'admin') return 'Admin';
+      return '';
+    }
+
+    function setLoginButtonByRole(role) {
+      const btn = document.getElementById('loginBtn');
+      if (!btn) return;
+      const normalized = normalizeRole(role);
+      if (normalized === 'TA') {
+        btn.textContent = 'TA Login';
+      } else if (normalized === 'MO') {
+        btn.textContent = 'MO Login';
+      } else if (normalized === 'Admin') {
+        btn.textContent = 'Admin Login';
+      } else {
+        btn.textContent = 'Login';
+      }
+    }
+
+    function setRoleHintText(text, isWarning = false) {
+      const roleHint = document.getElementById('roleHint');
+      if (!roleHint) return;
+      roleHint.textContent = text;
+      roleHint.style.color = isWarning ? 'var(--danger-color)' : 'var(--gray-500)';
+    }
+
+    async function detectRoleByAccount(userId) {
+      const account = (userId || '').trim();
+      if (!account) {
+        detectedRole = '';
+        setLoginButtonByRole('');
+        setRoleHintText('Role will be identified automatically');
+        return;
+      }
+
+      try {
+        const result = await API.getLoginRoleHint(account);
+        const role = normalizeRole(result && result.role);
+        if (!role) {
+          detectedRole = '';
+          setLoginButtonByRole('');
+          setRoleHintText('Role could not be identified', true);
+          return;
+        }
+
+        detectedRole = role;
+        setLoginButtonByRole(role);
+        setRoleHintText(`Detected role: ${role}`);
+      } catch (error) {
+        detectedRole = '';
+        setLoginButtonByRole('');
+        setRoleHintText('Account not found', true);
+      }
+    }
+
+    document.getElementById('username').addEventListener('input', function() {
+      const value = this.value || '';
+      if (roleHintTimer) {
+        clearTimeout(roleHintTimer);
+      }
+      roleHintTimer = setTimeout(() => {
+        detectRoleByAccount(value);
+      }, 250);
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      setLockInfo('');
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      // Validation
+      let hasError = false;
+      const errorDivs = document.querySelectorAll('.form-error-inline');
+
+      if (!username) {
+        errorDivs[0].textContent = 'Please enter account';
+        errorDivs[0].classList.add('show');
+        hasError = true;
+      } else {
+        errorDivs[0].classList.remove('show');
+      }
+
+      if (!password) {
+        errorDivs[1].textContent = 'Please enter password';
+        errorDivs[1].classList.add('show');
+        hasError = true;
+      } else {
+        errorDivs[1].classList.remove('show');
+      }
+
+      if (hasError) return;
+
+      try {
+        const data = await API.login(username, password, detectedRole || '');
+        if (!data.success) {
+          if (data.locked) {
+            setLockInfo(data.message || 'Account is temporarily locked.');
+          }
+          alert(data.message || 'Login failed');
+          return;
+        }
+
+        setLockInfo('');
+        localStorage.setItem('userRole', data.user.userRole);
+        localStorage.setItem('userId', data.user.userId);
+        localStorage.setItem('userName', data.user.userName);
+
+        if (data.user.userRole === 'TA') {
+          window.location.href = 'ta-profile.html';
+        } else if (data.user.userRole === 'MO') {
+          window.location.href = 'mo-positions.html';
+        } else {
+          window.location.href = 'admin-dashboard.html';
+        }
+      } catch (error) {
+        alert(error.message || 'Network error. Please check the backend service.');
+      }
+    });
+
+  </script>
+</body>
+</html>
+
+
+

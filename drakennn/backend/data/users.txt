@@ -1,0 +1,18 @@
+﻿20210001|张三|zhangsan@example.com|Qmta2026A|TA|20210001|active
+20210002|李四|lisi@example.com|Qmta2026A|TA|20210002|active
+M001|王老师|wangteacher@example.com|Qmta2026A|MO|M001|active
+ADM001|管理员|admin@example.com|Qmta2026A|Admin|ADM001|active
+ta001|张三|zhangsan@example.com|Qmta2026A|TA|20210001|active
+ta002|李四|lisi@example.com|Qmta2026A|TA|20210002|active
+mo001|王老师|wangteacher@example.com|Qmta2026A|MO|M001|active
+admin001|管理员|admin@example.com|Qmta2026A|Admin|ADM001|active
+admin_user|System Manager|admin_user@example.com|Qmta2026A|Admin|admin_user|active
+admin_02|Office Coordinator|admin_02@example.com|Qmta2026A|Admin|admin_02|active
+mo_smith|Dr. Smith (Java Module)|mo_smith@example.com|Qmta2026A|MO|mo_smith|active
+mo_jones|Prof. Jones (Agile Module)|mo_jones@example.com|Qmta2026A|MO|mo_jones|active
+mo_wang|Dr. Wang (Network Module)|mo_wang@example.com|Qmta2026A|MO|mo_wang|active
+ta_alice|Alice Zhang|ta_alice@example.com|Qmta2026A|TA|ta_alice|active
+ta_bob|Bob Li|ta_bob@example.com|Qmta2026A|TA|ta_bob|active
+ta_charlie|Charlie Brown|ta_charlie@example.com|Qmta2026A|TA|ta_charlie|active
+ta_david|David Wang|ta_david@example.com|Qmta2026A|TA|ta_david|active
+ta_emma|Emma Wilson|ta_emma@example.com|Qmta2026A|TA|ta_emma|active
