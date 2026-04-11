@@ -22,6 +22,7 @@ public class CORSFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
+        // 回显请求 Origin 以支持携带 Cookie 的跨域请求；无 Origin 时允许任意来源。
         String origin = req.getHeader("Origin");
         if (origin != null && !origin.trim().isEmpty()) {
             resp.setHeader("Access-Control-Allow-Origin", origin);
@@ -29,11 +30,13 @@ public class CORSFilter implements Filter {
         } else {
             resp.setHeader("Access-Control-Allow-Origin", "*");
         }
+        // 前后端分离场景需要允许凭证与常用请求头/方法。
         resp.setHeader("Access-Control-Allow-Credentials", "true");
         resp.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
         resp.setHeader("Access-Control-Max-Age", "3600");
 
+        // 预检请求直接返回，避免继续进入后端业务 Servlet。
         if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
             resp.setStatus(HttpServletResponse.SC_OK);
             return;

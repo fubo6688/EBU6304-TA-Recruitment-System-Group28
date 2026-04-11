@@ -551,6 +551,46 @@
       return d.getFullYear() === y && (d.getMonth() + 1) === m && d.getDate() === day;
     }
 
+    function isPastDate(value) {
+      const normalized = normalizeDeadlineInput(value);
+      if (!isValidIsoDate(normalized)) {
+        return false;
+      }
+      const d = new Date(`${normalized}T00:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return d.getTime() < today.getTime();
+    }
+
+    function promptDeadlineForExpiredReopen(positionId) {
+      const position = allPositions.find((p) => p.id === positionId);
+      if (!position) {
+        return '';
+      }
+
+      if (!isPastDate(position.deadline)) {
+        return '';
+      }
+
+      const raw = window.prompt('Deadline has passed. Please enter a new deadline (YYYY-MM-DD) before reopen:', '');
+      if (raw === null) {
+        return null;
+      }
+
+      const normalized = normalizeDeadlineInput(raw);
+      if (!isValidIsoDate(normalized)) {
+        taSystem.showMessage('Deadline format must be YYYY-MM-DD', 'warning');
+        return null;
+      }
+
+      if (isPastDate(normalized)) {
+        taSystem.showMessage('New deadline cannot be earlier than today', 'warning');
+        return null;
+      }
+
+      return normalized;
+    }
+
     function bindDatePicker(displayId, pickerId) {
       // Keep text input and native date picker synchronized bidirectionally.
       const display = document.getElementById(displayId);
@@ -699,6 +739,10 @@
       const data = collectPublishForm();
       if (data.deadline && !isValidIsoDate(data.deadline)) {
         taSystem.showMessage('Deadline format must be YYYY-MM-DD', 'warning');
+        return;
+      }
+      if (data.deadline && isPastDate(data.deadline)) {
+        taSystem.showMessage('Deadline cannot be earlier than today', 'warning');
         return;
       }
       try {
@@ -890,6 +934,14 @@
       }
       bindDatePicker('publishDeadline', 'publishDeadlinePicker');
       bindDatePicker('editDeadline', 'editDeadlinePicker');
+
+      const now = new Date();
+      const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const publishPicker = document.getElementById('publishDeadlinePicker');
+      if (publishPicker) {
+        publishPicker.min = todayIso;
+      }
+
       await loadPositions();
       updatePublishStepUI();
 

@@ -24,6 +24,7 @@ public class AdminServlet extends HttpServlet {
         resp.setContentType("application/json;charset=UTF-8");
         PrintWriter out = resp.getWriter();
 
+        // Admin 专属接口统一入口校验。
         User user = requireAdmin(req, resp, out);
         if (user == null) {
             return;
@@ -31,6 +32,7 @@ public class AdminServlet extends HttpServlet {
 
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
         if ("/dashboard".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
+            // 仪表盘聚合：岗位、申请、TA 工作负载。
             List<Map<String, String>> positions = dataManager.getAllPositions();
             List<Map<String, Object>> taWorkload = dataManager.getTaWorkloadSummary();
 
@@ -61,6 +63,7 @@ public class AdminServlet extends HttpServlet {
                 }
             }
 
+            // 最新创建的岗位优先展示。
             positions.sort(Comparator.comparing((Map<String, String> p) -> value(p.get("createdAt"))).reversed());
 
             JSONObject summary = new JSONObject();
@@ -82,11 +85,13 @@ public class AdminServlet extends HttpServlet {
         }
 
         if ("/positions".equalsIgnoreCase(path)) {
+            // 提供原始岗位列表给管理员页面使用。
             out.print(new JSONObject().put("success", true).put("positions", new JSONArray(dataManager.getAllPositions())).toString());
             return;
         }
 
         if ("/ta-workload".equalsIgnoreCase(path)) {
+            // 提供 TA 负载统计独立接口，便于前端按需刷新。
             out.print(new JSONObject().put("success", true).put("taWorkload", new JSONArray(dataManager.getTaWorkloadSummary())).toString());
             return;
         }
@@ -107,6 +112,14 @@ public class AdminServlet extends HttpServlet {
         if (user == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             out.print(new JSONObject().put("success", false).put("message", "User not found").toString());
+            return null;
+        }
+
+        if (!"active".equalsIgnoreCase(value(user.getStatus()))) {
+            // 停用管理员账号后，旧会话不得继续访问管理接口。
+            session.invalidate();
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            out.print(new JSONObject().put("success", false).put("message", "Account is inactive").toString());
             return null;
         }
 
