@@ -68,6 +68,9 @@ public class PositionServlet extends HttpServlet {
                 return;
             }
 
+            // POST /api/position/create
+            // Implements MO posting feature: validates role, resolves owner moId,
+            // then delegates persistence + ID generation to DataManager.createPosition.
             String title = value(req.getParameter("title"));
             String department = value(req.getParameter("department"));
             String salary = value(req.getParameter("salary"));
@@ -113,6 +116,9 @@ public class PositionServlet extends HttpServlet {
                 return;
             }
 
+            // POST /api/position/update
+            // Permission rule: only the owning MO (matched by userId/qmId) or Admin
+            // may edit the target position record.
             String positionId = value(req.getParameter("positionId"));
             if (positionId.isEmpty()) {
                 out.print(new JSONObject().put("success", false).put("message", "Missing positionId").toString());
@@ -157,7 +163,9 @@ public class PositionServlet extends HttpServlet {
                 return;
             }
 
-            // publish 是 status=open 的语义糖，便于前端按钮直连。
+            // POST /api/position/status or /api/position/publish
+            // /status = operational state change (open/closed),
+            // /publish = force-open and trigger notification fan-out to active TAs.
             boolean publishAction = "/publish".equalsIgnoreCase(path);
 
             String positionId = value(req.getParameter("positionId"));

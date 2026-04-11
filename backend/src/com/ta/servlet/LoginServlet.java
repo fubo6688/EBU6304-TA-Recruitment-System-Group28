@@ -152,7 +152,16 @@ public class LoginServlet extends HttpServlet {
                         .put("message", "Account locked. Please try again in " + remainingAfterFail + " seconds")
                         .toString());
             } else {
-                out.print(new JSONObject().put("success", false).put("message", "Invalid account or password").toString());
+                if (existing != null) {
+                    int attemptsRemaining = getRemainingAttempts(lockKey);
+                    out.print(new JSONObject()
+                            .put("success", false)
+                            .put("attemptsRemaining", attemptsRemaining)
+                            .put("message", "Invalid password. " + attemptsRemaining + " attempt(s) remaining")
+                            .toString());
+                } else {
+                    out.print(new JSONObject().put("success", false).put("message", "Invalid account or password").toString());
+                }
             }
             return;
         }
@@ -296,6 +305,25 @@ public class LoginServlet extends HttpServlet {
                 state.failedAttempts = 0;
                 state.lockUntil = now + LOCK_DURATION_MILLIS;
             }
+        }
+    }
+
+    private int getRemainingAttempts(String lockKey) {
+        if (lockKey.isEmpty()) {
+            return MAX_FAILED_ATTEMPTS;
+        }
+
+        LoginAttemptState state = LOGIN_ATTEMPTS.get(lockKey);
+        if (state == null) {
+            return MAX_FAILED_ATTEMPTS;
+        }
+
+        synchronized (state) {
+            long now = System.currentTimeMillis();
+            if (state.lockUntil > now) {
+                return 0;
+            }
+            return Math.max(0, MAX_FAILED_ATTEMPTS - state.failedAttempts);
         }
     }
 

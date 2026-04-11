@@ -7,6 +7,16 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Ensure current session can find javac/java even if PATH is missing JDK bin.
+$detectedJavaHome = $env:JAVA_HOME
+if (-not $detectedJavaHome) {
+    $detectedJavaHome = [Environment]::GetEnvironmentVariable("JAVA_HOME", "Machine")
+}
+if ($detectedJavaHome -and (Test-Path (Join-Path $detectedJavaHome "bin/javac.exe"))) {
+    $env:JAVA_HOME = $detectedJavaHome
+    $env:Path = (Join-Path $env:JAVA_HOME "bin") + ";" + $env:Path
+}
+
 function Write-Step {
     param([string]$Message)
     Write-Host "`n==> $Message" -ForegroundColor Cyan
@@ -20,7 +30,8 @@ function Resolve-TomcatHome {
     $candidates = @(
         "D:/apache-tomcat*",
         "C:/apache-tomcat*",
-        "C:/Program Files/Apache Software Foundation/Tomcat*"
+        "C:/Program Files/Apache Software Foundation/Tomcat*",
+        "D:/Program Files/Apache Software Foundation/Tomcat*"
     )
 
     foreach ($pattern in $candidates) {
@@ -68,6 +79,8 @@ Write-Step "Compiling backend Java sources"
 $classesDir = Join-Path $backendWebInf "classes"
 if (-not (Test-Path $classesDir)) {
     New-Item -ItemType Directory -Path $classesDir | Out-Null
+} else {
+    Get-ChildItem -Path $classesDir -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 $javaFiles = Get-ChildItem -Path (Join-Path $backendDir "src/com/ta") -Recurse -Filter "*.java" |
@@ -94,6 +107,8 @@ if (-not (Test-Path $rootWebInf)) {
 }
 if (-not (Test-Path (Join-Path $rootWebInf "classes"))) {
     New-Item -ItemType Directory -Path (Join-Path $rootWebInf "classes") | Out-Null
+} else {
+    Get-ChildItem -Path (Join-Path $rootWebInf "classes") -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 }
 if (-not (Test-Path (Join-Path $rootWebInf "lib"))) {
     New-Item -ItemType Directory -Path (Join-Path $rootWebInf "lib") | Out-Null
@@ -110,11 +125,17 @@ if ($jsonLib) {
 
 Write-Step "Deploying to Tomcat webapps contexts"
 $contexts = @("ta-system", "MyRecruitmentSystem")
+$robocopyExe = Join-Path $env:SystemRoot "System32/robocopy.exe"
 
 foreach ($contextName in $contexts) {
     $appDir = Join-Path $tomcatHome "webapps/$contextName"
     if (-not (Test-Path $appDir)) {
         New-Item -ItemType Directory -Path $appDir | Out-Null
+    }
+
+    $tomcatWorkDir = Join-Path $tomcatHome "work/Catalina/localhost/$contextName"
+    if (Test-Path $tomcatWorkDir) {
+        Remove-Item -Path $tomcatWorkDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     Write-Host "Deploying context: /$contextName"
@@ -128,7 +149,7 @@ foreach ($contextName in $contexts) {
         "/XF", "*.ps1", "*.bat"
     )
 
-    robocopy @robocopyArgs | Out-Null
+    & $robocopyExe @robocopyArgs | Out-Null
     $rc = $LASTEXITCODE
     if ($rc -gt 7) {
         throw "robocopy failed for context $contextName with exit code $rc"

@@ -1,0 +1,901 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Personal Profile - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: var(--gray-100);
+      padding: 20px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .sidebar-menu-item:hover {
+      background-color: var(--gray-200);
+      color: var(--primary-color);
+    }
+
+    .sidebar-menu-item.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      padding: 40px;
+    }
+
+    .steps {
+      margin-bottom: 40px;
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .step {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 20px;
+      width: 100%;
+      height: 2px;
+      background-color: var(--gray-200);
+    }
+
+    .step.active:not(:last-child)::after,
+    .step.completed:not(:last-child)::after {
+      background-color: var(--primary-color);
+    }
+
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      background-color: var(--gray-200);
+      color: var(--gray-500);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .step.active .step-circle {
+      background-color: var(--primary-color);
+      color: var(--white);
+    }
+
+    .step.completed .step-circle {
+      background-color: var(--success-color);
+      color: var(--white);
+    }
+
+    .step-label {
+      font-size: 13px;
+      color: var(--gray-500);
+      text-align: center;
+    }
+
+    .step.active .step-label {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .form-card {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    .form-section {
+      display: none;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    .form-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    /* Skill Tagsstyle */
+    .skills-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .skill-tag {
+      padding: 8px 16px;
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .skill-tag:hover {
+      background-color: var(--primary-color);
+      color: var(--white);
+    }
+
+    .skill-tag.selected {
+      background-color: var(--primary-color);
+      color: var(--white);
+    }
+
+    /* time table */
+    .time-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .time-table th,
+    .time-table td {
+      border: 1px solid var(--gray-200);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .time-table th {
+      background-color: var(--gray-100);
+      font-weight: 600;
+    }
+
+    .time-cell {
+      background-color: var(--white);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .time-cell:hover {
+      background-color: #f0f0f0;
+    }
+
+    .time-cell.selected {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    /* File upload area */
+    .upload-area {
+      border: 2px dashed var(--gray-300);
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary-color);
+      background-color: var(--primary-light);
+    }
+
+    .upload-area.active {
+      border-color: var(--primary-color);
+      background-color: var(--primary-light);
+    }
+
+    .upload-area input {
+      display: none;
+    }
+
+    .upload-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .file-preview {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background-color: var(--gray-100);
+      border-radius: 6px;
+      margin-top: 16px;
+    }
+
+    .preview-info {
+      flex: 1;
+    }
+
+    .preview-filename {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .preview-size {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    /* Confirm card */
+    .confirm-card {
+      background-color: var(--gray-50);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .confirm-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .confirm-row:last-child {
+      border-bottom: none;
+    }
+
+    .confirm-label {
+      color: var(--gray-500);
+      font-weight: 500;
+    }
+
+    .confirm-value {
+      color: #333;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <!-- TopNavbar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">📋</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a href="profile.html">Profile</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- left menu -->
+    <div class="sidebar">
+      <div class="sidebar-title">TA Function</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item active">My Profile</li>
+        <li class="sidebar-menu-item">Browse Positions</li>
+        <li class="sidebar-menu-item">My Applications</li>
+        <li class="sidebar-menu-item">Profile</li>
+        <li class="sidebar-menu-item">Notifications</li>
+      </ul>
+    </div>
+
+    <!-- right sideContent -->
+    <div class="content">
+      <!-- step bar -->
+      <div class="steps">
+        <div class="step active" data-step="1">
+          <div class="step-circle">1</div>
+          <div class="step-label">Basic Information</div>
+        </div>
+        <div class="step" data-step="2">
+          <div class="step-circle">2</div>
+          <div class="step-label">Skills & Availability</div>
+        </div>
+        <div class="step" data-step="3">
+          <div class="step-circle">3</div>
+          <div class="step-label">Resume Upload</div>
+        </div>
+        <div class="step" data-step="4">
+          <div class="step-circle">4</div>
+          <div class="step-label">Confirm & Submit</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <!-- step 1：Basic Information -->
+        <div class="form-section active" data-section="1">
+          <h2 class="form-title">Basic Information</h2>
+          <div class="form-two-col">
+            <div class="form-group">
+              <label class="form-label required">Year</label>
+              <select class="form-control" id="grade" required>
+                <option value="">-- Please selectYear --</option>
+                <option value="Year 1">Year 1</option>
+                <option value="Year 2">Year 2</option>
+                <option value="Year 3">Year 3</option>
+                <option value="Year 4">Year 4</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Major</label>
+              <select class="form-control" id="major" required>
+                <option value="">-- Please selectMajor --</option>
+                <option value="Computer Science and Technology">Computer Science and Technology</option>
+                <option value="Software Engineering">Software Engineering</option>
+                <option value="Cybersecurity">Cybersecurity</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">GPA</label>
+              <input type="number" class="form-control" id="gpa" placeholder="Enter GPA" step="0.01" min="0" max="4" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Contact Email</label>
+              <input type="email" class="form-control" id="email" placeholder="Enter email" required>
+            </div>
+          </div>
+          <div class="form-controls">
+            <div></div>
+            <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+          </div>
+        </div>
+
+        <!-- step 2：Skills & Availability -->
+        <div class="form-section" data-section="2">
+          <h2 class="form-title">Skills & Availability</h2>
+          
+          <div class="form-group">
+            <label class="form-label required">Skill Tags</label>
+            <div class="skills-container">
+              <div class="skill-tag" onclick="toggleSkill(this)">Python</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">Java</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">C++</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">JavaScript</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">SQL</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">Linux</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">Git</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">Docker</div>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 30px;">
+            <label class="form-label required">Available Time</label>
+            <table class="time-table">
+              <thead>
+                <tr>
+                  <th>Time Slot</th>
+                  <th>Mon</th>
+                  <th>Tue</th>
+                  <th>Wed</th>
+                  <th>Thu</th>
+                  <th>Fri</th>
+                  <th>Sat</th>
+                  <th>Sun</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>9:00-12:00</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell"></td>
+                  <td class="time-cell"></td>
+                </tr>
+                <tr>
+                  <td>13:00-17:00</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                </tr>
+                <tr>
+                  <td>18:00-20:00</td>
+                  <td class="time-cell"></td>
+                  <td class="time-cell"></td>
+                  <td class="time-cell"></td>
+                  <td class="time-cell"></td>
+                  <td class="time-cell"></td>
+                  <td class="time-cell">✓</td>
+                  <td class="time-cell">✓</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="form-controls">
+            <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+            <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+          </div>
+        </div>
+
+        <!-- step 3：Resume Upload -->
+        <div class="form-section" data-section="3">
+          <h2 class="form-title">Resume Upload</h2>
+          <div class="form-group">
+            <label class="form-label required">PDF Resume</label>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('resumeFile').click()">
+              <div class="upload-icon">📄</div>
+              <p style="margin: 0 0 8px; font-weight: 600; color: var(--primary-color);">Click to upload or drag files here</p>
+              <p style="margin: 0; font-size: 12px; color: var(--gray-500);">Supports PDF, max 10MB</p>
+              <input type="file" id="resumeFile" accept=".pdf" onchange="handleFileUpload(this)">
+            </div>
+            <div id="filePreview"></div>
+          </div>
+
+          <div class="form-controls">
+            <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+            <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+          </div>
+        </div>
+
+        <!-- step 4：Confirm & Submit -->
+        <div class="form-section" data-section="4">
+          <h2 class="form-title">Confirm & Submit</h2>
+          <p style="margin-bottom: 20px; color: var(--gray-500);">Please confirm all information before submitting</p>
+
+          <div class="confirm-card">
+            <div class="confirm-row">
+              <span class="confirm-label">Year</span>
+              <span class="confirm-value" id="confirmGrade">-</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">Major</span>
+              <span class="confirm-value" id="confirmMajor">-</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">GPA</span>
+              <span class="confirm-value" id="confirmGPA">-</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">Mail</span>
+              <span class="confirm-value" id="confirmEmail">-</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">Skill</span>
+              <span class="confirm-value" id="confirmSkills">-</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">CV</span>
+              <span class="confirm-value" id="confirmResume">-</span>
+            </div>
+          </div>
+
+          <div class="form-controls">
+            <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+            <button type="button" class="btn btn-primary btn-lg" onclick="submitProfile()">Submit and Save Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js?v=20260323-1"></script>
+  <script>
+    // SidebarMenu navigation
+    const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
+    const menuMap = {
+      'My Profile': 'ta-profile.html',
+      'Browse Positions': 'ta-positions.html',
+      'My Applications': 'ta-applications.html',
+      'Profile': 'profile.html',
+      'Notifications': 'notification.html'
+    };
+    
+    sidebarMenuItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const text = this.textContent.trim();
+        const page = menuMap[text];
+        if (page) {
+          // Updates activeStatus
+          sidebarMenuItems.forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          // navigation
+          window.location.href = page;
+        }
+      });
+    });
+
+    let currentStep = 1;
+    // In-memory wizard state; submitted as multipart form in submitProfile().
+    let profileData = {
+      grade: '',
+      major: '',
+      gpa: '',
+      email: '',
+      skills: [],
+      availableTime: [],
+      resume: null,
+      existingResumeName: ''
+    };
+
+    function nextStep() {
+      // Move forward only when current step validation passes.
+      if (validateCurrentStep()) {
+        currentStep++;
+        if (currentStep <= 4) {
+          updateStepView();
+          if (currentStep === 4) {
+            populateConfirmData();
+          }
+        }
+      }
+    }
+
+    function prevStep() {
+      // Allow users to go back without losing in-memory selections.
+      currentStep--;
+      if (currentStep >= 1) {
+        updateStepView();
+      }
+    }
+
+    function validateCurrentStep() {
+      // Wizard-level gate:
+      // Step 1 requires basic profile fields, Step 2 requires skills/time,
+      // Step 3 requires a new or existing resume.
+      if (currentStep === 1) {
+        const grade = document.getElementById('grade').value;
+        const major = document.getElementById('major').value;
+        const gpa = document.getElementById('gpa').value;
+        const email = document.getElementById('email').value;
+
+        if (!grade || !major || !gpa || !email) {
+          taSystem.showMessage('Please complete all required fields', 'danger');
+          return false;
+        }
+
+        profileData.grade = grade;
+        profileData.major = major;
+        profileData.gpa = gpa;
+        profileData.email = email;
+      } else if (currentStep === 2) {
+        if (profileData.skills.length === 0) {
+          taSystem.showMessage('Please select at least one skill', 'danger');
+          return false;
+        }
+        if (profileData.availableTime.length === 0) {
+          taSystem.showMessage('Please select available time slots', 'danger');
+          return false;
+        }
+      } else if (currentStep === 3) {
+        if (!profileData.resume && !profileData.existingResumeName) {
+          taSystem.showMessage('Please upload your resume', 'danger');
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    function updateStepView() {
+      // Sync both the content section and stepper UI with currentStep.
+      document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.form-section[data-section="' + currentStep + '"]').forEach(s => s.classList.add('active'));
+
+      document.querySelectorAll('.step').forEach((s, i) => {
+        s.classList.remove('active', 'completed');
+        if (i + 1 === currentStep) {
+          s.classList.add('active');
+        } else if (i + 1 < currentStep) {
+          s.classList.add('completed');
+        }
+      });
+    }
+
+    function toggleSkill(element) {
+      // Multi-select skills and keep profileData.skills in sync with selected tags.
+      element.classList.toggle('selected');
+      profileData.skills = Array.from(document.querySelectorAll('.skill-tag.selected')).map(e => e.textContent);
+    }
+
+    function collectAvailableTime() {
+      // Convert selected timetable cells into stable slot keys for persistence.
+      profileData.availableTime = Array.from(document.querySelectorAll('.time-cell.selected'))
+        .map((cell) => cell.getAttribute('data-slot'))
+        .filter(Boolean);
+    }
+
+    function handleFileUpload(input) {
+      const file = input.files[0];
+      if (file) {
+        // Frontend pre-checks before upload request:
+        // allow PDF only and limit size to 10MB for better UX and safer multipart handling.
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+          taSystem.showMessage('Only PDF files are supported', 'danger');
+          input.value = '';
+          return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          taSystem.showMessage('File size exceeds 10MB', 'danger');
+          input.value = '';
+          return;
+        }
+        
+        profileData.resume = file;
+        profileData.existingResumeName = file.name;
+        const preview = document.getElementById('filePreview');
+        preview.innerHTML = `
+          <div class="file-preview">
+            <span style="font-size: 24px;">📄</span>
+            <div class="preview-info">
+              <div class="preview-filename">${file.name}</div>
+              <div class="preview-size">${(file.size / 1024).toFixed(2)} KB</div>
+            </div>
+            <button type="button" class="btn btn-sm btn-secondary" style="margin-left: auto;" onclick="previewResume()">Preview</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('resumeFile').click()">Re-upload</button>
+          </div>
+        `;
+      }
+    }
+
+    function previewResume() {
+      // Preview order: newly uploaded file first, then backend-stored resume.
+      if (profileData.resume) {
+        const url = URL.createObjectURL(profileData.resume);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        return;
+      }
+      const userId = localStorage.getItem('userId') || '';
+      if (userId) {
+        if (typeof API !== 'undefined' && typeof API.getResumePreviewUrl === 'function') {
+          window.open(API.getResumePreviewUrl(userId), '_blank');
+          return;
+        }
+        const segments = (window.location.pathname || '/').split('/').filter(Boolean);
+        const base = segments.length >= 1 ? `${window.location.origin}/${segments[0]}/api` : `${window.location.origin}/api`;
+        window.open(`${base}/user/resume?userId=${encodeURIComponent(userId)}`, '_blank');
+      }
+    }
+
+    async function uploadProfileRequest(formData) {
+      // Prefer centralized API helper; fallback keeps page runnable in standalone deployments.
+      if (typeof API !== 'undefined' && typeof API.uploadProfile === 'function') {
+        return API.uploadProfile(formData);
+      }
+
+      const segments = (window.location.pathname || '/').split('/').filter(Boolean);
+      const base = segments.length >= 1 ? `${window.location.origin}/${segments[0]}/api` : `${window.location.origin}/api`;
+      const response = await fetch(`${base}/user/profile`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      const text = await response.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        data = { success: false, message: text || 'Invalid server response' };
+      }
+
+      if (!response.ok) {
+        throw new Error((data && data.message) || `HTTP ${response.status}`);
+      }
+      return data;
+    }
+
+    function populateConfirmData() {
+      // Render step-4 summary from current wizard state before final submit.
+      document.getElementById('confirmGrade').textContent = profileData.grade;
+      document.getElementById('confirmMajor').textContent = profileData.major;
+      document.getElementById('confirmGPA').textContent = profileData.gpa;
+      document.getElementById('confirmEmail').textContent = profileData.email;
+      document.getElementById('confirmSkills').textContent = profileData.skills.join(', ');
+      const timeText = profileData.availableTime.length ? profileData.availableTime.join('; ') : '-';
+      document.getElementById('confirmSkills').textContent += ` | Available: ${timeText}`;
+      document.getElementById('confirmResume').textContent = profileData.resume ? profileData.resume.name : (profileData.existingResumeName || '-');
+    }
+
+    async function submitProfile() {
+      if (!validateCurrentStep()) {
+        return;
+      }
+
+      try {
+        // Field names intentionally match backend /api/user/profile parameters.
+        const form = new FormData();
+        form.append('userName', localStorage.getItem('userName') || '');
+        form.append('email', profileData.email || '');
+        form.append('grade', profileData.grade || '');
+        form.append('major', profileData.major || '');
+        form.append('gpa', profileData.gpa || '');
+        form.append('skills', (profileData.skills || []).join(','));
+        form.append('availableTime', (profileData.availableTime || []).join(';'));
+        form.append('resumeFileName', profileData.resume ? profileData.resume.name : (profileData.existingResumeName || ''));
+        if (profileData.resume) {
+          form.append('resumeFile', profileData.resume);
+        }
+
+        const result = await uploadProfileRequest(form);
+        if (result.success) {
+          taSystem.showMessage('Profile submitted and saved', 'success');
+          setTimeout(() => {
+            window.location.href = 'ta-positions.html';
+          }, 1200);
+        } else {
+          taSystem.showMessage(result.message || '保存失败', 'danger');
+        }
+      } catch (error) {
+        taSystem.showMessage(error.message || '保存失败', 'danger');
+      }
+    }
+
+    // Drag and drop upload
+    const uploadArea = document.getElementById('uploadArea');
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('active');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('active');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('active');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        document.getElementById('resumeFile').files = files;
+        handleFileUpload(document.getElementById('resumeFile'));
+      }
+    });
+
+    function initTimeCells() {
+      // Build deterministic slot identifiers (e.g., "Mon 9:00-12:00") for each cell.
+      document.querySelectorAll('.time-table tbody tr').forEach((row) => {
+        const slotLabel = row.querySelector('td')?.textContent?.trim() || '';
+        const dayHeaders = Array.from(document.querySelectorAll('.time-table thead th')).map((th) => th.textContent.trim());
+        const cells = row.querySelectorAll('.time-cell');
+        cells.forEach((cell, idx) => {
+          const day = dayHeaders[idx + 1] || `D${idx + 1}`;
+          const slot = `${day} ${slotLabel}`;
+          cell.setAttribute('data-slot', slot);
+
+          if ((cell.textContent || '').trim() === '✓') {
+            cell.classList.add('selected');
+          }
+
+          cell.addEventListener('click', () => {
+            cell.classList.toggle('selected');
+            cell.textContent = cell.classList.contains('selected') ? '✓' : '';
+            collectAvailableTime();
+          });
+        });
+      });
+      collectAvailableTime();
+    }
+
+    function restoreAvailableTime(raw) {
+      // Rehydrate timetable selections from persisted semicolon-delimited slots.
+      if (!raw) return;
+      const slots = raw.split(';').map((s) => s.trim()).filter(Boolean);
+      if (!slots.length) return;
+
+      document.querySelectorAll('.time-cell').forEach((cell) => {
+        const slot = cell.getAttribute('data-slot');
+        const selected = slots.includes(slot);
+        cell.classList.toggle('selected', selected);
+        cell.textContent = selected ? '✓' : '';
+      });
+      collectAvailableTime();
+    }
+
+    async function loadExistingProfile() {
+      try {
+        // Read persisted profile from backend and hydrate the wizard state.
+        const profile = await API.getProfile();
+        if (!profile || !profile.userId) return;
+
+        profileData.grade = profile.grade || '';
+        profileData.major = profile.major || '';
+        profileData.gpa = profile.gpa || '';
+        profileData.email = profile.email || '';
+        profileData.skills = (profile.skills || '').split(',').map((s) => s.trim()).filter(Boolean);
+        profileData.existingResumeName = profile.resumeFileName || '';
+
+        document.getElementById('grade').value = profileData.grade;
+        document.getElementById('major').value = profileData.major;
+        document.getElementById('gpa').value = profileData.gpa;
+        document.getElementById('email').value = profileData.email;
+
+        document.querySelectorAll('.skill-tag').forEach((el) => {
+          const selected = profileData.skills.includes(el.textContent.trim());
+          el.classList.toggle('selected', selected);
+        });
+
+        restoreAvailableTime(profile.availableTime || '');
+
+        if (profileData.existingResumeName) {
+          const preview = document.getElementById('filePreview');
+          preview.innerHTML = `
+            <div class="file-preview">
+              <span style="font-size: 24px;">📄</span>
+              <div class="preview-info">
+                <div class="preview-filename">${profileData.existingResumeName}</div>
+                <div class="preview-size">Saved in server data</div>
+              </div>
+              <button type="button" class="btn btn-sm btn-secondary" style="margin-left: auto;" onclick="previewResume()">Preview</button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('resumeFile').click()">Re-upload</button>
+            </div>
+          `;
+        }
+      } catch (error) {
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize interactive timetable and then preload saved profile data.
+      initTimeCells();
+      await loadExistingProfile();
+    });
+
+  </script>
+</body>
+</html>
+
+
+

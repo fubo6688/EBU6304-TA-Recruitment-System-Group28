@@ -326,7 +326,10 @@ public class DataManager {
                                                            String moId,
                                                            String openings,
                                                            String deadline) {
-        // 新建岗位默认 open，计数从 0 开始。
+        // File-store write format for positions.txt:
+        // id|title|department|salary|description|requirements|moId|openings|
+        // appliedCount|acceptedCount|status|createdAt|deadline
+        // ID is generated server-side to guarantee uniqueness in this storage model.
         String id = nextId("pos");
         String line = String.join("|",
                 id,
@@ -485,6 +488,8 @@ public class DataManager {
 
         // 同一用户对同一岗位的未撤回申请只保留一条，避免重复投递。
         for (Map<String, String> app : getAllApplications()) {
+            // Business guard: one active application per TA per position.
+            // If an existing non-canceled record exists, return it instead of creating new.
             if (positionId.equals(app.get("positionId")) && userId.equals(app.get("userId")) && !"canceled".equalsIgnoreCase(app.get("status"))) {
                 return app;
             }
@@ -691,7 +696,8 @@ public class DataManager {
                                          String resumeStoredName,
                                          String availableTime,
                                          String avatarStoredName) {
-        // 资料按 userId 单条覆盖写入，避免出现同一用户多条记录。
+        // Profile persistence strategy: upsert by userId in profiles.txt.
+        // This allows repeated edits from TA profile page without duplicate rows.
         List<String> lines = readLinesSafe(resolve(PROFILES_FILE));
         List<String> updated = new ArrayList<>();
         boolean replaced = false;
@@ -733,6 +739,9 @@ public class DataManager {
     }
 
     public synchronized Map<String, String> getProfile(String userId) {
+        // Backward compatibility:
+        // support both legacy profile rows and newer extended rows
+        // (resumeStoredName/availableTime/avatarStoredName/updatedAt).
         for (String line : readLinesSafe(resolve(PROFILES_FILE))) {
             String[] p = line.split("\\|", -1);
             if (p.length >= 8 && userId.equals(p[0])) {

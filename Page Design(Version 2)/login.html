@@ -1,0 +1,334 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Login - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-topbar {
+      text-align: center;
+      margin-bottom: 60px;
+      color: var(--white);
+    }
+
+    .login-topbar-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .login-topbar-icon {
+      width: 48px;
+      height: 48px;
+      background-color: var(--white);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .login-topbar-text {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .login-card {
+      background-color: var(--white);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .login-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-align: center;
+      color: #333;
+    }
+
+    .login-footer {
+      text-align: center;
+      color: var(--white);
+      margin-top: 40px;
+      font-size: 12px;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray-500);
+      font-size: 18px;
+    }
+
+    .forgot-password {
+      text-align: right;
+      margin-top: 12px;
+    }
+
+    .forgot-password a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-size: 12px;
+    }
+
+    .forgot-password a:hover {
+      text-decoration: underline;
+    }
+
+    .form-error-inline {
+      color: var(--danger-color);
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .form-error-inline.show {
+      display: block;
+    }
+
+    .lock-info {
+      background-color: #fee2e2;
+      color: var(--danger-color);
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      text-align: center;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .lock-info.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-topbar">
+      <div class="login-topbar-logo">
+        <div class="login-topbar-icon">📋</div>
+        <div class="login-topbar-text">TARecruitment system</div>
+      </div>
+    </div>
+
+    <div class="login-card">
+      <h1 class="login-title">Login</h1>
+      
+      <div class="lock-info" id="lockInfo"></div>
+
+      <form id="loginForm">
+        <!-- Rolechoose -->
+        <div class="form-group">
+          <label class="form-label required">Please selectRole</label>
+          <select id="roleSelect" class="form-control" required>
+            <option value="">-- Please selectRole --</option>
+            <option value="TA">TA</option>
+            <option value="MO">MO</option>
+            <option value="Admin">Admin</option>
+          </select>
+          <div class="form-error-inline"></div>
+        </div>
+
+        <!-- Accountenter -->
+        <div class="form-group">
+          <label class="form-label required">Account</label>
+          <input type="text" id="username" class="form-control" placeholder="Enter QM Student/Staff ID" required>
+          <div class="form-error-inline"></div>
+        </div>
+
+        <!-- Passwordenter -->
+        <div class="form-group">
+          <label class="form-label required">Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" class="form-control" placeholder="Please enterPassword" required style="padding-right: 40px;">
+            <button type="button" class="password-toggle" id="passwordToggle">👁️</button>
+          </div>
+          <div class="form-error-inline"></div>
+        </div>
+
+        <!-- Loginbutton -->
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Login</button>
+      </form>
+
+      <div class="forgot-password">
+        <a href="#">forgetPassword？</a>
+      </div>
+    </div>
+
+    <div class="login-footer">
+      <p>©2025-26 EBU6304 Software Engineering Group28</p>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    const ATTEMPT_KEY = 'loginAttempts';
+    const LOCK_KEY = 'lockTime';
+    const MAX_ATTEMPTS = 3;
+    const LOCK_MILLIS = 5 * 60 * 1000;
+
+    let loginAttempts = parseInt(localStorage.getItem(ATTEMPT_KEY) || '0');
+    let lockTime = parseInt(localStorage.getItem(LOCK_KEY) || '0');
+
+    function resetLockState() {
+      loginAttempts = 0;
+      lockTime = 0;
+      localStorage.setItem(ATTEMPT_KEY, '0');
+      localStorage.removeItem(LOCK_KEY);
+      document.getElementById('lockInfo').classList.remove('show');
+      document.getElementById('loginForm').style.opacity = '1';
+      document.getElementById('loginForm').style.pointerEvents = 'auto';
+    }
+
+    function registerFailedAttempt() {
+      loginAttempts += 1;
+      if (loginAttempts >= MAX_ATTEMPTS) {
+        lockTime = Date.now() + LOCK_MILLIS;
+        localStorage.setItem(LOCK_KEY, String(lockTime));
+        localStorage.setItem(ATTEMPT_KEY, '0');
+        alert('LoginFailedtoo many times，Accountlocked5minutes');
+        location.reload();
+        return;
+      }
+      localStorage.setItem(ATTEMPT_KEY, String(loginAttempts));
+    }
+
+    // Check whether account is locked
+    function checkLock() {
+      const now = Date.now();
+      if (lockTime && now >= lockTime) {
+        resetLockState();
+        return;
+      }
+
+      if (lockTime && now < lockTime) {
+        const remainSeconds = Math.ceil((lockTime - now) / 1000);
+        document.getElementById('lockInfo').textContent = `Accountlocked，please ${remainSeconds} seconds before retry`;
+        document.getElementById('lockInfo').classList.add('show');
+        document.getElementById('loginForm').style.opacity = '0.5';
+        document.getElementById('loginForm').style.pointerEvents = 'none';
+        
+        setTimeout(checkLock, 1000);
+      }
+    }
+
+    // For demo/testing stability: reset client-side lock state on page load to avoid stale lock records.
+    resetLockState();
+    checkLock();
+
+    // Passwordshow/hide
+    document.getElementById('passwordToggle').addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        this.textContent = '🙈';
+      } else {
+        passwordInput.type = 'password';
+        this.textContent = '👁️';
+      }
+    });
+
+    // Form Submission
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const role = document.getElementById('roleSelect').value;
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      // Validation
+      let hasError = false;
+      const errorDivs = document.querySelectorAll('.form-error-inline');
+
+      if (!role) {
+        errorDivs[0].textContent = 'Please selectRole';
+        errorDivs[0].classList.add('show');
+        hasError = true;
+      } else {
+        errorDivs[0].classList.remove('show');
+      }
+
+      if (!username) {
+        errorDivs[1].textContent = 'Please enter account';
+        errorDivs[1].classList.add('show');
+        hasError = true;
+      } else {
+        errorDivs[1].classList.remove('show');
+      }
+
+      if (!password) {
+        errorDivs[2].textContent = 'Please enter password';
+        errorDivs[2].classList.add('show');
+        hasError = true;
+      } else {
+        errorDivs[2].classList.remove('show');
+      }
+
+      if (hasError) return;
+
+      if (lockTime && Date.now() < lockTime) {
+        checkLock();
+        return;
+      }
+
+      try {
+        const data = await API.login(username, password, role);
+        if (!data.success) {
+          registerFailedAttempt();
+          alert(data.message || '登录失败');
+          return;
+        }
+
+        resetLockState();
+        localStorage.setItem('userRole', data.user.userRole);
+        localStorage.setItem('userId', data.user.userId);
+        localStorage.setItem('userName', data.user.userName);
+
+        if (data.user.userRole === 'TA') {
+          window.location.href = 'ta-profile.html';
+        } else if (data.user.userRole === 'MO') {
+          window.location.href = 'mo-positions.html';
+        } else {
+          window.location.href = 'admin-analytics.html';
+        }
+      } catch (error) {
+        registerFailedAttempt();
+        alert(error.message || '网络错误，请检查后端服务');
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+

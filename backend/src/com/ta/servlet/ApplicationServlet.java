@@ -80,6 +80,9 @@ public class ApplicationServlet extends HttpServlet {
 
             List<Map<String, String>> apps = dataManager.getApplicationsByUser(targetUserId);
             List<Map<String, String>> enriched = new ArrayList<>();
+            // Build TA "my applications" view model:
+            // attach position status/deadline/department to each application record
+            // so frontend can render status table directly from one response.
             for (Map<String, String> app : apps) {
                 Map<String, String> item = new java.util.LinkedHashMap<>(app);
                 // 回填岗位状态/截止日期，便于前端直接展示申请上下文。
@@ -121,16 +124,9 @@ public class ApplicationServlet extends HttpServlet {
                 return;
             }
 
-            // 申请前必须完成 TA 档案（基础信息、技能与可用时间、简历）。
-            Map<String, String> profile = getProfileForApply(user);
-            if (!isProfileCompleteForApply(profile)) {
-                out.print(new JSONObject()
-                        .put("success", false)
-                        .put("message", "Please complete your profile (basic information, skills & availability, resume) before applying")
-                        .toString());
-                return;
-            }
-
+            // Submission rule for TA flow:
+            // only allow apply when target position exists and is not closed,
+            // then create pending application + related notifications.
             String positionId = value(req.getParameter("positionId"));
             String priority = value(req.getParameter("priority"));
             if (positionId.isEmpty()) {
