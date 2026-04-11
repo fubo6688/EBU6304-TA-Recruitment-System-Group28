@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -462,8 +462,6 @@
       'Notifications': 'notification.html'
     };
 
-    // 功能：switchTab。
-    // 实现：控制页面流程步骤与导航状态。
     function switchTab(event) {
       const tabName = event.target.getAttribute('data-tab');
       document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));

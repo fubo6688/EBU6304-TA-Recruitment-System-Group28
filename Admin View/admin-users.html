@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -598,16 +598,12 @@
     let usersCache = [];
     let exportHistory = [];
 
-    // 功能：formatDateTime。
-    // 实现：规范化或格式化数据，便于后续处理。
     function formatDateTime() {
       const d = new Date();
       const p = (v) => String(v).padStart(2, '0');
       return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
     }
 
-    // 功能：getSelectedExportParams。
-    // 实现：加载数据并同步界面状态。
     function getSelectedExportParams() {
       const dataType = document.querySelector('input[name="dataType"]:checked')?.value || 'positions';
       const startDate = document.getElementById('exportStartDate')?.value || '';
@@ -616,8 +612,6 @@
       return { dataType, startDate, endDate, role };
     }
 
-    // 功能：getAdminBaseUrl。
-    // 实现：加载数据并同步界面状态。
     function getAdminBaseUrl() {
       if (typeof API !== 'undefined' && typeof API.getBaseUrl === 'function') {
         return API.getBaseUrl();
@@ -634,8 +628,6 @@
       return `${origin}/api`;
     }
 
-    // 功能：requestJson。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     async function requestJson(url) {
       const response = await fetch(url, { credentials: 'include' });
       const text = await response.text();
@@ -651,8 +643,6 @@
       return data;
     }
 
-    // 功能：adminExportPreviewRequest。
-    // 实现：渲染界面内容并更新可视结果。
     async function adminExportPreviewRequest(params) {
       if (typeof API !== 'undefined' && typeof API.adminExportPreview === 'function') {
         return API.adminExportPreview(params);
@@ -667,8 +657,6 @@
       return requestJson(`${getAdminBaseUrl()}/admin/export?${q.toString()}`);
     }
 
-    // 功能：adminExportCsvRequest。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     async function adminExportCsvRequest(params) {
       if (typeof API !== 'undefined' && typeof API.adminExportCsv === 'function') {
         return API.adminExportCsv(params);
@@ -705,8 +693,6 @@
       return { blob, fileName };
     }
 
-    // 功能：renderPreview。
-    // 实现：渲染界面内容并更新可视结果。
     function renderPreview(columns, rows) {
       const table = document.getElementById('previewTable');
       if (!table) return;
@@ -732,8 +718,6 @@
       tbody.innerHTML = list.map((row) => `<tr>${cols.map((c) => `<td>${(row && row[c]) || ''}</td>`).join('')}</tr>`).join('');
     }
 
-    // 功能：renderExportHistory。
-    // 实现：渲染界面内容并更新可视结果。
     function renderExportHistory() {
       const container = document.getElementById('exportHistoryList');
       if (!container) return;
@@ -755,8 +739,6 @@
       `).join('');
     }
 
-    // 功能：applyUserFilters。
-    // 实现：按条件筛选数据并刷新展示。
     function applyUserFilters() {
       const role = (document.getElementById('userFilterRole')?.value || '').toLowerCase();
       const status = (document.getElementById('userFilterStatus')?.value || '').toLowerCase();
@@ -795,8 +777,6 @@
       }).join('');
     }
 
-    // 功能：loadUsers。
-    // 实现：加载数据并同步界面状态。
     async function loadUsers() {
       try {
         const result = await API.adminUsers();
@@ -807,8 +787,6 @@
       }
     }
 
-    // 功能：switchTab。
-    // 实现：控制页面流程步骤与导航状态。
     function switchTab(event) {
       const tabName = event.target.getAttribute('data-tab');
       document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -817,8 +795,6 @@
       document.querySelector(`.tab-content[data-tab="${tabName}"]`).classList.add('active');
     }
 
-    // 功能：toggleUserStatus。
-    // 实现：处理用户操作并调用后端接口完成数据更新。
     async function toggleUserStatus(userId, status) {
       try {
         const result = await API.adminUpdateUserStatus(userId, status);
@@ -833,8 +809,6 @@
       }
     }
 
-    // 功能：previewExport。
-    // 实现：渲染界面内容并更新可视结果。
     async function previewExport() {
       try {
         const params = getSelectedExportParams();
@@ -849,8 +823,6 @@
       }
     }
 
-    // 功能：exportData。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     async function exportData() {
       try {
         const params = getSelectedExportParams();

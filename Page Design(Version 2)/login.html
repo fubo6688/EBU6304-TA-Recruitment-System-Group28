@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -200,8 +200,6 @@
     let loginAttempts = parseInt(localStorage.getItem(ATTEMPT_KEY) || '0');
     let lockTime = parseInt(localStorage.getItem(LOCK_KEY) || '0');
 
-    // 功能：resetLockState。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function resetLockState() {
       loginAttempts = 0;
       lockTime = 0;
@@ -212,8 +210,6 @@
       document.getElementById('loginForm').style.pointerEvents = 'auto';
     }
 
-    // 功能：registerFailedAttempt。
-    // 实现：校验输入或当前状态，返回判断结果。
     function registerFailedAttempt() {
       loginAttempts += 1;
       if (loginAttempts >= MAX_ATTEMPTS) {
@@ -228,8 +224,6 @@
     }
 
     // Check whether account is locked
-    // 功能：checkLock。
-    // 实现：校验输入或当前状态，返回判断结果。
     function checkLock() {
       const now = Date.now();
       if (lockTime && now >= lockTime) {

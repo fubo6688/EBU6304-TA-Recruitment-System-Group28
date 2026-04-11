@@ -24,7 +24,6 @@ import java.util.Map;
 public class AdminServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
-    // 处理管理员 GET 能力：分析数据、导出预览、用户列表与系统日志。
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -121,7 +120,6 @@ public class AdminServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
-    // 处理管理员 POST 能力：当前用于用户状态更新。
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
@@ -159,7 +157,6 @@ public class AdminServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
-    // 会话与角色校验：仅允许 Admin 访问该 Servlet。
     private User requireAdmin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -181,12 +178,10 @@ public class AdminServlet extends HttpServlet {
         return user;
     }
 
-    // 安全取值工具。
     private String value(String s) {
         return s == null ? "" : s.trim();
     }
 
-    // 标准化导出数据类型，非白名单值回退为 positions。
     private String normalizeDataType(String dataType) {
         String t = dataType.toLowerCase();
         if ("applications".equals(t) || "hired".equals(t) || "users".equals(t) || "logs".equals(t)) {
@@ -195,7 +190,6 @@ public class AdminServlet extends HttpServlet {
         return "positions";
     }
 
-    // 构建导出数据集：按类型装配列定义并筛选行数据。
     private ExportPayload buildExportPayload(String dataType, String startDate, String endDate, String role) {
         List<String> columns = new ArrayList<>();
         List<Map<String, String>> rows = new ArrayList<>();
@@ -339,7 +333,6 @@ public class AdminServlet extends HttpServlet {
         return new ExportPayload(columns, rows);
     }
 
-    // 判断日期是否落在筛选区间内。
     private boolean inDateRange(String rawDate, String startDate, String endDate, boolean includeTime) {
         if ((startDate == null || startDate.isEmpty()) && (endDate == null || endDate.isEmpty())) {
             return true;
@@ -359,7 +352,6 @@ public class AdminServlet extends HttpServlet {
         return true;
     }
 
-    // 解析日期文本，兼容 yyyy-MM-dd 与 yyyy-MM-dd HH:mm:ss。
     private LocalDate parseDate(String text, boolean mayContainTime) {
         String value = value(text);
         if (value.isEmpty()) {
@@ -378,7 +370,6 @@ public class AdminServlet extends HttpServlet {
         return null;
     }
 
-    // 将结构化数据编码为 CSV 文本。
     private String toCsv(List<String> columns, List<Map<String, String>> rows) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < columns.size(); i++) {
@@ -401,7 +392,6 @@ public class AdminServlet extends HttpServlet {
         return sb.toString();
     }
 
-    // CSV 字段转义：含逗号/引号/换行时自动加引号并转义内部引号。
     private String escapeCsv(String value) {
         String v = value == null ? "" : value;
         boolean needsQuote = v.contains(",") || v.contains("\n") || v.contains("\r") || v.contains("\"");
@@ -411,7 +401,6 @@ public class AdminServlet extends HttpServlet {
         return "\"" + v.replace("\"", "\"\"") + "\"";
     }
 
-    // 导出结果载体：包含列定义与数据行。
     private static class ExportPayload {
         private final List<String> columns;
         private final List<Map<String, String>> rows;

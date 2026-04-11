@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -597,26 +597,18 @@
     let selectedPositionId = '';
     let appliedPositionIds = new Set();
 
-    // 功能：normalizeText。
-    // 实现：规范化或格式化数据，便于后续处理。
     function normalizeText(value) {
       return String(value || '').toLowerCase();
     }
 
-    // 功能：isClosedPosition。
-    // 实现：校验输入或当前状态，返回判断结果。
     function isClosedPosition(position) {
       return normalizeText(position && position.status) === 'closed';
     }
 
-    // 功能：hasApplied。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function hasApplied(positionId) {
       return !!positionId && appliedPositionIds.has(String(positionId));
     }
 
-    // 功能：escapeHtml。
-    // 实现：规范化或格式化数据，便于后续处理。
     function escapeHtml(value) {
       return String(value || '')
         .replace(/&/g, '&amp;')
@@ -626,8 +618,6 @@
         .replace(/'/g, '&#39;');
     }
 
-    // 功能：isMeaningfulFilterOption。
-    // 实现：校验输入或当前状态，返回判断结果。
     function isMeaningfulFilterOption(value) {
       const v = normalizeText(value).trim();
       if (!v) return false;
@@ -642,8 +632,6 @@
       return true;
     }
 
-    // 功能：extractTokens。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function extractTokens(text) {
       const source = String(text || '');
       return source
@@ -653,8 +641,6 @@
         .filter((s) => isMeaningfulFilterOption(s));
     }
 
-    // 功能：renderDynamicFilterGroup。
-    // 实现：渲染界面内容并更新可视结果。
     function renderDynamicFilterGroup(containerId, cssClass, options, idPrefix) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -677,8 +663,6 @@
       }).join('');
     }
 
-    // 功能：buildDynamicFilterOptions。
-    // 实现：按条件筛选数据并刷新展示。
     function buildDynamicFilterOptions(positions) {
       const majorSet = new Set();
       const skillSet = new Set();
@@ -715,16 +699,12 @@
       renderDynamicFilterGroup('skillOptions', 'filter-skill', skills, 'skillDynamic');
     }
 
-    // 功能：getCheckedValues。
-    // 实现：加载数据并同步界面状态。
     function getCheckedValues(selector) {
       return Array.from(document.querySelectorAll(selector))
         .filter((el) => el.checked)
         .map((el) => normalizeText(el.value));
     }
 
-    // 功能：isClosingSoon。
-    // 实现：校验输入或当前状态，返回判断结果。
     function isClosingSoon(deadline) {
       if (!deadline) return false;
       const d = new Date(deadline + 'T23:59:59');
@@ -734,16 +714,12 @@
       return days >= 0 && days <= 3;
     }
 
-    // 功能：matchAnyKeyword。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function matchAnyKeyword(haystack, keywords) {
       if (!keywords.length) return true;
       const text = normalizeText(haystack);
       return keywords.some((k) => text.includes(k));
     }
 
-    // 功能：applyFilters。
-    // 实现：按条件筛选数据并刷新展示。
     function applyFilters() {
       const courseName = normalizeText(document.getElementById('filterCourseName')?.value || '');
       const majors = getCheckedValues('.filter-major');
@@ -787,8 +763,6 @@
       renderPositions(currentPositions);
     }
 
-    // 功能：resetFilters。
-    // 实现：按条件筛选数据并刷新展示。
     function resetFilters() {
       const nameInput = document.getElementById('filterCourseName');
       const statusSelect = document.getElementById('filterStatus');
@@ -801,8 +775,6 @@
       renderPositions(currentPositions);
     }
 
-    // 功能：renderPositions。
-    // 实现：渲染界面内容并更新可视结果。
     function renderPositions(list) {
       const container = document.querySelector('.position-list');
       if (!container) {
@@ -847,8 +819,6 @@
       }).join('');
     }
 
-    // 功能：openPositionDetail。
-    // 实现：控制弹窗或页面区域的打开与关闭。
     function openPositionDetail(positionId) {
       selectedPositionId = positionId;
       const p = currentPositions.find((item) => item.id === positionId);
@@ -886,8 +856,6 @@
       taSystem.openModal('detailModal');
     }
 
-    // 功能：applyPosition。
-    // 实现：按条件筛选数据并刷新展示。
     async function applyPosition(positionId) {
       const position = allPositions.find((item) => item.id === positionId);
       if (position && isClosedPosition(position)) {
@@ -913,8 +881,6 @@
       }
     }
 
-    // 功能：loadPositions。
-    // 实现：加载数据并同步界面状态。
     async function loadPositions() {
       try {
         const [list, myAppsResult] = await Promise.all([

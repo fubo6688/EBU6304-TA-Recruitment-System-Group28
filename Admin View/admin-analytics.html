@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -384,8 +384,6 @@
       'Notifications': 'notification.html'
     };
 
-    // 功能：switchTab。
-    // 实现：控制页面流程步骤与导航状态。
     function switchTab(event) {
       const tabName = event.target.getAttribute('data-tab');
       document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -394,8 +392,6 @@
       document.querySelector(`.tab-content[data-tab="${tabName}"]`).classList.add('active');
     }
 
-    // 功能：groupCountBy。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function groupCountBy(items, keyGetter) {
       const map = new Map();
       (items || []).forEach((item) => {
@@ -406,16 +402,12 @@
       return map;
     }
 
-    // 功能：toDateKey。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function toDateKey(value) {
       const s = String(value || '');
       if (s.length >= 10) return s.slice(0, 10);
       return '';
     }
 
-    // 功能：renderStats。
-    // 实现：渲染界面内容并更新可视结果。
     function renderStats(summary) {
       const values = document.querySelectorAll('.stats-cards .stat-value');
       if (values.length < 4) return;
@@ -425,8 +417,6 @@
       values[3].textContent = String(summary.unfilledPositions || 0);
     }
 
-    // 功能：renderTables。
-    // 实现：渲染界面内容并更新可视结果。
     function renderTables(summary) {
       const positionTbody = document.querySelector('.tab-content[data-tab="positions"] tbody');
       if (positionTbody) {
@@ -462,8 +452,6 @@
       }
     }
 
-    // 功能：renderCharts。
-    // 实现：渲染界面内容并更新可视结果。
     function renderCharts(summary) {
       const positions = Array.isArray(summary.positions) ? summary.positions : [];
       const apps = Array.isArray(summary.applications) ? summary.applications : [];

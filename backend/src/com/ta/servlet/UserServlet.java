@@ -33,8 +33,6 @@ import java.util.Set;
 @MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 15 * 1024 * 1024)
 public class UserServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
-    // 允许查看 TA 资料的角色集合。
-    // TA 只能看自己的资料，MO 和 Admin 可以看他人的 TA 资料用于审核和管理。
     private static final Set<String> PROFILE_VIEW_ROLES = new HashSet<>();
 
     static {
@@ -44,10 +42,8 @@ public class UserServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // 所有 GET 接口统一输出 JSON，前端可以直接按 JSON 解析。
         resp.setContentType("application/json;charset=UTF-8");
 
-        // 先做登录校验，未登录直接返回 401，避免后面每个分支重复判断。
         User user = requireLogin(req, resp);
         if (user == null) {
             return;
@@ -55,14 +51,12 @@ public class UserServlet extends HttpServlet {
 
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
         if ("/pending-registrations".equalsIgnoreCase(path)) {
-            // Admin 才能查看待审批账号列表。
             if (!isAdmin(user)) {
                 resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 resp.getWriter().print(new JSONObject().put("success", false).put("message", "Admin only").toString());
                 return;
             }
 
-            // 只筛选 pending 状态的 TA/MO 账号，Admin 账号本身不进入审批列表。
             JSONArray items = new JSONArray();
             for (User item : dataManager.getAllUsers()) {
                 if (!"pending".equalsIgnoreCase(item.getStatus())) {
@@ -79,13 +73,11 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("/avatar".equalsIgnoreCase(path)) {
-            // 头像读取：默认读当前登录用户；如果传了 userId，则尝试读取指定用户头像。
             String targetUserId = value(req.getParameter("userId"));
             if (targetUserId.isEmpty()) {
                 targetUserId = user.getUserId();
             }
 
-            // 先校验权限，防止普通 TA 读取别人的头像。
             if (!canViewProfile(user, targetUserId)) {
                 resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 resp.setContentType("application/json;charset=UTF-8");
@@ -93,7 +85,6 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
-            // 先查 profile，再根据 profile 中保存的头像文件名定位磁盘文件。
             ResolvedProfile resolved = resolveProfileByAnyId(targetUserId);
             Map<String, String> profile = resolved.profile;
             if (profile == null) {
@@ -138,13 +129,11 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("/resume".equalsIgnoreCase(path)) {
-            // 简历读取逻辑和头像类似：先校验权限，再定位 PDF 文件并流式返回。
             String targetUserId = value(req.getParameter("userId"));
             if (targetUserId.isEmpty()) {
                 targetUserId = user.getUserId();
             }
 
-            // TA 只能看自己的简历；MO/Admin 可以用于审核查看。
             if (!canViewProfile(user, targetUserId)) {
                 resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 resp.setContentType("application/json;charset=UTF-8");
@@ -152,7 +141,6 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
-            // 兼容旧数据和新数据：有的记录存原文件名，有的记录存固定文件名。
             ResolvedProfile resolved = resolveProfileByAnyId(targetUserId);
             Map<String, String> profile = resolved.profile;
             if (profile == null) {
@@ -199,8 +187,8 @@ public class UserServlet extends HttpServlet {
         }
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
             // GET /api/user/profile
-            // 返回当前登录用户的“账号信息 + 资料信息”合并对象。
-            // TA 资料页会用这个接口回填表单，方便断点继续填写。
+            // Returns the logged-in user's profile aggregate (account fields + profile fields)
+            // used by TA profile page to prefill and continue the multi-step form.
             JSONObject result = toUserJson(user);
             Map<String, String> profile = dataManager.getProfile(user.getUserId());
             if (profile != null) {
@@ -223,8 +211,8 @@ public class UserServlet extends HttpServlet {
 
         if ("/ta-profile".equalsIgnoreCase(path)) {
             // GET /api/user/ta-profile?userId=...
-            // 这是跨账号查看接口，专门给 MO/Admin 审核 TA 时使用。
-            // 返回 TA 资料和简历预览地址，前端可以直接打开查看。
+            // Cross-user read endpoint for MO/Admin review scenarios:
+            // returns TA profile data plus resume preview URL.
             String targetUserId = value(req.getParameter("userId"));
             if (targetUserId.isEmpty()) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -281,11 +269,9 @@ public class UserServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // 所有 POST 接口统一输出 JSON，前端处理时不用区分文本和二进制。
         resp.setContentType("application/json;charset=UTF-8");
         PrintWriter out = resp.getWriter();
 
-        // POST 接口同样先检查登录态。
         User user = requireLogin(req, resp);
         if (user == null) {
             return;
@@ -293,14 +279,12 @@ public class UserServlet extends HttpServlet {
 
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
         if ("/approve-registration".equalsIgnoreCase(path)) {
-            // Admin 审批注册请求：approve -> active，reject -> inactive。
             if (!isAdmin(user)) {
                 resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 out.print(new JSONObject().put("success", false).put("message", "Admin only").toString());
                 return;
             }
 
-            // targetUserId 是待审批账号；decision 只允许 approve / reject。
             String targetUserId = value(req.getParameter("userId"));
             String decision = value(req.getParameter("decision"));
             if (targetUserId.isEmpty() || decision.isEmpty()) {
@@ -338,8 +322,8 @@ public class UserServlet extends HttpServlet {
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
             req.setCharacterEncoding("UTF-8");
             // POST /api/user/profile
-            // 这是 TA 资料页的提交入口，支持 multipart 表单。
-            // 如果某些字段这次没填，代码会自动沿用旧值，避免编辑一步丢一步。
+            // Accepts multipart form from TA profile wizard; supports partial updates
+            // by falling back to old stored values when a field is omitted.
             String userName = value(req.getParameter("userName"));
             String email = value(req.getParameter("email"));
             String grade = value(req.getParameter("grade"));
@@ -353,7 +337,6 @@ public class UserServlet extends HttpServlet {
             String resumeStoredName = oldProfile == null ? "" : value(oldProfile.get("resumeStoredName"));
             String avatarStoredName = oldProfile == null ? "" : value(oldProfile.get("avatarStoredName"));
 
-            // 如果资料已经存在，就把空字段补回旧值，更新时不会把已有内容覆盖掉。
             if (oldProfile != null) {
                 if (grade.isEmpty()) {
                     grade = value(oldProfile.get("grade"));
@@ -381,7 +364,6 @@ public class UserServlet extends HttpServlet {
             String contentType = req.getContentType();
             if (contentType != null && contentType.toLowerCase().startsWith("multipart/")) {
                 try {
-                    // 头像上传：只允许图片，且限制 5MB，避免上传错误文件或过大文件。
                     Part avatarPart = req.getPart("avatarFile");
                     if (avatarPart != null && avatarPart.getSize() > 0) {
                         if (avatarPart.getSize() > 5L * 1024L * 1024L) {
@@ -408,12 +390,11 @@ public class UserServlet extends HttpServlet {
                         avatarStoredName = storedAvatar;
                     }
 
-                    // 简历上传：只允许 PDF，并且固定存成 userId.pdf，方便覆盖更新和后续预览。
                     Part part = req.getPart("resumeFile");
                     if (part != null && part.getSize() > 0) {
-                        // 存储策略：
-                        // - 真实磁盘文件名统一改为 {userId}.pdf，保证每次上传都覆盖旧简历；
-                        // - 原始文件名保留在数据库中，供前端展示。
+                        // Storage strategy:
+                        // - physical file name is normalized to {userId}.pdf for deterministic overwrite,
+                        // - original uploaded file name is preserved for UI display.
                         String submitted = value(part.getSubmittedFileName());
                         String lower = submitted.toLowerCase();
                         if (!lower.endsWith(".pdf")) {
@@ -478,7 +459,6 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("/password".equalsIgnoreCase(path)) {
-            // 修改密码：必须先校验旧密码，再校验新密码复杂度。
             String oldPassword = value(req.getParameter("oldPassword"));
             String newPassword = value(req.getParameter("newPassword"));
             if (oldPassword.isEmpty() || newPassword.isEmpty()) {
@@ -508,7 +488,6 @@ public class UserServlet extends HttpServlet {
     }
 
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp) {
-        // 统一登录校验：没有 session 或 session 里没有 userId，就视为未登录。
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -532,7 +511,6 @@ public class UserServlet extends HttpServlet {
     }
 
     private JSONObject toUserJson(User user) {
-        // 把 User 对象转换成前端更容易直接消费的 JSON 结构。
         return new JSONObject()
                 .put("userId", user.getUserId())
                 .put("userName", user.getUserName())
@@ -559,9 +537,6 @@ public class UserServlet extends HttpServlet {
     }
 
     private boolean canViewProfile(User currentUser, String targetUserId) {
-        // 权限规则：
-        // 1. 自己永远可以看自己的资料；
-        // 2. MO/Admin 可以查看别人的 TA 资料，用于审核和管理。
         if (targetUserId == null || targetUserId.trim().isEmpty()) {
             return false;
         }
@@ -597,13 +572,10 @@ public class UserServlet extends HttpServlet {
         if (value(avatarStoredName).isEmpty()) {
             return "";
         }
-        // 这里不直接返回磁盘路径，而是返回后端接口地址，方便浏览器安全访问头像。
         return req.getContextPath() + "/api/user/avatar?userId=" + userId + "&t=" + System.currentTimeMillis();
     }
 
     private Path resolveResumeFile(String userId, String storedName, String originalName) {
-        // 简历文件兼容查找逻辑：
-        // 先按固定命名 {userId}.pdf 找，再按数据库记录的文件名找，最后再尝试历史遗留路径。
         Path dataDir = dataManager.getDataDirPath();
         Path resumesDir = dataDir.resolve("resumes");
         Path parentDir = dataDir.getParent();
@@ -636,7 +608,7 @@ public class UserServlet extends HttpServlet {
             }
         }
 
-        // 如果上述路径都没找到，就退回到目录里最新生成的该用户简历。
+        // Fallback: pick latest generated resume for this user.
         if (Files.exists(resumesDir) && Files.isDirectory(resumesDir)) {
             Path latest = null;
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(resumesDir, userId + "_*.pdf")) {
@@ -656,7 +628,6 @@ public class UserServlet extends HttpServlet {
     }
 
     private Path resolveAvatarFile(String userId, String storedName) {
-        // 头像文件查找逻辑和简历类似：先找数据库记录的文件名，再找该用户最新一张历史头像。
         Path dataDir = dataManager.getDataDirPath();
         Path avatarsDir = dataDir.resolve("avatars");
 
@@ -693,8 +664,6 @@ public class UserServlet extends HttpServlet {
     }
 
     private ResolvedProfile resolveProfileByAnyId(String targetUserId) {
-        // 兼容“用户 ID / QM ID”两种查找方式。
-        // 有些页面传 userId，有些页面传 qmId，所以这里做一层统一解析。
         String id = value(targetUserId);
         if (id.isEmpty()) {
             return new ResolvedProfile("", null);
@@ -735,7 +704,6 @@ public class UserServlet extends HttpServlet {
     }
 
     private User findUserByQmId(String qmId) {
-        // 通过 QM ID 反向查找用户，用于兼容旧数据和某些审核场景。
         String target = value(qmId);
         if (target.isEmpty()) {
             return null;

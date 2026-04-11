@@ -19,8 +19,6 @@ import java.util.Map;
 public class PositionServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
-    // 处理岗位查询接口。
-    // 根据登录角色返回可见岗位：MO 仅可见本人名下岗位，其他角色可见全部。
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -45,8 +43,6 @@ public class PositionServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
-    // 处理岗位创建、更新、发布与状态变更。
-    // 每个分支都包含角色校验与归属校验，防止越权操作。
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
@@ -225,7 +221,6 @@ public class PositionServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
-    // 按岗位所属 MO 过滤数据，兼容 userId/qmId 双匹配。
     private List<Map<String, String>> filterMoPositions(List<Map<String, String>> all, User user) {
         List<Map<String, String>> result = new ArrayList<>();
         for (Map<String, String> p : all) {
@@ -237,7 +232,6 @@ public class PositionServlet extends HttpServlet {
         return result;
     }
 
-    // 校验登录态并返回当前用户。
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -254,7 +248,6 @@ public class PositionServlet extends HttpServlet {
         return user;
     }
 
-    // 判断角色是否在允许集合中。
     private boolean isRole(User user, String... roles) {
         for (String role : roles) {
             if (role.equalsIgnoreCase(user.getRole())) {
@@ -264,18 +257,14 @@ public class PositionServlet extends HttpServlet {
         return false;
     }
 
-    // 安全取值工具。
     private String value(String s) {
         return s == null ? "" : s.trim();
     }
 
-    // 忽略大小写的字符串比较。
     private boolean eq(String a, String b) {
         return a != null && b != null && a.equalsIgnoreCase(b);
     }
 
-    // 判断当前用户是否有权限管理目标岗位。
-    // 规则：Admin 全量可管；MO 仅可管理自己名下岗位。
     private boolean canManagePosition(User user, Map<String, String> position) {
         if (isRole(user, "Admin")) {
             return true;

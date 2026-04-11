@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -569,8 +569,6 @@
       existingResumeName: ''
     };
 
-    // 功能：nextStep。
-    // 实现：控制页面流程步骤与导航状态。
     function nextStep() {
       // Move forward only when current step validation passes.
       if (validateCurrentStep()) {
@@ -584,8 +582,6 @@
       }
     }
 
-    // 功能：prevStep。
-    // 实现：控制页面流程步骤与导航状态。
     function prevStep() {
       // Allow users to go back without losing in-memory selections.
       currentStep--;
@@ -594,8 +590,6 @@
       }
     }
 
-    // 功能：validateCurrentStep。
-    // 实现：校验输入或当前状态，返回判断结果。
     function validateCurrentStep() {
       // Wizard-level gate:
       // Step 1 requires basic profile fields, Step 2 requires skills/time,
@@ -634,8 +628,6 @@
       return true;
     }
 
-    // 功能：updateStepView。
-    // 实现：处理用户操作并调用后端接口完成数据更新。
     function updateStepView() {
       // Sync both the content section and stepper UI with currentStep.
       document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
@@ -651,16 +643,12 @@
       });
     }
 
-    // 功能：toggleSkill。
-    // 实现：处理用户操作并调用后端接口完成数据更新。
     function toggleSkill(element) {
       // Multi-select skills and keep profileData.skills in sync with selected tags.
       element.classList.toggle('selected');
       profileData.skills = Array.from(document.querySelectorAll('.skill-tag.selected')).map(e => e.textContent);
     }
 
-    // 功能：collectAvailableTime。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function collectAvailableTime() {
       // Convert selected timetable cells into stable slot keys for persistence.
       profileData.availableTime = Array.from(document.querySelectorAll('.time-cell.selected'))
@@ -668,8 +656,6 @@
         .filter(Boolean);
     }
 
-    // 功能：handleFileUpload。
-    // 实现：加载数据并同步界面状态。
     function handleFileUpload(input) {
       const file = input.files[0];
       if (file) {
@@ -703,8 +689,6 @@
       }
     }
 
-    // 功能：previewResume。
-    // 实现：渲染界面内容并更新可视结果。
     function previewResume() {
       // Preview order: newly uploaded file first, then backend-stored resume.
       if (profileData.resume) {
@@ -725,8 +709,6 @@
       }
     }
 
-    // 功能：uploadProfileRequest。
-    // 实现：加载数据并同步界面状态。
     async function uploadProfileRequest(formData) {
       // Prefer centralized API helper; fallback keeps page runnable in standalone deployments.
       if (typeof API !== 'undefined' && typeof API.uploadProfile === 'function') {
@@ -755,8 +737,6 @@
       return data;
     }
 
-    // 功能：populateConfirmData。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function populateConfirmData() {
       // Render step-4 summary from current wizard state before final submit.
       document.getElementById('confirmGrade').textContent = profileData.grade;
@@ -769,8 +749,6 @@
       document.getElementById('confirmResume').textContent = profileData.resume ? profileData.resume.name : (profileData.existingResumeName || '-');
     }
 
-    // 功能：submitProfile。
-    // 实现：处理用户操作并调用后端接口完成数据更新。
     async function submitProfile() {
       if (!validateCurrentStep()) {
         return;
@@ -826,8 +804,6 @@
       }
     });
 
-    // 功能：initTimeCells。
-    // 实现：初始化页面事件与默认状态。
     function initTimeCells() {
       // Build deterministic slot identifiers (e.g., "Mon 9:00-12:00") for each cell.
       document.querySelectorAll('.time-table tbody tr').forEach((row) => {
@@ -853,8 +829,6 @@
       collectAvailableTime();
     }
 
-    // 功能：restoreAvailableTime。
-    // 实现：初始化页面事件与默认状态。
     function restoreAvailableTime(raw) {
       // Rehydrate timetable selections from persisted semicolon-delimited slots.
       if (!raw) return;
@@ -870,8 +844,6 @@
       collectAvailableTime();
     }
 
-    // 功能：loadExistingProfile。
-    // 实现：加载数据并同步界面状态。
     async function loadExistingProfile() {
       try {
         // Read persisted profile from backend and hydrate the wizard state.

@@ -19,8 +19,6 @@ import java.util.Map;
 public class ApplicationServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
-    // 处理申请查询相关 GET 接口。
-    // 通过不同 path 返回 MO 审核列表或 TA 个人申请列表，并按角色做权限过滤。
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -102,8 +100,6 @@ public class ApplicationServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // 处理申请提交与审核相关 POST 接口。
-        // 先鉴权，再根据 path 执行业务规则（提交、审核、通知、日志写入）。
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
         PrintWriter out = resp.getWriter();
@@ -222,7 +218,6 @@ public class ApplicationServlet extends HttpServlet {
     }
 
     private List<Map<String, String>> filterMoApplications(List<Map<String, String>> all, User user) {
-        // 按 MO 所属关系过滤申请数据，只保留该 MO 可以审核的记录。
         List<Map<String, String>> result = new ArrayList<>();
         for (Map<String, String> app : all) {
             String moId = app.get("moId");
@@ -234,11 +229,9 @@ public class ApplicationServlet extends HttpServlet {
     }
 
     private boolean isMoOwner(User user, String moId) {
-        // 判断当前用户是否为该申请所属 MO（兼容 userId 与 qmId 两种标识）。
         return eq(moId, user.getUserId()) || eq(moId, user.getQmId());
     }
 
-    // 校验登录态并返回用户对象，失败时统一写回 401 JSON。
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -256,7 +249,6 @@ public class ApplicationServlet extends HttpServlet {
     }
 
     private boolean isRole(User user, String... roles) {
-        // 判断用户角色是否在允许列表中。
         for (String role : roles) {
             if (role.equalsIgnoreCase(user.getRole())) {
                 return true;
@@ -266,11 +258,9 @@ public class ApplicationServlet extends HttpServlet {
     }
 
     private boolean eq(String a, String b) {
-        // 忽略大小写的安全字符串比较，任一为空返回 false。
         return a != null && b != null && a.equalsIgnoreCase(b);
     }
 
-    // 安全取值工具。
     private String value(String s) {
         return s == null ? "" : s.trim();
     }

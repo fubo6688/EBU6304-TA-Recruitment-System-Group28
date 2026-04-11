@@ -26,8 +26,6 @@ public class LoginServlet extends HttpServlet {
         private long lockUntil;
     }
 
-    // 处理登录态查询、角色提示与登出。
-    // 同一入口通过 action 参数区分子能力，统一输出 JSON 给前端消费。
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -84,8 +82,6 @@ public class LoginServlet extends HttpServlet {
                 .toString());
     }
 
-    // 处理登录与注册提交。
-    // 登录流程包含锁定机制、角色校验、会话写入；注册流程委托 handleRegister。
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
@@ -172,7 +168,6 @@ public class LoginServlet extends HttpServlet {
                 .toString());
     }
 
-    // 处理用户注册：校验必填项、角色与密码复杂度，创建 pending 账号并记录日志。
     private void handleRegister(HttpServletRequest req, PrintWriter out) {
         String userId = value(req.getParameter("userId"));
         String userName = value(req.getParameter("userName"));
@@ -215,7 +210,6 @@ public class LoginServlet extends HttpServlet {
                 .toString());
     }
 
-    // 密码复杂度校验：至少 8 位，含大小写字母和数字，且仅允许字母数字。
     private boolean isPasswordComplex(String password) {
         if (password == null) {
             return false;
@@ -223,7 +217,6 @@ public class LoginServlet extends HttpServlet {
         return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$");
     }
 
-    // 将后端 User 对象转换成前端使用的标准 JSON 结构。
     private JSONObject toUserJson(User user) {
         return new JSONObject()
                 .put("userId", user.getUserId())
@@ -235,18 +228,14 @@ public class LoginServlet extends HttpServlet {
                 .put("status", user.getStatus());
     }
 
-    // 安全取值工具。
     private String value(String s) {
         return s == null ? "" : s.trim();
     }
 
-    // 规范化登录锁定键，避免大小写差异导致重复状态。
     private String normalizeLockKey(String userId) {
         return value(userId).toLowerCase(Locale.ROOT);
     }
 
-    // 读取账号锁定剩余秒数。
-    // 如果已过期会自动清理状态并返回 0。
     private long getRemainingLockSeconds(String lockKey) {
         if (lockKey.isEmpty()) {
             return 0;
@@ -270,7 +259,6 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-    // 记录一次登录失败并在阈值达到时设置锁定时间。
     private void registerFailedAttempt(String lockKey) {
         if (lockKey.isEmpty()) {
             return;
@@ -291,7 +279,6 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-    // 登录成功后清除失败次数和锁定状态。
     private void clearFailedAttempts(String lockKey) {
         if (lockKey.isEmpty()) {
             return;

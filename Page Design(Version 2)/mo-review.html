@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -485,8 +485,6 @@
     let currentPositionId = '';
     let applicantProfileMap = {};
 
-    // 功能：ensureProfileModal。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function ensureProfileModal() {
       if (document.getElementById('applicantProfileModal')) return;
       const modal = document.createElement('div');
@@ -507,8 +505,6 @@
       document.body.appendChild(modal);
     }
 
-    // 功能：renderPositions。
-    // 实现：渲染界面内容并更新可视结果。
     function renderPositions(positions) {
       const list = document.querySelector('.position-list-left');
       if (!list) return;
@@ -525,8 +521,6 @@
       }
     }
 
-    // 功能：renderApplicants。
-    // 实现：渲染界面内容并更新可视结果。
     function renderApplicants(apps) {
       const grid = document.querySelector('.applicants-grid');
       if (!grid) return;
@@ -561,8 +555,6 @@
       `).join('');
     }
 
-    // 功能：preloadApplicantProfiles。
-    // 实现：加载数据并同步界面状态。
     async function preloadApplicantProfiles(apps) {
       const ids = [...new Set((apps || []).map((a) => a.userId).filter(Boolean))];
       applicantProfileMap = {};
@@ -578,8 +570,6 @@
       }));
     }
 
-    // 功能：loadApplications。
-    // 实现：加载数据并同步界面状态。
     async function loadApplications() {
       try {
         const result = await API.getReviewApplications(currentPositionId);
@@ -592,15 +582,11 @@
       }
     }
 
-    // 功能：openResume。
-    // 实现：控制弹窗或页面区域的打开与关闭。
     function openResume(userId) {
       if (!userId) return;
       window.open(API.getResumePreviewUrl(userId), '_blank');
     }
 
-    // 功能：showApplicantProfile。
-    // 实现：渲染界面内容并更新可视结果。
     function showApplicantProfile(userId) {
       const result = applicantProfileMap[userId];
       const p = result && result.profile ? result.profile : null;
@@ -630,8 +616,6 @@
       taSystem.openModal('applicantProfileModal');
     }
 
-    // 功能：selectPosition。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function selectPosition(positionId, element) {
       currentPositionId = positionId;
       document.querySelectorAll('.position-item').forEach(item => item.classList.remove('active'));
@@ -641,8 +625,6 @@
       loadApplications();
     }
 
-    // 功能：acceptApplicant。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     async function acceptApplicant(applicationId) {
       try {
         const result = await API.processApplication(applicationId, 'approved', '审核通过');
@@ -657,8 +639,6 @@
       }
     }
 
-    // 功能：rejectApplicant。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     async function rejectApplicant(applicationId) {
       const reason = prompt('Please enterRejectreason：') || '审核不通过';
       try {

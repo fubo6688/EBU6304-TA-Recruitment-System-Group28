@@ -19,8 +19,6 @@ import java.util.Map;
 public class AdminServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
-    // 统一处理管理员 GET 接口：根据 path 分发看板、岗位列表、工作量等查询能力。
-    // 实现方式是先做管理员权限校验，再按子路径组织并返回 JSON 结构。
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -97,8 +95,6 @@ public class AdminServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
-    // 校验当前会话是否为 Admin。
-    // 若未登录、账号不存在或角色不符，会直接写入错误响应并返回 null。
     private User requireAdmin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -123,7 +119,6 @@ public class AdminServlet extends HttpServlet {
         return user;
     }
 
-    // 安全取值工具：把 null 统一转为空字符串并去除首尾空白，减少空指针与比较分支。
     private String value(String s) {
         return s == null ? "" : s.trim();
     }

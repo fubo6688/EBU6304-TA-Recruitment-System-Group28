@@ -12,13 +12,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class CORSFilter implements Filter {
-    // 过滤器初始化入口；当前实现不需要额外初始化资源。
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
     }
 
-    // 统一为请求添加 CORS 响应头。
-    // 对 OPTIONS 预检请求直接返回 200，其余请求继续传递到后续过滤器/Servlet。
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -45,7 +42,6 @@ public class CORSFilter implements Filter {
         chain.doFilter(request, response);
     }
 
-    // 过滤器销毁入口；当前实现无需要释放的资源。
     @Override
     public void destroy() {
     }

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -478,14 +478,10 @@
     let applicantProfileMap = {};
     let currentApplications = [];
 
-    // 功能：normalizeStatus。
-    // 实现：规范化或格式化数据，便于后续处理。
     function normalizeStatus(status) {
       return String(status || '').toLowerCase();
     }
 
-    // 功能：statusText。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function statusText(status) {
       const s = normalizeStatus(status);
       if (s === 'approved') return 'approved';
@@ -494,8 +490,6 @@
       return 'pending';
     }
 
-    // 功能：ensureProfileModal。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function ensureProfileModal() {
       if (document.getElementById('applicantProfileModal')) return;
       const modal = document.createElement('div');
@@ -516,8 +510,6 @@
       document.body.appendChild(modal);
     }
 
-    // 功能：renderPositions。
-    // 实现：渲染界面内容并更新可视结果。
     function renderPositions(positions) {
       const list = document.querySelector('.position-list-left');
       if (!list) return;
@@ -534,8 +526,6 @@
       }
     }
 
-    // 功能：renderApplicants。
-    // 实现：渲染界面内容并更新可视结果。
     function renderApplicants(apps) {
       const grid = document.querySelector('.applicants-grid');
       if (!grid) return;
@@ -579,8 +569,6 @@
       `).join('');
     }
 
-    // 功能：preloadApplicantProfiles。
-    // 实现：加载数据并同步界面状态。
     async function preloadApplicantProfiles(apps) {
       const ids = [...new Set((apps || []).map((a) => a.userId).filter(Boolean))];
       applicantProfileMap = {};
@@ -596,8 +584,6 @@
       }));
     }
 
-    // 功能：loadApplications。
-    // 实现：加载数据并同步界面状态。
     async function loadApplications() {
       try {
         const result = await API.getReviewApplications(currentPositionId);
@@ -611,8 +597,6 @@
       }
     }
 
-    // 功能：openResume。
-    // 实现：控制弹窗或页面区域的打开与关闭。
     function openResume(userId) {
       if (!userId) return;
       if (typeof API.openResume === 'function') {
@@ -624,8 +608,6 @@
       window.open(API.getResumePreviewUrl(userId), '_blank');
     }
 
-    // 功能：formatAvailability。
-    // 实现：规范化或格式化数据，便于后续处理。
     function formatAvailability(raw) {
       const text = (raw || '').toString().trim();
       if (!text) {
@@ -634,8 +616,6 @@
       return text.split(';').map((s) => s.trim()).filter(Boolean).join(' | ') || 'Not provided';
     }
 
-    // 功能：showApplicantProfile。
-    // 实现：渲染界面内容并更新可视结果。
     function showApplicantProfile(userId) {
       const result = applicantProfileMap[userId];
       const p = result && result.profile ? result.profile : null;
@@ -665,8 +645,6 @@
       taSystem.openModal('applicantProfileModal');
     }
 
-    // 功能：selectPosition。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function selectPosition(positionId, element) {
       currentPositionId = positionId;
       document.querySelectorAll('.position-item').forEach(item => item.classList.remove('active'));
@@ -676,8 +654,6 @@
       loadApplications();
     }
 
-    // 功能：reloadPositionsAndKeepSelection。
-    // 实现：加载数据并同步界面状态。
     async function reloadPositionsAndKeepSelection() {
       const positions = await API.getPositions();
       const list = Array.isArray(positions) ? positions : [];
@@ -706,8 +682,6 @@
       }
     }
 
-    // 功能：reviewApplication。
-    // 实现：处理用户操作并调用后端接口完成数据更新。
     async function reviewApplication(applicationId, decision) {
       if (!applicationId) return;
       const feedback = window.prompt('Optional feedback for applicant:', '') || '';

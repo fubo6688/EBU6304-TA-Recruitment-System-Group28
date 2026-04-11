@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -653,8 +653,6 @@
       'Notifications': 'notification.html'
     };
 
-    // 功能：loadUsers。
-    // 实现：加载数据并同步界面状态。
     async function loadUsers() {
       try {
         const result = await API.adminUsers();
@@ -686,8 +684,6 @@
       }
     }
 
-    // 功能：switchTab。
-    // 实现：控制页面流程步骤与导航状态。
     function switchTab(event) {
       const tabName = event.target.getAttribute('data-tab');
       document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -696,8 +692,6 @@
       document.querySelector(`.tab-content[data-tab="${tabName}"]`).classList.add('active');
     }
 
-    // 功能：toggleUserStatus。
-    // 实现：处理用户操作并调用后端接口完成数据更新。
     async function toggleUserStatus(userId, status) {
       try {
         const result = await API.adminUpdateUserStatus(userId, status);
@@ -712,14 +706,10 @@
       }
     }
 
-    // 功能：previewExport。
-    // 实现：渲染界面内容并更新可视结果。
     function previewExport() {
       taSystem.showMessage('dataPreviewLoaded', 'info');
     }
 
-    // 功能：exportData。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function exportData() {
       taSystem.showMessage('Data has been exported，areDownload...', 'success');
     }

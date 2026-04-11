@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -261,8 +261,6 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
-    // 功能：setLockInfo。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function setLockInfo(message) {
       const lockInfo = document.getElementById('lockInfo');
       if (!lockInfo) return;
@@ -291,8 +289,6 @@
     let detectedRole = '';
     let roleHintTimer = null;
 
-    // 功能：normalizeRole。
-    // 实现：规范化或格式化数据，便于后续处理。
     function normalizeRole(role) {
       const r = (role || '').toString().trim().toLowerCase();
       if (r === 'ta') return 'TA';
@@ -301,8 +297,6 @@
       return '';
     }
 
-    // 功能：setLoginButtonByRole。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function setLoginButtonByRole(role) {
       const btn = document.getElementById('loginBtn');
       if (!btn) return;
@@ -318,8 +312,6 @@
       }
     }
 
-    // 功能：setRoleHintText。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function setRoleHintText(text, isWarning = false) {
       const roleHint = document.getElementById('roleHint');
       if (!roleHint) return;
@@ -327,8 +319,6 @@
       roleHint.style.color = isWarning ? 'var(--danger-color)' : 'var(--gray-500)';
     }
 
-    // 功能：detectRoleByAccount。
-    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     async function detectRoleByAccount(userId) {
       const account = (userId || '').trim();
       if (!account) {

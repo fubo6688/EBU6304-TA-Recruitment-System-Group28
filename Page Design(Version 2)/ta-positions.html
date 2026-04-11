@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -615,8 +615,6 @@
     let currentPositions = [];
     let selectedPositionId = '';
 
-    // 功能：renderPositions。
-    // 实现：渲染界面内容并更新可视结果。
     function renderPositions(list) {
       const container = document.querySelector('.position-list');
       if (!container) {
@@ -653,8 +651,6 @@
       `).join('');
     }
 
-    // 功能：openPositionDetail。
-    // 实现：控制弹窗或页面区域的打开与关闭。
     function openPositionDetail(positionId) {
       selectedPositionId = positionId;
       const p = currentPositions.find((item) => item.id === positionId);
@@ -681,8 +677,6 @@
       taSystem.openModal('detailModal');
     }
 
-    // 功能：applyPosition。
-    // 实现：按条件筛选数据并刷新展示。
     async function applyPosition(positionId) {
       try {
         const result = await API.submitApplication(positionId, 'first');
@@ -697,8 +691,6 @@
       }
     }
 
-    // 功能：loadPositions。
-    // 实现：加载数据并同步界面状态。
     async function loadPositions() {
       try {
         const list = await API.getPositions();

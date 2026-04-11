@@ -1,11 +1,9 @@
 ﻿// TA Recruitment System - Common Functions
 class TARecruitmentSystem {
-  // 构造函数：初始化全局交互事件。
   constructor() {
     this.initEventListeners();
   }
 
-  // 绑定全局交互事件：弹窗、标签切换、菜单和退出登录。
   initEventListeners() {
     // Modal box closesbutton
     document.addEventListener('click', (e) => {
@@ -55,7 +53,7 @@ class TARecruitmentSystem {
     }
   }
 
-  // 初始化侧边栏菜单映射与点击跳转。
+  // Menu navigation map
   initMenuNavigation() {
     // TA RoleMenu mapping
     const taMenuMap = {
@@ -110,7 +108,7 @@ class TARecruitmentSystem {
     this.setActiveMenu(menuMap);
   }
 
-  // 根据当前页面 URL 高亮菜单项。
+  // Set the active menu of the current page
   setActiveMenu(menuMap) {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     const currentMenuItem = Object.entries(menuMap).find(([, page]) => page === currentPage)?.[0];
@@ -126,7 +124,7 @@ class TARecruitmentSystem {
     }
   }
 
-  // 打开指定弹窗。
+  // Open modal box
   openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -134,7 +132,7 @@ class TARecruitmentSystem {
     }
   }
 
-  // 关闭指定弹窗。
+  // Close modal box
   closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -142,7 +140,7 @@ class TARecruitmentSystem {
     }
   }
 
-  // 校验表单必填字段并提示错误信息。
+  // formValidation
   validateForm(formId) {
     const form = document.getElementById(formId);
     if (!form) return false;
@@ -170,7 +168,7 @@ class TARecruitmentSystem {
     return isValid;
   }
 
-  // 显示浮动提示消息。
+  // showTip
   showMessage(message, type = 'info') {
     const alert = document.createElement('div');
     alert.className = `alert alert-${type}`;
@@ -185,7 +183,7 @@ class TARecruitmentSystem {
     }, 3000);
   }
 
-  // 绑定文件预览（图片 + 文件名）。
+  // File uploadPreview
   setupFilePreview(inputId, previewId) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -205,7 +203,7 @@ class TARecruitmentSystem {
     });
   }
 
-  // 初始化时间表可选单元格。
+  // Time table initialization
   initTimeTable() {
     const cells = document.querySelectorAll('.time-cell');
     cells.forEach(cell => {
@@ -215,7 +213,7 @@ class TARecruitmentSystem {
     });
   }
 
-  // 初始化表格排序功能，支持数字和字符串。
+  // Initialize data table sorting
   initTableSort() {
     const tableSortState = {};
     document.addEventListener('click', (e) => {
@@ -254,7 +252,7 @@ class TARecruitmentSystem {
     });
   }
 
-  // 本地权限校验，不通过跳转登录页。
+  // Initialization page permission check
   checkPageAccess(requiredRole) {
     const userRole = localStorage.getItem('userRole');
     const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
@@ -265,7 +263,7 @@ class TARecruitmentSystem {
     }
   }
 
-  // 初始化搜索过滤（含防抖）。
+  // Initialize search function（With anti-shake）
   initSearch(searchInputId, tableId) {
     const searchInput = document.getElementById(searchInputId);
     if (!searchInput) return;
