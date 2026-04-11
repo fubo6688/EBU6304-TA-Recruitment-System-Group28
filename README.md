@@ -311,7 +311,7 @@ Validated from `data/users.txt` and `backend/data/users.txt`.
 |---|---|---|
 | ta002 | Qmta2026A | TA |
 | mo001 | Qmta2026A | MO |
-| admin001 | Qmta2026A | Admin |
+| admin001 | Qmta2026A | Admin |Qmta2026A
 | 20210001 | Qmta2026A | TA |
 | M001 | Qmta2026A | MO |
 | ADM001 | Qmta2026A | Admin |
@@ -329,6 +329,34 @@ Validated from `data/users.txt` and `backend/data/users.txt`.
 Notes:
 1. Legacy weak passwords were migrated in batch to `Qmta2026A`.
 2. If an account still cannot log in, restart service with `./restart-dev.bat` so runtime data is reloaded.
+
+## Test Files
+
+This repository keeps only the final servlet test files under `backend/test/`.
+Please do not add extra test files unless they are required by a new feature.
+
+Current retained tests:
+1. `backend/test/com/ta/servlet/LoginServletProjectTest.java`
+2. `backend/test/com/ta/servlet/UserServletProjectTest.java`
+3. `backend/test/com/ta/servlet/PositionServletProjectTest.java`
+4. `backend/test/com/ta/servlet/ApplicationServletProjectTest.java`
+5. `backend/test/com/ta/servlet/AdminServletProjectTest.java`
+
+Run them from the repository root after compiling the backend:
+
+```powershell
+$tests = @(
+   'com.ta.servlet.LoginServletProjectTest',
+   'com.ta.servlet.UserServletProjectTest',
+   'com.ta.servlet.PositionServletProjectTest',
+   'com.ta.servlet.ApplicationServletProjectTest',
+   'com.ta.servlet.AdminServletProjectTest'
+)
+
+foreach ($test in $tests) {
+   java -cp 'backend\test-bin;backend\WEB-INF\classes;backend\WEB-INF\lib\*' $test
+}
+```
 
 ## Backend API Base
 

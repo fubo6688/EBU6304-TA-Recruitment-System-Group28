@@ -361,3 +361,30 @@ log1775813554294|2026-04-10 17:32:34|mo001|王老师|MO|LOGIN|login|success
 log1775813585053|2026-04-10 17:33:05|mo001|王老师|MO|REVIEW_APPLICATION|app1774255844166 -> accept|success
 log1775813590263|2026-04-10 17:33:10|mo001|王老师|MO|REVIEW_APPLICATION|app1774255844166 -> reject|success
 log1775813622195|2026-04-10 17:33:42|mo001|王老师|MO|LOGOUT|logout|success
+log1775835324804|2026-04-10 23:35:24|mo_wang|Dr. Wang (Network Module)|MO|LOGIN|login|success
+log1775835358961|2026-04-10 23:35:58|mo_wang|Dr. Wang (Network Module)|MO|LOGOUT|logout|success
+log1775835382101|2026-04-10 23:36:22|ta_emma|Emma Wilson|TA|LOGIN|login|success
+log1775835392672|2026-04-10 23:36:32|ta_emma|Emma Wilson|TA|SUBMIT_APPLICATION|pos1774243599623|success
+log1775835395726|2026-04-10 23:36:35|ta_emma|Emma Wilson|TA|SUBMIT_APPLICATION|pos1774246445186|success
+log1775835396943|2026-04-10 23:36:36|ta_emma|Emma Wilson|TA|SUBMIT_APPLICATION|pos1774246502692|success
+log1775835405377|2026-04-10 23:36:45|ta_emma|Emma Wilson|TA|LOGOUT|logout|success
+log1775835430619|2026-04-10 23:37:10|mo_jones|Prof. Jones (Agile Module)|MO|LOGIN|login|success
+log1775835543564|2026-04-10 23:39:03|mo_jones|Prof. Jones (Agile Module)|MO|CREATE_POSITION|DSD|success
+log1775835553281|2026-04-10 23:39:13|mo_jones|Prof. Jones (Agile Module)|MO|LOGOUT|logout|success
+log1775835576090|2026-04-10 23:39:36|ta_david|David Wang|TA|LOGIN|login|success
+log1775835606481|2026-04-10 23:40:06|ta_david|David Wang|TA|UPDATE_PROFILE|profile|success
+log1775835606852|2026-04-10 23:40:06|ta_david|David Wang|TA|UPDATE_PROFILE|profile|success
+log1775835611784|2026-04-10 23:40:11|ta_david|David Wang|TA|LOGOUT|logout|success
+log1775835635540|2026-04-10 23:40:35|mo_jones|Prof. Jones (Agile Module)|MO|LOGIN|login|success
+log1775835646935|2026-04-10 23:40:46|mo_jones|Prof. Jones (Agile Module)|MO|LOGOUT|logout|success
+log1775835670425|2026-04-10 23:41:10|ta_david|David Wang|TA|LOGIN|login|success
+log1775835680754|2026-04-10 23:41:20|ta_david|David Wang|TA|SUBMIT_APPLICATION|pos1775835543560|success
+log1775835686046|2026-04-10 23:41:26|ta_david|David Wang|TA|LOGOUT|logout|success
+log1775835749288|2026-04-10 23:42:29|mo_jones|Prof. Jones (Agile Module)|MO|LOGIN|login|success
+log1775835763247|2026-04-10 23:42:43|mo_jones|Prof. Jones (Agile Module)|MO|REVIEW_APPLICATION|app1775835680752 -> accept|success
+log1775835767925|2026-04-10 23:42:47|mo_jones|Prof. Jones (Agile Module)|MO|LOGOUT|logout|success
+log1775835793872|2026-04-10 23:43:13|ta_david|David Wang|TA|LOGIN|login|success
+log1775892902435|2026-04-11 15:35:02|ta_emma|Emma Wilson|TA|LOGIN|login|success
+log1775892986166|2026-04-11 15:36:26|ta_emma|Emma Wilson|TA|LOGOUT|logout|success
+log1775893084781|2026-04-11 15:38:04|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775895666303|2026-04-11 16:21:06|mo_jones|Prof. Jones (Agile Module)|MO|LOGIN|login|success

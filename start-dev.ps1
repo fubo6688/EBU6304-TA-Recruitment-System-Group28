@@ -71,6 +71,10 @@ if (-not (Test-Path $startupBat)) {
     throw "Tomcat startup script not found at: $startupBat"
 }
 
+# Ensure Tomcat scripts resolve catalina.bat correctly regardless of current working directory.
+$env:CATALINA_HOME = $tomcatHome
+$env:CATALINA_BASE = $tomcatHome
+
 Write-Host "Project: $projectRoot"
 Write-Host "Tomcat : $tomcatHome"
 Write-Host "Data   : $persistentDataDir"
@@ -150,13 +154,25 @@ foreach ($contextName in $contexts) {
 Write-Step "Starting Tomcat"
 $portInUse = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
 if ($ForceRestart -and (Test-Path $shutdownBat)) {
-    & $shutdownBat | Out-Null
+    Push-Location (Join-Path $tomcatHome "bin")
+    try {
+        & $env:ComSpec /c "`"$shutdownBat`"" | Out-Null
+    }
+    finally {
+        Pop-Location
+    }
     Start-Sleep -Seconds 2
     $portInUse = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
 }
 
 if (-not $portInUse) {
-    & $startupBat | Out-Null
+    Push-Location (Join-Path $tomcatHome "bin")
+    try {
+        & $env:ComSpec /c "`"$startupBat`"" | Out-Null
+    }
+    finally {
+        Pop-Location
+    }
     Start-Sleep -Seconds 2
 } else {
     Write-Host "Tomcat already listening on port $Port, skip startup."
