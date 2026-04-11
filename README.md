@@ -30,6 +30,7 @@ Enabled Sprint 2 workflow:
 6. MO review applications and process Accept/Reject decisions
 7. Admin dashboard for overall positions and TA workload monitoring
 8. Admin registration approval page in Admin sidebar
+9. Admin account status page (separate TA/MO areas) for de-active/re-active operations
 
 Partially implemented / placeholder:
 1. MO notification page UI exists (`mo-notifications.html`), business logic pending
@@ -48,19 +49,23 @@ This section summarizes all currently implemented and testable features in this 
 4. TA/MO self-registration:
    - New TA/MO accounts are created with `pending` status.
    - Pending users cannot log in before admin approval.
-5. Admin registration approval flow:
+5. Account status semantics:
+   - `active`: account is enabled and can log in/use protected APIs.
+   - `inactive`: account is disabled and login/protected APIs are blocked.
+   - `pending`: waiting for admin registration approval.
+6. Admin registration approval flow:
    - Admin can approve/reject pending TA/MO accounts.
-6. Password policy enforcement for registration and password change:
+7. Password policy enforcement for registration and password change:
    - Minimum 8 characters.
    - Must contain uppercase + lowercase + digit.
    - Letters and digits only.
-7. Server-side failed login lockout:
+8. Server-side failed login lockout:
    - Same account fails 3 times -> account is locked for 60 seconds.
    - Lock is enforced by backend (not client-only), so page refresh cannot bypass it.
-8. Unified session/role guard on protected pages:
+9. Unified session/role guard on protected pages:
    - TA, MO, Admin pages perform session and role validation before loading content.
    - Direct URL access without valid session/role redirects to login page.
-9. Legacy login compatibility:
+10. Legacy login compatibility:
    - `MyRecruitmentSystem/login.jsp` redirects to `login.html` in same context.
 
 ### 2. TA Features
@@ -79,6 +84,7 @@ This section summarizes all currently implemented and testable features in this 
    - View all available positions with details.
    - Multi-condition filtering (course/major/skill/status).
    - Closed positions are not appliable.
+   - TA must complete profile (basic info, skills/availability, resume) before applying.
    - Duplicate application for same position is prevented.
 5. Submit applications:
    - TA can apply to open positions.
@@ -93,6 +99,8 @@ This section summarizes all currently implemented and testable features in this 
    - Create position.
    - Edit position details.
    - Open/Close/Reopen position.
+   - Posting deadline cannot be earlier than today.
+   - If a position deadline has passed, MO must set a new deadline before reopen/publish.
    - Publish position.
 2. Position publish behavior:
    - Publishing triggers TA notifications for active TA accounts.
@@ -120,6 +128,10 @@ This section summarizes all currently implemented and testable features in this 
 3. Registration approvals (`admin-approvals.html`):
    - List all pending TA/MO registrations.
    - Approve/Reject actions with immediate refresh.
+4. TA/MO account status management (`admin-account-status.html`):
+   - Admin can de-active or re-active active/inactive TA and MO accounts.
+   - TA and MO accounts are displayed in two separate sections.
+   - Inactive accounts are blocked from protected API access and new login sessions.
 
 ### 5. Data, Notification, and Audit
 
@@ -167,6 +179,7 @@ This section summarizes all currently implemented and testable features in this 
 |- mo-review.html
 |- admin-dashboard.html
 |- admin-approvals.html
+|- admin-account-status.html
 |- css/
 |- js/
 |  |- script.js
@@ -305,29 +318,29 @@ powershell -ExecutionPolicy Bypass -File .\restart-dev.ps1 -NoBrowser -ForceKill
 The system reads user credentials from `users.txt` only.
 `users.csv` has been removed to avoid accidental misuse.
 
-Validated from `data/users.txt` and `backend/data/users.txt`.
+Validated from `data/users.txt`.
 
 | Username | Password | Role |
 |---|---|---|
-| ta002 | Qmta2026A | TA |
-| mo001 | Qmta2026A | MO |
-| admin001 | Qmta2026A | Admin |Qmta2026A
-| 20210001 | Qmta2026A | TA |
-| M001 | Qmta2026A | MO |
-| ADM001 | Qmta2026A | Admin |
-| admin_user | Qmta2026A | Admin |
-| admin_02 | Qmta2026A | Admin |
-| mo_smith | Qmta2026A | MO |
-| mo_jones | Qmta2026A | MO |
-| mo_wang | Qmta2026A | MO |
-| ta_alice | Qmta2026A | TA |
-| ta_bob | Qmta2026A | TA |
-| ta_charlie | Qmta2026A | TA |
-| ta_david | Qmta2026A | TA |
-| ta_emma | Qmta2026A | TA |
+| ta002 | Ta002SecureA1 | TA |
+| mo001 | Mo001SecureA1 | MO |
+| admin001 | Admin001SafeA1 | Admin |
+| 20210001 | Ta20210001SafeA1 | TA |
+| M001 | MoM001SafeA1 | MO |
+| ADM001 | AdminADM001A1 | Admin |
+| admin_user | AdminUserSafeA1 | Admin |
+| admin_02 | Admin02SafeA1 | Admin |
+| mo_smith | MoSmithSafeA1 | MO |
+| mo_jones | MoJonesSafeA1 | MO |
+| mo_wang | MoWangSafeA1 | MO |
+| ta_alice | TaAliceSafeA1 | TA |
+| ta_bob | TaBobSafeA1 | TA |
+| ta_charlie | TaCharlieSafeA1 | TA |
+| ta_david | TaDavidSafeA1 | TA |
+| ta_emma | TaEmmaSafeA1 | TA |
 
 Notes:
-1. Legacy weak passwords were migrated in batch to `Qmta2026A`.
+1. Passwords are diversified per account for security testing and all satisfy the password policy.
 2. If an account still cannot log in, restart service with `./restart-dev.bat` so runtime data is reloaded.
 
 ## Test Files
@@ -388,6 +401,13 @@ User:
 5. `GET /api/user/resume`
 6. `GET /api/user/pending-registrations` (Admin only)
 7. `POST /api/user/approve-registration` (Admin only, decision=`approve|reject`)
+8. `GET /api/user/managed-users` (Admin only, active/inactive TA/MO list)
+9. `POST /api/user/account-status` (Admin only, status=`active|inactive|deactive|reactive`)
+
+Admin account status page behavior:
+1. Location: `admin-account-status.html` in Admin sidebar.
+2. TA and MO accounts are displayed in separate areas.
+3. Button action toggles between De-active and Re-active based on current status.
 
 Position:
 1. `GET /api/position/list`
@@ -472,6 +492,7 @@ Use this order during demo/viva:
 6. Login as TA -> open `ta-applications.html` and check status is pending
 7. Login as MO -> open `mo-review.html` and Accept/Reject applicants
 8. Login as Admin -> open `admin-dashboard.html` and `admin-approvals.html`
+9. Login as Admin -> open `admin-account-status.html` and test De-active/Re-active on TA/MO accounts
 
 ## Troubleshooting
 

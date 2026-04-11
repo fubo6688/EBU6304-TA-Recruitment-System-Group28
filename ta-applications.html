@@ -163,10 +163,10 @@
       <div class="toolbar">
         <h2 style="margin:0;">My Application Status</h2>
         <div class="filters">
-          <button class="status-filter active" data-status="all">All</button>
-          <button class="status-filter" data-status="pending">Pending</button>
-          <button class="status-filter" data-status="approved">Approved</button>
-          <button class="status-filter" data-status="rejected">Rejected</button>
+          <button type="button" class="status-filter active" data-status="all">All</button>
+          <button type="button" class="status-filter" data-status="pending">Pending</button>
+          <button type="button" class="status-filter" data-status="approved">Approved</button>
+          <button type="button" class="status-filter" data-status="rejected">Rejected</button>
         </div>
       </div>
 
@@ -219,7 +219,7 @@
       // No extra round-trip is needed unless data is reloaded.
       const list = currentStatus === 'all'
         ? allApplications
-        : allApplications.filter((a) => normalizeStatus(a.status) === currentStatus);
+        : allApplications.filter((a) => normalizeStatus(a.status) === statusFilter);
 
       if (!list.length) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">No applications found</td></tr>';
@@ -266,10 +266,10 @@
           // Switch current filter state and re-render table immediately.
           document.querySelectorAll('.status-filter').forEach((x) => x.classList.remove('active'));
           btn.classList.add('active');
-          currentStatus = btn.getAttribute('data-status') || 'all';
+          currentStatus = normalizeStatusFilter(btn.getAttribute('data-status') || 'all');
           applyFilter();
         });
-      });
+      }
     });
   </script>
 </body>

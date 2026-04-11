@@ -3,11 +3,14 @@ package com.ta.model;
 import java.io.Serializable;
 
 public class User implements Serializable {
+    // 用户唯一账号（登录主键）。
     private String userId;
+    // 用户展示名称。
     private String userName;
     private String email;
     private String password;
     private String role; // TA, MO, Admin
+    // 业务关联 ID（常用于学号/工号或负责人映射）。
     private String qmId;
     private String status; // active, inactive
 
@@ -47,12 +50,14 @@ public class User implements Serializable {
 
     @Override
     public String toString() {
+        // 文本持久化格式：与 DataManager 的 users.txt 管道分隔协议保持一致。
         return userId + "|" + userName + "|" + email + "|" + password + "|" + role + "|" + qmId + "|" + status;
     }
 
     public static User fromString(String line) {
         String[] parts = line.split("\\|");
         if (parts.length >= 7) {
+            // 反序列化时补回状态字段，兼容文件读写。
             User user = new User(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
             user.setStatus(parts[6]);
             return user;
