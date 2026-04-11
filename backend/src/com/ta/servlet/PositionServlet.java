@@ -18,9 +18,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 岗位管理 Servlet。
+ *
+ * <p>负责岗位列表读取、创建、编辑、开关状态与发布通知，
+ * 并按 MO/Admin 权限及岗位归属做访问控制。</p>
+ */
 public class PositionServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
+    /**
+     * 处理岗位读取类 GET 接口（列表查询）。
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -47,6 +56,9 @@ public class PositionServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
+    /**
+     * 处理岗位写操作 POST 接口（创建、更新、状态变更、发布）。
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
@@ -276,6 +288,9 @@ public class PositionServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
+    /**
+     * 按负责人（userId/qmId）过滤 MO 可见岗位。
+     */
     private List<Map<String, String>> filterMoPositions(List<Map<String, String>> all, User user) {
         List<Map<String, String>> result = new ArrayList<>();
         for (Map<String, String> p : all) {
@@ -288,6 +303,9 @@ public class PositionServlet extends HttpServlet {
         return result;
     }
 
+    /**
+     * 统一登录态校验：要求会话有效且账号 active。
+     */
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -311,6 +329,9 @@ public class PositionServlet extends HttpServlet {
         return user;
     }
 
+    /**
+     * 判断当前用户角色是否在允许角色集合内。
+     */
     private boolean isRole(User user, String... roles) {
         for (String role : roles) {
             if (role.equalsIgnoreCase(user.getRole())) {
@@ -320,14 +341,23 @@ public class PositionServlet extends HttpServlet {
         return false;
     }
 
+    /**
+     * 空值安全取值并去首尾空白。
+     */
     private String value(String s) {
         return s == null ? "" : s.trim();
     }
 
+    /**
+     * 忽略大小写比较两个字符串是否相等。
+     */
     private boolean eq(String a, String b) {
         return a != null && b != null && a.equalsIgnoreCase(b);
     }
 
+    /**
+     * 判断当前用户是否有权管理指定岗位。
+     */
     private boolean canManagePosition(User user, Map<String, String> position) {
         if (isRole(user, "Admin")) {
             return true;
@@ -336,11 +366,17 @@ public class PositionServlet extends HttpServlet {
         return eq(moId, user.getUserId()) || eq(moId, user.getQmId());
     }
 
+    /**
+     * 判断截止日期是否早于今天。
+     */
     private boolean isPastDeadline(String deadline, LocalDate today) {
         LocalDate d = parseIsoDate(deadline);
         return d != null && d.isBefore(today);
     }
 
+    /**
+     * 解析 ISO 日期字符串（yyyy-MM-dd），非法返回 null。
+     */
     private LocalDate parseIsoDate(String raw) {
         String value = value(raw);
         if (value.isEmpty()) {

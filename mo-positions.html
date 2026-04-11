@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -519,11 +519,13 @@
     let currentFilterStatus = 'all';
     let currentEditPositionId = '';
 
+    // 功能：标准化状态值，避免大小写与空值影响判断。
     function normalizeStatus(status) {
       // Normalize backend status values for consistent UI comparisons.
       return String(status || '').toLowerCase();
     }
 
+    // 功能：标准化输入值，便于后续处理。
     function normalizeDeadlineInput(raw) {
       // Accept common user date inputs and normalize to YYYY-MM-DD-like format.
       const value = String(raw || '').trim();
@@ -538,6 +540,7 @@
         .replace(/^-|-$/g, '');
     }
 
+    // 功能：判断条件是否成立。
     function isValidIsoDate(value) {
       // Strictly validate real calendar dates to prevent invalid deadline writes.
       if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -551,6 +554,7 @@
       return d.getFullYear() === y && (d.getMonth() + 1) === m && d.getDate() === day;
     }
 
+    // 功能：判断条件是否成立。
     function isPastDate(value) {
       const normalized = normalizeDeadlineInput(value);
       if (!isValidIsoDate(normalized)) {
@@ -562,6 +566,7 @@
       return d.getTime() < today.getTime();
     }
 
+    // 功能：处理 promptDeadlineForExpiredReopen 相关逻辑。
     function promptDeadlineForExpiredReopen(positionId) {
       const position = allPositions.find((p) => p.id === positionId);
       if (!position) {
@@ -591,6 +596,7 @@
       return normalized;
     }
 
+    // 功能：处理 bindDatePicker 相关逻辑。
     function bindDatePicker(displayId, pickerId) {
       // Keep text input and native date picker synchronized bidirectionally.
       const display = document.getElementById(displayId);
@@ -612,6 +618,7 @@
       });
     }
 
+    // 功能：打开对应弹窗或视图。
     function openDatePicker(pickerId) {
       // Trigger native picker where supported, with graceful fallback.
       const picker = document.getElementById(pickerId);
@@ -627,6 +634,7 @@
       }
     }
 
+    // 功能：处理 collectPublishForm 相关逻辑。
     function collectPublishForm() {
       const normalizedDeadline = normalizeDeadlineInput(document.getElementById('publishDeadline')?.value || '');
       // Consolidate inputs from all publish steps into one payload object.
@@ -647,6 +655,7 @@
       };
     }
 
+    // 功能：处理 updatePublishStepUI 相关逻辑。
     function updatePublishStepUI() {
       // Single renderer for publish wizard: sections, progress indicator, and footer buttons.
       document.querySelectorAll('#publishModal .form-section').forEach((section, index) => {
@@ -691,6 +700,7 @@
       }
     }
 
+    // 功能：校验当前输入或步骤是否合法。
     function validatePublishStep() {
       const data = collectPublishForm();
       // Step-specific blocking checks:
@@ -714,6 +724,7 @@
       return true;
     }
 
+    // 功能：进入下一步流程。
     function nextPublishStep() {
       // Advance wizard or submit final payload at last step.
       if (!validatePublishStep()) {
@@ -727,6 +738,7 @@
       submitPublishPosition();
     }
 
+    // 功能：返回上一步流程。
     function prevPublishStep() {
       // Navigate backward inside publish wizard.
       if (publishStep > 1) {
@@ -735,6 +747,7 @@
       }
     }
 
+    // 功能：提交发布岗位请求。
     async function submitPublishPosition() {
       const data = collectPublishForm();
       if (data.deadline && !isValidIsoDate(data.deadline)) {
@@ -772,6 +785,7 @@
       }
     }
 
+    // 功能：应用当前设置并刷新结果。
     function applyCurrentFilter() {
       // Apply toolbar status filter to locally cached position list.
       const list = currentFilterStatus === 'all'
@@ -780,6 +794,7 @@
       renderPositions(list);
     }
 
+    // 功能：渲染岗位列表视图。
     function renderPositions(positions) {
       // Render position table rows with action buttons bound to each position record.
       const tbody = document.querySelector('#positionsTable tbody');
@@ -810,6 +825,7 @@
       `).join('');
     }
 
+    // 功能：打开对应弹窗或视图。
     function openEditModal(positionId) {
       // Load selected row data into edit modal controls.
       const position = allPositions.find((p) => p.id === positionId);
@@ -834,6 +850,7 @@
       taSystem.openModal('editModal');
     }
 
+    // 功能：保存岗位编辑结果。
     async function saveEditPosition() {
       // Validate and send edit payload to backend update endpoint.
       if (!currentEditPositionId) {
@@ -871,6 +888,7 @@
       }
     }
 
+    // 功能：切换岗位开放/关闭状态。
     async function togglePositionStatus(positionId, status) {
       try {
         // Status toggle path (POST /position/status):
@@ -888,6 +906,7 @@
       }
     }
 
+    // 功能：执行岗位发布流程。
     async function publishPosition(positionId) {
       try {
         // Publish path (POST /position/publish):
@@ -905,6 +924,7 @@
       }
     }
 
+    // 功能：加载岗位数据并更新页面。
     async function loadPositions() {
       // Read current MO-visible positions from backend and re-render table.
       try {
@@ -916,6 +936,7 @@
       }
     }
 
+    // 功能：按条件筛选数据。
     function filterStatus(element, status) {
       // Update active filter chip and refresh filtered table.
       document.querySelectorAll('.filter-tag').forEach(tag => tag.classList.remove('active'));

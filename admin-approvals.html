@@ -150,6 +150,7 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
+    // 功能：转义 HTML 特殊字符，降低 XSS 风险。
     function escapeHtml(text) {
       return String(text || '')
         .replace(/&/g, '&amp;')
@@ -159,6 +160,7 @@
         .replace(/'/g, '&#39;');
     }
 
+    // 功能：加载待审批注册账号列表。
     async function loadPendingRegistrations() {
       const list = document.getElementById('approvalList');
       if (!list) return;
@@ -195,6 +197,7 @@
       }
     }
 
+    // 功能：处理管理员对注册账号的审批操作。
     async function handleApprovalAction(userId, decision) {
       try {
         const result = await API.approveRegistration(userId, decision);

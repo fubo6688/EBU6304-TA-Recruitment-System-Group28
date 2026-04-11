@@ -15,6 +15,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 认证入口 Servlet。
+ *
+ * <p>负责登录、登出、会话查询、角色提示与 TA/MO 自注册，
+ * 并内置失败锁定与注册唯一性约束（role + qmId）。</p>
+ */
 public class LoginServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
     // 登录失败策略：3 次失败后锁定 60 秒（按账号维度）。
@@ -27,6 +33,9 @@ public class LoginServlet extends HttpServlet {
         private long lockUntil;
     }
 
+    /**
+     * 处理会话查询、角色提示与登出请求。
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -92,6 +101,9 @@ public class LoginServlet extends HttpServlet {
                 .toString());
     }
 
+    /**
+     * 处理登录与注册提交。
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
@@ -152,16 +164,7 @@ public class LoginServlet extends HttpServlet {
                         .put("message", "Account locked. Please try again in " + remainingAfterFail + " seconds")
                         .toString());
             } else {
-                if (existing != null) {
-                    int attemptsRemaining = getRemainingAttempts(lockKey);
-                    out.print(new JSONObject()
-                            .put("success", false)
-                            .put("attemptsRemaining", attemptsRemaining)
-                            .put("message", "Invalid password. " + attemptsRemaining + " attempt(s) remaining")
-                            .toString());
-                } else {
-                    out.print(new JSONObject().put("success", false).put("message", "Invalid account or password").toString());
-                }
+                out.print(new JSONObject().put("success", false).put("message", "Invalid account or password").toString());
             }
             return;
         }
@@ -193,6 +196,9 @@ public class LoginServlet extends HttpServlet {
                 .toString());
     }
 
+    /**
+     * 处理 TA/MO 自注册流程。
+     */
     private void handleRegister(HttpServletRequest req, PrintWriter out) {
         String userId = value(req.getParameter("userId"));
         String userName = value(req.getParameter("userName"));
@@ -225,8 +231,17 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
+        String effectiveQmId = qmId.isEmpty() ? userId : qmId;
+        if (existsSameRoleAndQmId(normalizedRole, effectiveQmId)) {
+            out.print(new JSONObject()
+                    .put("success", false)
+                    .put("message", "Another account with same role and QM ID already exists")
+                    .toString());
+            return;
+        }
+
         // 新注册默认进入 pending，等待管理员审批。
-        User user = new User(userId, userName, email, password, normalizedRole, qmId.isEmpty() ? userId : qmId);
+        User user = new User(userId, userName, email, password, normalizedRole, effectiveQmId);
         user.setStatus("pending");
         dataManager.saveUser(user);
         dataManager.writeLog(userId, userName, normalizedRole, "REGISTER", "pending approval", "success");
@@ -237,6 +252,9 @@ public class LoginServlet extends HttpServlet {
                 .toString());
     }
 
+    /**
+     * 校验密码复杂度是否满足策略。
+     */
     private boolean isPasswordComplex(String password) {
         if (password == null) {
             return false;
@@ -244,6 +262,29 @@ public class LoginServlet extends HttpServlet {
         return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$");
     }
 
+    /**
+     * 检查是否已存在同 role + qmId 的账号，避免同人多账号。
+     */
+    private boolean existsSameRoleAndQmId(String role, String qmId) {
+        String normalizedRole = value(role).toUpperCase(Locale.ROOT);
+        String normalizedQmId = value(qmId).toLowerCase(Locale.ROOT);
+        if (normalizedRole.isEmpty() || normalizedQmId.isEmpty()) {
+            return false;
+        }
+
+        for (User item : dataManager.getAllUsers()) {
+            String itemRole = value(item.getRole()).toUpperCase(Locale.ROOT);
+            String itemQmId = value(item.getQmId()).toLowerCase(Locale.ROOT);
+            if (normalizedRole.equals(itemRole) && normalizedQmId.equals(itemQmId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 将用户实体转为前端使用的标准 JSON 结构。
+     */
     private JSONObject toUserJson(User user) {
         return new JSONObject()
                 .put("userId", user.getUserId())
@@ -255,14 +296,23 @@ public class LoginServlet extends HttpServlet {
                 .put("status", user.getStatus());
     }
 
+    /**
+     * 空值安全取值并去首尾空白。
+     */
     private String value(String s) {
         return s == null ? "" : s.trim();
     }
 
+    /**
+     * 归一化登录锁定键（按账号小写）。
+     */
     private String normalizeLockKey(String userId) {
         return value(userId).toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * 查询账号剩余锁定秒数；锁到期后会顺便清理内存态。
+     */
     private long getRemainingLockSeconds(String lockKey) {
         if (lockKey.isEmpty()) {
             return 0;
@@ -287,6 +337,9 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
+    /**
+     * 记录一次登录失败并在达到阈值后写入锁定时窗。
+     */
     private void registerFailedAttempt(String lockKey) {
         if (lockKey.isEmpty()) {
             return;
@@ -308,25 +361,9 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-    private int getRemainingAttempts(String lockKey) {
-        if (lockKey.isEmpty()) {
-            return MAX_FAILED_ATTEMPTS;
-        }
-
-        LoginAttemptState state = LOGIN_ATTEMPTS.get(lockKey);
-        if (state == null) {
-            return MAX_FAILED_ATTEMPTS;
-        }
-
-        synchronized (state) {
-            long now = System.currentTimeMillis();
-            if (state.lockUntil > now) {
-                return 0;
-            }
-            return Math.max(0, MAX_FAILED_ATTEMPTS - state.failedAttempts);
-        }
-    }
-
+    /**
+     * 清空指定账号的失败与锁定状态。
+     */
     private void clearFailedAttempts(String lockKey) {
         if (lockKey.isEmpty()) {
             return;

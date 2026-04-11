@@ -9,9 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
@@ -30,6 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 用户域 Servlet。
+ *
+ * <p>处理个人资料读取/更新、头像与简历上传下载、改密、
+ * 以及管理员的注册审批与账号启停等管理操作。</p>
+ */
 @MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 15 * 1024 * 1024)
 public class UserServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
@@ -41,6 +44,9 @@ public class UserServlet extends HttpServlet {
         PROFILE_VIEW_ROLES.add("Admin");
     }
 
+    /**
+     * 处理用户读取类 GET 接口（profile/avatar/resume/审批列表等）。
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -307,6 +313,9 @@ public class UserServlet extends HttpServlet {
         resp.getWriter().print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
+    /**
+     * 处理用户写操作 POST 接口（资料更新、改密、审批、账号状态变更）。
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -581,6 +590,9 @@ public class UserServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
+    /**
+     * 统一登录态校验：要求存在会话且账号为 active。
+     */
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp) {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -614,6 +626,9 @@ public class UserServlet extends HttpServlet {
         return user;
     }
 
+    /**
+     * 将用户实体转为对外返回的标准 JSON 结构。
+     */
     private JSONObject toUserJson(User user) {
         return new JSONObject()
                 .put("userId", user.getUserId())
@@ -625,10 +640,16 @@ public class UserServlet extends HttpServlet {
                 .put("status", user.getStatus());
     }
 
+    /**
+     * 空值安全取值并去首尾空白。
+     */
     private String value(String s) {
         return s == null ? "" : s.trim();
     }
 
+    /**
+     * 判断是否管理员角色。
+     */
     private boolean isAdmin(User user) {
         return user != null && "Admin".equalsIgnoreCase(value(user.getRole()));
     }
@@ -650,6 +671,9 @@ public class UserServlet extends HttpServlet {
         return "";
     }
 
+    /**
+     * 校验密码复杂度是否满足系统策略。
+     */
     private boolean isPasswordComplex(String password) {
         if (password == null) {
             return false;
@@ -657,6 +681,9 @@ public class UserServlet extends HttpServlet {
         return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$");
     }
 
+    /**
+     * 判断是否允许查看目标用户资料（本人/MO/Admin）。
+     */
     private boolean canViewProfile(User currentUser, String targetUserId) {
         if (targetUserId == null || targetUserId.trim().isEmpty()) {
             return false;
@@ -667,6 +694,9 @@ public class UserServlet extends HttpServlet {
         return PROFILE_VIEW_ROLES.contains(currentUser.getRole());
     }
 
+    /**
+     * 清理非法文件名字符，避免路径注入与文件系统异常。
+     */
     private String sanitizeFileName(String name) {
         if (name == null || name.isEmpty()) {
             return "resume.pdf";
@@ -674,6 +704,9 @@ public class UserServlet extends HttpServlet {
         return name.replaceAll("[\\\\/:*?\"<>|]", "_");
     }
 
+    /**
+     * 推断头像扩展名（优先文件名，其次 Content-Type）。
+     */
     private String guessAvatarExtension(String fileName, String contentType) {
         String name = value(fileName).toLowerCase(Locale.ROOT);
         if (name.endsWith(".png")) return ".png";
@@ -689,6 +722,9 @@ public class UserServlet extends HttpServlet {
         return ".png";
     }
 
+    /**
+     * 生成头像访问 URL（附时间戳避免缓存）。
+     */
     private String buildAvatarUrl(HttpServletRequest req, String userId, String avatarStoredName) {
         if (value(avatarStoredName).isEmpty()) {
             return "";
@@ -696,6 +732,9 @@ public class UserServlet extends HttpServlet {
         return req.getContextPath() + "/api/user/avatar?userId=" + userId + "&t=" + System.currentTimeMillis();
     }
 
+    /**
+     * 解析简历文件实际路径（兼容历史路径与命名策略）。
+     */
     private Path resolveResumeFile(String userId, String storedName, String originalName) {
         Path dataDir = dataManager.getDataDirPath();
         Path resumesDir = dataDir.resolve("resumes");
@@ -748,6 +787,9 @@ public class UserServlet extends HttpServlet {
         return resumesDir.resolve(storedName.isEmpty() ? originalName : storedName);
     }
 
+    /**
+     * 解析头像文件实际路径并支持按用户匹配最新文件回退。
+     */
     private Path resolveAvatarFile(String userId, String storedName) {
         Path dataDir = dataManager.getDataDirPath();
         Path avatarsDir = dataDir.resolve("avatars");
@@ -784,6 +826,9 @@ public class UserServlet extends HttpServlet {
         return avatarsDir.resolve(storedName);
     }
 
+    /**
+     * 兼容 userId 与 qmId 的资料解析，减少历史数据键不一致问题。
+     */
     private ResolvedProfile resolveProfileByAnyId(String targetUserId) {
         // 解析顺序：直接 userId -> 该用户 qmId -> 反查 qmId 对应用户。
         String id = value(targetUserId);
@@ -825,6 +870,9 @@ public class UserServlet extends HttpServlet {
         return new ResolvedProfile(id, null);
     }
 
+    /**
+     * 通过 qmId 反查用户实体。
+     */
     private User findUserByQmId(String qmId) {
         String target = value(qmId);
         if (target.isEmpty()) {
@@ -842,6 +890,9 @@ public class UserServlet extends HttpServlet {
         private final String resolvedUserId;
         private final Map<String, String> profile;
 
+        /**
+         * 封装解析后的档案定位结果。
+         */
         private ResolvedProfile(String resolvedUserId, Map<String, String> profile) {
             this.resolvedUserId = resolvedUserId;
             this.profile = profile;
