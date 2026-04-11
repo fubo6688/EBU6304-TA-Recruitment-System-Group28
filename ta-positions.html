@@ -378,16 +378,16 @@
             <div id="skillOptions"></div>
 
             <div class="filter-title" style="font-size: 12px; margin-top: 16px;">Position Status</div>
-            <select id="filterStatus" class="form-control" style="font-size: 12px;">
-              <option value="">-- All Statuses --</option>
+            <select id="filterStatus" class="form-control" style="font-size: 12px;" onchange="applyFilters()">
+              <option value="all">-- All Statuses --</option>
               <option value="open">Open</option>
               <option value="closing">Closing Soon</option>
               <option value="closed">Closed</option>
             </select>
 
             <div class="filter-buttons">
-              <button id="filterResetBtn" class="btn btn-secondary btn-sm">Reset</button>
-              <button id="filterConfirmBtn" class="btn btn-primary btn-sm">Confirm</button>
+              <button id="filterResetBtn" type="button" class="btn btn-secondary btn-sm" onclick="resetFilters()">Reset</button>
+              <button id="filterConfirmBtn" type="button" class="btn btn-primary btn-sm" onclick="applyFilters()">Confirm</button>
             </div>
           </div>
         </div>
@@ -596,9 +596,25 @@
     let currentPositions = [];
     let selectedPositionId = '';
     let appliedPositionIds = new Set();
+    let profileCompleteForApply = false;
+    const profileApplyHint = 'Please complete your profile (basic information, skills & availability, resume) before applying';
 
     function normalizeText(value) {
-      return String(value || '').toLowerCase();
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function normalizeStatusFilter(value) {
+      const v = normalizeText(value);
+      if (!v || v === 'all' || v.includes('all status') || v.includes('all')) {
+        return 'all';
+      }
+      if (v.includes('clos') && v.includes('soon')) {
+        return 'closing';
+      }
+      if (v === 'open' || v === 'closed' || v === 'closing') {
+        return v;
+      }
+      return 'all';
     }
 
     function isClosedPosition(position) {
@@ -607,6 +623,24 @@
 
     function hasApplied(positionId) {
       return !!positionId && appliedPositionIds.has(String(positionId));
+    }
+
+    function isProfileComplete(profile) {
+      if (!profile || typeof profile !== 'object') {
+        return false;
+      }
+      const valueOf = (v) => String(v || '').trim();
+      const grade = valueOf(profile.grade);
+      const major = valueOf(profile.major);
+      const gpa = valueOf(profile.gpa);
+      const email = valueOf(profile.email);
+      const skills = valueOf(profile.skills);
+      const availableTime = valueOf(profile.availableTime);
+      const resumeFileName = valueOf(profile.resumeFileName);
+      const resumeStoredName = valueOf(profile.resumeStoredName);
+      return !!(
+        grade && major && gpa && email && skills && availableTime && (resumeFileName || resumeStoredName)
+      );
     }
 
     function escapeHtml(value) {
@@ -656,7 +690,7 @@
         const value = escapeHtml(normalizeText(option));
         return `
           <div class="filter-item">
-            <input type="checkbox" class="filter-checkbox ${cssClass}" id="${id}" value="${value}">
+            <input type="checkbox" class="filter-checkbox ${cssClass}" id="${id}" value="${value}" onchange="applyFilters()">
             <label for="${id}">${label}</label>
           </div>
         `;
@@ -724,7 +758,11 @@
       const courseName = normalizeText(document.getElementById('filterCourseName')?.value || '');
       const majors = getCheckedValues('.filter-major');
       const skills = getCheckedValues('.filter-skill');
-      const statusFilter = normalizeText(document.getElementById('filterStatus')?.value || '');
+      const statusSelect = document.getElementById('filterStatus');
+      const selectedText = statusSelect && statusSelect.selectedIndex >= 0
+        ? (statusSelect.options[statusSelect.selectedIndex]?.text || '')
+        : '';
+      const statusFilter = normalizeStatusFilter((statusSelect?.value || selectedText || 'all'));
 
       currentPositions = allPositions.filter((p) => {
         const title = normalizeText(p.title);
@@ -746,14 +784,16 @@
           return false;
         }
 
-        if (statusFilter === 'open' && status !== 'open') {
-          return false;
-        }
-        if (statusFilter === 'closed' && status !== 'closed') {
-          return false;
-        }
-        if (statusFilter === 'closing' && !isClosingSoon(p.deadline)) {
-          return false;
+        if (statusFilter !== 'all') {
+          if (statusFilter === 'open' && status !== 'open') {
+            return false;
+          }
+          if (statusFilter === 'closed' && status !== 'closed') {
+            return false;
+          }
+          if (statusFilter === 'closing' && !isClosingSoon(p.deadline)) {
+            return false;
+          }
         }
 
         // Keep free text resilient for unexpected MO input fields.
@@ -767,7 +807,7 @@
       const nameInput = document.getElementById('filterCourseName');
       const statusSelect = document.getElementById('filterStatus');
       if (nameInput) nameInput.value = '';
-      if (statusSelect) statusSelect.value = '';
+      if (statusSelect) statusSelect.value = 'all';
       document.querySelectorAll('.filter-major, .filter-skill').forEach((el) => {
         el.checked = false;
       });
@@ -788,10 +828,15 @@
       container.innerHTML = list.map((p) => {
         const closed = isClosedPosition(p);
         const applied = hasApplied(p.id);
-        const applyLabel = closed ? 'Closed' : (applied ? 'Applied' : 'Apply Now');
+        const profileBlocked = !profileCompleteForApply;
+        const applyLabel = closed
+          ? 'Closed'
+          : (applied ? 'Applied' : (profileBlocked ? 'Complete Profile' : 'Apply Now'));
         const applyDisabledAttr = closed
           ? 'disabled title="Closed positions cannot be applied"'
-          : (applied ? 'disabled title="You already applied for this position"' : '');
+          : (applied
+            ? 'disabled title="You already applied for this position"'
+            : (profileBlocked ? `disabled title="${profileApplyHint}"` : ''));
         return `
         <div class="position-card">
           <div class="position-header">
@@ -847,11 +892,14 @@
       if (applyInModal) {
         const closed = isClosedPosition(p);
         const applied = hasApplied(p.id);
-        applyInModal.disabled = closed || applied;
-        applyInModal.textContent = closed ? 'Closed' : (applied ? 'Applied' : 'Apply Now');
+        const profileBlocked = !profileCompleteForApply;
+        applyInModal.disabled = closed || applied || profileBlocked;
+        applyInModal.textContent = closed ? 'Closed' : (applied ? 'Applied' : (profileBlocked ? 'Complete Profile' : 'Apply Now'));
         applyInModal.title = closed
           ? 'Closed positions cannot be applied'
-          : (applied ? 'You already applied for this position' : '');
+          : (applied
+            ? 'You already applied for this position'
+            : (profileBlocked ? profileApplyHint : ''));
       }
       taSystem.openModal('detailModal');
     }
@@ -864,6 +912,11 @@
       }
       if (hasApplied(positionId)) {
         taSystem.showMessage('You already applied for this position', 'info');
+        return;
+      }
+
+      if (!profileCompleteForApply) {
+        taSystem.showMessage(profileApplyHint, 'warning');
         return;
       }
 
@@ -883,10 +936,13 @@
 
     async function loadPositions() {
       try {
-        const [list, myAppsResult] = await Promise.all([
+        const [list, myAppsResult, profileResult] = await Promise.all([
           API.getPositions(),
-          API.getMyApplications().catch(() => ({ applications: [] }))
+          API.getMyApplications().catch(() => ({ applications: [] })),
+          API.getProfile().catch(() => null)
         ]);
+
+        profileCompleteForApply = isProfileComplete(profileResult);
 
         const myApps = Array.isArray(myAppsResult && myAppsResult.applications) ? myAppsResult.applications : [];
         appliedPositionIds = new Set(
@@ -910,6 +966,22 @@
       if (!allowed) {
         return;
       }
+
+      const statusSelect = document.getElementById('filterStatus');
+      if (statusSelect) {
+        const hasAll = Array.from(statusSelect.options || []).some((opt) => normalizeStatusFilter(opt.value || opt.textContent) === 'all');
+        if (!hasAll) {
+          const allOption = document.createElement('option');
+          allOption.value = 'all';
+          allOption.textContent = '-- All Statuses --';
+          statusSelect.insertBefore(allOption, statusSelect.firstChild);
+        }
+        statusSelect.value = 'all';
+        if (normalizeStatusFilter(statusSelect.value) !== 'all') {
+          statusSelect.selectedIndex = 0;
+        }
+      }
+
       await loadPositions();
 
       const filterConfirmBtn = document.getElementById('filterConfirmBtn');

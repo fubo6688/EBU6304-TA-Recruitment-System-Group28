@@ -12,6 +12,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,7 @@ public class PositionServlet extends HttpServlet {
         resp.setContentType("application/json;charset=UTF-8");
         PrintWriter out = resp.getWriter();
 
+        // 所有岗位接口都要求已登录且账号 active。
         User user = requireLogin(req, resp, out);
         if (user == null) {
             return;
@@ -32,6 +35,7 @@ public class PositionServlet extends HttpServlet {
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
         if ("/list".equalsIgnoreCase(path) || "/all".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
             List<Map<String, String>> positions = dataManager.getAllPositions();
+            // MO 只能看到自己负责（moId 或 qmId 对应）的岗位。
             if ("MO".equalsIgnoreCase(user.getRole())) {
                 positions = filterMoPositions(positions, user);
             }
@@ -57,6 +61,7 @@ public class PositionServlet extends HttpServlet {
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
 
         if ("/create".equalsIgnoreCase(path)) {
+            // 创建岗位仅 MO/Admin 可操作。
             if (!isRole(user, "MO", "Admin")) {
                 resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 out.print(new JSONObject().put("success", false).put("message", "No permission").toString());
@@ -79,7 +84,21 @@ public class PositionServlet extends HttpServlet {
                 out.print(new JSONObject().put("success", false).put("message", "Title is required").toString());
                 return;
             }
+
+            if (!deadline.isEmpty()) {
+                LocalDate parsedDeadline = parseIsoDate(deadline);
+                if (parsedDeadline == null) {
+                    out.print(new JSONObject().put("success", false).put("message", "Invalid deadline format. Use YYYY-MM-DD").toString());
+                    return;
+                }
+                if (parsedDeadline.isBefore(LocalDate.now())) {
+                    out.print(new JSONObject().put("success", false).put("message", "Deadline cannot be earlier than today").toString());
+                    return;
+                }
+            }
+
             if (moId.isEmpty()) {
+                // 兜底负责人：优先 qmId，避免岗位缺失责任人。
                 moId = user.getQmId() == null ? user.getUserId() : user.getQmId();
             }
 
@@ -90,6 +109,7 @@ public class PositionServlet extends HttpServlet {
         }
 
         if ("/update".equalsIgnoreCase(path)) {
+            // 岗位更新：先做角色校验，再校验是否属于当前 MO。
             if (!isRole(user, "MO", "Admin")) {
                 resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 out.print(new JSONObject().put("success", false).put("message", "No permission").toString());
@@ -178,6 +198,40 @@ public class PositionServlet extends HttpServlet {
                 return;
             }
 
+            String deadlineParam = value(req.getParameter("deadline"));
+            if ("open".equals(normalized)) {
+                LocalDate today = LocalDate.now();
+                String currentDeadline = value(existing.get("deadline"));
+                boolean expiredDeadline = isPastDeadline(currentDeadline, today);
+
+                // 过期岗位 reopen/publish 前，必须提供新的有效截止日期。
+                if (expiredDeadline && deadlineParam.isEmpty()) {
+                    out.print(new JSONObject()
+                            .put("success", false)
+                            .put("message", "Deadline has passed. Please select a new deadline before reopen")
+                            .toString());
+                    return;
+                }
+
+                if (!deadlineParam.isEmpty()) {
+                    LocalDate newDeadline = parseIsoDate(deadlineParam);
+                    if (newDeadline == null) {
+                        out.print(new JSONObject().put("success", false).put("message", "Invalid deadline format. Use YYYY-MM-DD").toString());
+                        return;
+                    }
+                    if (newDeadline.isBefore(today)) {
+                        out.print(new JSONObject().put("success", false).put("message", "New deadline cannot be earlier than today").toString());
+                        return;
+                    }
+
+                    boolean deadlineUpdated = dataManager.updatePosition(positionId, null, null, null, null, null, null, deadlineParam);
+                    if (!deadlineUpdated) {
+                        out.print(new JSONObject().put("success", false).put("message", "Failed to update deadline").toString());
+                        return;
+                    }
+                }
+            }
+
             boolean ok = dataManager.updatePositionStatus(positionId, normalized);
             if (!ok) {
                 out.print(new JSONObject().put("success", false).put("message", "Status update failed").toString());
@@ -188,6 +242,7 @@ public class PositionServlet extends HttpServlet {
                 Map<String, String> latest = dataManager.getPositionById(positionId);
                 String title = latest == null ? positionId : value(latest.get("title"));
                 int sentCount = 0;
+                // 发布岗位后仅通知 active 的 TA，避免给停用账号推送。
                 for (User taUser : dataManager.getAllUsers()) {
                     if (!"TA".equalsIgnoreCase(value(taUser.getRole()))) {
                         continue;
@@ -225,6 +280,7 @@ public class PositionServlet extends HttpServlet {
         List<Map<String, String>> result = new ArrayList<>();
         for (Map<String, String> p : all) {
             String moId = p.get("moId");
+            // 同时兼容账号主键与 qmId 两种负责人标识。
             if (eq(moId, user.getUserId()) || eq(moId, user.getQmId())) {
                 result.add(p);
             }
@@ -243,6 +299,13 @@ public class PositionServlet extends HttpServlet {
         if (user == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             out.print(new JSONObject().put("success", false).put("message", "User not found").toString());
+            return null;
+        }
+        if (!"active".equalsIgnoreCase(value(user.getStatus()))) {
+            // 被停用账号触发接口访问时立即踢出会话。
+            session.invalidate();
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            out.print(new JSONObject().put("success", false).put("message", "Account is inactive").toString());
             return null;
         }
         return user;
@@ -271,5 +334,22 @@ public class PositionServlet extends HttpServlet {
         }
         String moId = position == null ? "" : value(position.get("moId"));
         return eq(moId, user.getUserId()) || eq(moId, user.getQmId());
+    }
+
+    private boolean isPastDeadline(String deadline, LocalDate today) {
+        LocalDate d = parseIsoDate(deadline);
+        return d != null && d.isBefore(today);
+    }
+
+    private LocalDate parseIsoDate(String raw) {
+        String value = value(raw);
+        if (value.isEmpty()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(value);
+        } catch (DateTimeParseException ignore) {
+            return null;
+        }
     }
 }
