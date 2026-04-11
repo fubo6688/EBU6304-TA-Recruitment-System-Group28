@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+  <display-name>TA Recruitment System Backend</display-name>
+
+  <session-config>
+    <cookie-config>
+      <secure>false</secure>
+      <http-only>true</http-only>
+    </cookie-config>
+    <tracking-mode>COOKIE</tracking-mode>
+  </session-config>
+
+  <filter>
+    <filter-name>CORSFilter</filter-name>
+    <filter-class>com.ta.servlet.CORSFilter</filter-class>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>CORSFilter</filter-name>
+    <url-pattern>/api/*</url-pattern>
+  </filter-mapping>
+
+  <servlet>
+    <servlet-name>LoginServlet</servlet-name>
+    <servlet-class>com.ta.servlet.LoginServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>LoginServlet</servlet-name>
+    <url-pattern>/api/login</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>UserServlet</servlet-name>
+    <servlet-class>com.ta.servlet.UserServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>UserServlet</servlet-name>
+    <url-pattern>/api/user/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>PositionServlet</servlet-name>
+    <servlet-class>com.ta.servlet.PositionServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PositionServlet</servlet-name>
+    <url-pattern>/api/position/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>ApplicationServlet</servlet-name>
+    <servlet-class>com.ta.servlet.ApplicationServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ApplicationServlet</servlet-name>
+    <url-pattern>/api/application/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>AdminServlet</servlet-name>
+    <servlet-class>com.ta.servlet.AdminServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AdminServlet</servlet-name>
+    <url-pattern>/api/admin/*</url-pattern>
+  </servlet-mapping>
+
+</web-app>

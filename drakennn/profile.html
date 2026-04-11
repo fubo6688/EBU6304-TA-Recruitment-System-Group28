@@ -1,0 +1,852 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .main-sidebar {
+      width: 300px;
+      background-color: var(--gray-100);
+      padding: 30px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-avatar {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .avatar-upload {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 16px;
+      cursor: pointer;
+    }
+
+    .avatar-upload input[type="file"] {
+      display: none;
+    }
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      background-color: var(--primary-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-size: 48px;
+      transition: all 0.2s;
+    }
+
+    .avatar-upload:hover .avatar-img {
+      filter: brightness(0.8);
+    }
+
+    .avatar-change {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 32px;
+      height: 32px;
+      background-color: var(--primary-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      border: 2px solid var(--white);
+      font-size: 16px;
+    }
+
+    .profile-info {
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 0 16px 20px;
+    }
+
+    .profile-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-200);
+      font-size: 13px;
+    }
+
+    .profile-info-row:last-child {
+      border-bottom: none;
+    }
+
+    .profile-info-label {
+      color: var(--gray-500);
+      font-weight: 500;
+    }
+
+    .profile-info-value {
+      color: #333;
+      font-weight: 600;
+    }
+
+    .profile-status {
+      background-color: var(--gray-100);
+      padding: 12px 16px;
+      margin: 0 16px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--success-color);
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .tabs-container {
+      margin-bottom: 30px;
+    }
+
+    .tabs {
+      margin-bottom: 0;
+    }
+
+    .tab-content {
+      display: none;
+      background-color: var(--white);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .form-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .form-two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .notification-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 16px;
+      border-bottom: 1px solid var(--gray-200);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .notification-item:hover {
+      background-color: #fafafa;
+    }
+
+    .notification-content {
+      flex: 1;
+    }
+
+    .notification-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .notification-text {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-bottom: 4px;
+    }
+
+    .notification-time {
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+
+    .notification-badge {
+      width: 12px;
+      height: 12px;
+      background-color: var(--primary-color);
+      border-radius: 50%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .notification-toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--gray-200);
+      padding-bottom: 12px;
+    }
+
+    .notification-filter {
+      background: none;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      color: var(--gray-500);
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .notification-filter.active {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--primary-color);
+    }
+
+    .notification-filter:hover {
+      color: var(--primary-color);
+    }
+
+    .password-strength {
+      font-size: 12px;
+      margin-top: 4px;
+      padding: 8px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .password-strength.weak {
+      background-color: #ffe6e6;
+      color: var(--danger-color);
+    }
+
+    .password-strength.medium {
+      background-color: #fff3cd;
+      color: #ff9800;
+    }
+
+    .password-strength.strong {
+      background-color: #e6f7e6;
+      color: var(--success-color);
+    }
+
+    .notification-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .password-requirement {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 8px;
+      padding: 8px;
+      background-color: var(--gray-50);
+      border-radius: 4px;
+      line-height: 1.6;
+    }
+
+    .password-requirement .requirement-item {
+      display: flex;
+      align-items: center;
+      margin: 4px 0;
+    }
+
+    .requirement-icon {
+      margin-right: 6px;
+      width: 16px;
+      text-align: center;
+    }
+
+    .requirement-icon.met {
+      color: var(--success-color);
+    }
+
+    .requirement-icon.unmet {
+      color: var(--gray-400);
+    }
+
+    .approval-list {
+      max-height: 360px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .approval-item {
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .approval-item-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .approval-meta {
+      font-size: 12px;
+      color: var(--gray-500);
+      line-height: 1.5;
+      margin-bottom: 10px;
+      word-break: break-all;
+    }
+
+    .approval-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .approval-empty {
+      padding: 18px;
+      text-align: center;
+      color: var(--gray-500);
+      border: 1px dashed var(--gray-300);
+      border-radius: 8px;
+      background: var(--gray-100);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <!-- TopNavbar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">TA</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a href="#" class="topbar-back" onclick="goBackToHome(); return false;">← Back</a>
+      <a href="admin-dashboard.html" id="adminDashboardBtn" class="topbar-link" style="display:none;">Admin Dashboard</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- left column -->
+    <div class="main-sidebar">
+      <!-- Avatar Area -->
+      <div class="sidebar-avatar">
+        <div class="avatar-upload" onclick="document.getElementById('avatarInput').click()">
+          <div class="avatar-img" id="avatarDisplay">👤</div>
+          <div class="avatar-change">📸</div>
+          <input type="file" id="avatarInput" accept="image/*">
+        </div>
+        <p style="margin: 0; font-size: 14px; font-weight: 600;" id="userName">Zhang San</p>
+        <p style="margin: 4px 0 0; font-size: 12px; color: var(--gray-500);" id="userRole">TA</p>
+      </div>
+
+      <!-- Basic Info Card -->
+      <div class="profile-info">
+        <div class="profile-info-row">
+          <span class="profile-info-label">Role</span>
+          <span class="profile-info-value" id="roleInfo">TA</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">QM ID</span>
+          <span class="profile-info-value" id="idInfo">20210001</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Name</span>
+          <span class="profile-info-value" id="nameInfo">Zhang San</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Mail</span>
+          <span class="profile-info-value" style="font-size: 11px; overflow: hidden; text-overflow: ellipsis;" id="emailInfo">zhangsan@example.com</span>
+        </div>
+      </div>
+
+      <!-- Profile Status -->
+      <div class="profile-status" id="profileStatus">
+        ✓ Profile is complete
+      </div>
+    </div>
+
+    <!-- Right mainContent -->
+    <div class="main-content">
+      <div class="tabs-container">
+        <div class="tabs">
+          <button class="tab-button active" data-tab="personal">Personal Information</button>
+          <button class="tab-button" data-tab="password">Change Password</button>
+        </div>
+
+        <!-- tab page1：personal information -->
+        <div class="tab-content active" data-tab="personal">
+          <form id="personalForm">
+            <div class="form-two-col">
+              <div class="form-group">
+                <label class="form-label required">Name</label>
+                <input type="text" class="form-control" value="Zhang San" placeholder="Enter your name">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Mail</label>
+                <input type="email" class="form-control" value="zhangsan@example.com" placeholder="Enter email">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">QM ID</label>
+                <input type="text" class="form-control" value="20210001" placeholder="QM ID" disabled>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Role</label>
+                <input type="text" class="form-control" value="TA" placeholder="Role" disabled>
+              </div>
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- tab page2：PasswordRevise -->
+        <div class="tab-content" data-tab="password">
+          <form id="passwordForm" style="max-width: 500px;">
+            <div class="form-group">
+              <label class="form-label required">Current Password</label>
+              <input type="password" class="form-control" id="oldPassword" placeholder="Enter your current password" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">New Password</label>
+              <input type="password" class="form-control" id="newPassword" placeholder="At least 8 characters, including upper/lowercase letters and numbers" required>
+              <div id="passwordStrength"></div>
+              <div class="password-requirement">
+                <div class="requirement-item">
+                  <span class="requirement-icon unmet" id="req-length">✓</span>
+                  <span>At least 8 characters</span>
+                </div>
+                <div class="requirement-item">
+                  <span class="requirement-icon unmet" id="req-upper">✓</span>
+                  <span>Contains uppercase letters (A-Z)</span>
+                </div>
+                <div class="requirement-item">
+                  <span class="requirement-icon unmet" id="req-lower">✓</span>
+                  <span>Contains lowercase letters (a-z)</span>
+                </div>
+                <div class="requirement-item">
+                  <span class="requirement-icon unmet" id="req-number">✓</span>
+                  <span>Contains numbers (0-9)</span>
+                </div>
+                <div class="requirement-item">
+                  <span class="requirement-icon unmet" id="req-alnum">✓</span>
+                  <span>Letters and digits only (no symbols)</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Confirm New Password</label>
+              <input type="password" class="form-control" id="confirmPassword" placeholder="Re-enter the new password" required>
+            </div>
+            <div style="text-align: right;">
+              <button type="submit" class="btn btn-primary">Save Password</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="approvalModal">
+    <div class="modal-content" style="max-width: 760px;">
+      <div class="modal-header">
+        <h2>Pending Registrations</h2>
+        <button type="button" class="modal-close" id="approvalCloseBtn">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="approvalList" class="approval-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="approvalRefreshBtn">Refresh</button>
+        <button type="button" class="btn btn-primary" id="approvalCloseFooterBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    // BackHome page
+    function goBackToHome() {
+      const userRole = localStorage.getItem('userRole') || 'TA';
+      const rolePageMap = {
+        'TA': 'ta-profile.html',
+        'MO': 'mo-positions.html',
+        'Admin': 'admin-dashboard.html'
+      };
+      window.location.href = rolePageMap[userRole] || 'ta-profile.html';
+    }
+
+    function setAvatarImage(url) {
+      const avatarDisplay = document.getElementById('avatarDisplay');
+      if (!avatarDisplay) return;
+      if (!url) {
+        avatarDisplay.textContent = '👤';
+        return;
+      }
+      avatarDisplay.innerHTML = `<img src="${url}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+    }
+
+    // PasswordStrength check
+    function checkPasswordStrength(password) {
+      const requirements = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        lowercase: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        alnumOnly: /^[A-Za-z0-9]*$/.test(password)
+      };
+
+      const requirementsList = document.querySelectorAll('.requirement-item .requirement-icon');
+      const icons = ['length', 'uppercase', 'lowercase', 'number', 'alnumOnly'];
+      
+      let metCount = 0;
+      icons.forEach((key, index) => {
+        const icon = requirementsList[index];
+        if (requirements[key]) {
+          icon.classList.remove('unmet');
+          icon.classList.add('met');
+          metCount++;
+        } else {
+          icon.classList.remove('met');
+          icon.classList.add('unmet');
+        }
+      });
+
+      const strengthDiv = document.getElementById('passwordStrength');
+      if (password.length === 0) {
+        strengthDiv.innerHTML = '';
+      } else if (metCount === 5) {
+        strengthDiv.innerHTML = '<div class="password-strength strong">Password strength: Strong ✓</div>';
+      } else if (metCount >= 3) {
+        strengthDiv.innerHTML = '<div class="password-strength medium">Password strength: Medium</div>';
+      } else {
+        strengthDiv.innerHTML = '<div class="password-strength weak">Password strength: Weak</div>';
+      }
+
+      return requirements;
+    }
+
+    // PasswordValidationfunction
+    function validatePassword(password) {
+      if (password.length < 8) {
+        return { valid: false, message: 'Password must be at least 8 characters long' };
+      }
+      if (!/[A-Z]/.test(password)) {
+        return { valid: false, message: 'Password must include at least one uppercase letter' };
+      }
+      if (!/[a-z]/.test(password)) {
+        return { valid: false, message: 'Password must include at least one lowercase letter' };
+      }
+      if (!/[0-9]/.test(password)) {
+        return { valid: false, message: 'Password must include at least one number' };
+      }
+      if (!/^[A-Za-z0-9]+$/.test(password)) {
+        return { valid: false, message: 'Password can contain only letters and numbers (no symbols)' };
+      }
+      return { valid: true, message: 'Password meets all requirements' };
+    }
+
+    function escapeHtml(text) {
+      return (text || '').replace(/[&<>"]/g, (ch) => {
+        if (ch === '&') return '&amp;';
+        if (ch === '<') return '&lt;';
+        if (ch === '>') return '&gt;';
+        return '&quot;';
+      });
+    }
+
+    async function loadPendingRegistrations() {
+      const list = document.getElementById('approvalList');
+      list.innerHTML = '<div class="approval-empty">Loading pending registrations...</div>';
+      try {
+        const result = await API.getPendingRegistrations();
+        const users = (result && result.users) ? result.users : [];
+        if (!users.length) {
+          list.innerHTML = '<div class="approval-empty">No pending registrations.</div>';
+          return;
+        }
+
+        list.innerHTML = users.map((u) => `
+          <div class="approval-item" data-user-id="${escapeHtml(u.userId || '')}">
+            <div class="approval-item-head">
+              <span>${escapeHtml(u.userName || 'Unknown')}</span>
+              <span>${escapeHtml(u.role || '')}</span>
+            </div>
+            <div class="approval-meta">
+              Account: ${escapeHtml(u.userId || '')}<br>
+              Email: ${escapeHtml(u.email || '')}<br>
+              QM ID: ${escapeHtml(u.qmId || '')}
+            </div>
+            <div class="approval-actions">
+              <button class="btn btn-success" data-action="approve" data-user-id="${escapeHtml(u.userId || '')}">Approve</button>
+              <button class="btn btn-danger" data-action="reject" data-user-id="${escapeHtml(u.userId || '')}">Reject</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        list.innerHTML = `<div class="approval-empty">${escapeHtml(error.message || 'Failed to load pending registrations')}</div>`;
+      }
+    }
+
+    async function handleApprovalAction(userId, decision) {
+      try {
+        const result = await API.approveRegistration(userId, decision);
+        if (!result || !result.success) {
+          taSystem.showMessage((result && result.message) || 'Approval operation failed', 'danger');
+          return;
+        }
+        taSystem.showMessage(`Registration ${decision}d: ${userId}`, 'success');
+        await loadPendingRegistrations();
+      } catch (error) {
+        taSystem.showMessage(error.message || 'Approval operation failed', 'danger');
+      }
+    }
+
+    // Initialize user information
+    document.addEventListener('DOMContentLoaded', async () => {
+      const allowed = await taSystem.enforceSessionGuard(['TA', 'MO', 'Admin']);
+      if (!allowed) {
+        return;
+      }
+
+      const userRole = localStorage.getItem('userRole') || 'TA';
+      const userId = localStorage.getItem('userId') || '';
+      const userName = localStorage.getItem('userName') || '';
+      const approvalBtn = document.getElementById('approvalBtn');
+      const approvalModal = document.getElementById('approvalModal');
+      const adminDashboardBtn = document.getElementById('adminDashboardBtn');
+
+      document.getElementById('userName').textContent = userName || 'Not logged in';
+      document.getElementById('userRole').textContent = userRole;
+      document.getElementById('roleInfo').textContent = userRole;
+      document.getElementById('idInfo').textContent = userId;
+      document.getElementById('nameInfo').textContent = userName;
+
+      try {
+        const profile = await API.getProfile();
+        if (profile && profile.userId) {
+          localStorage.setItem('userRole', profile.role);
+          localStorage.setItem('userId', profile.userId);
+          localStorage.setItem('userName', profile.userName);
+
+          document.getElementById('userName').textContent = profile.userName;
+          document.getElementById('userRole').textContent = profile.role;
+          document.getElementById('roleInfo').textContent = profile.role;
+          document.getElementById('idInfo').textContent = profile.qmId || profile.userId;
+          document.getElementById('nameInfo').textContent = profile.userName;
+          document.getElementById('emailInfo').textContent = profile.email || '';
+
+          if (profile.avatarUrl) {
+            setAvatarImage(profile.avatarUrl);
+          }
+
+          if ((profile.role || '').toLowerCase() === 'admin' && approvalBtn) {
+            approvalBtn.style.display = 'inline-flex';
+            if (adminDashboardBtn) {
+              adminDashboardBtn.style.display = 'inline-flex';
+            }
+          }
+
+          const personalInputs = document.querySelectorAll('#personalForm input.form-control');
+          if (personalInputs.length >= 4) {
+            personalInputs[0].value = profile.userName || '';
+            personalInputs[1].value = profile.email || '';
+            personalInputs[2].value = profile.qmId || profile.userId || '';
+            personalInputs[3].value = profile.role || '';
+          }
+        }
+      } catch (error) {
+        taSystem.showMessage(error.message || 'Failed to load user profile', 'danger');
+      }
+
+      // Tab switching
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const tabName = button.getAttribute('data-tab');
+          
+          // Remove all active kind
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+          
+          // Add to active Class to clickbuttonand correspondingContent
+          button.classList.add('active');
+          document.querySelector(`.tab-content[data-tab="${tabName}"]`)?.classList.add('active');
+        });
+      });
+
+      // personal informationForm Submission
+      document.getElementById('personalForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const personalInputs = document.querySelectorAll('#personalForm input.form-control');
+        try {
+          const result = await API.updateProfile({
+            userName: personalInputs[0]?.value || '',
+            email: personalInputs[1]?.value || ''
+          });
+          if (result.success) {
+            localStorage.setItem('userName', result.user.userName);
+            document.getElementById('userName').textContent = result.user.userName;
+            document.getElementById('nameInfo').textContent = result.user.userName;
+            document.getElementById('emailInfo').textContent = result.user.email;
+            taSystem.showMessage('Personal information saved', 'success');
+          } else {
+            taSystem.showMessage(result.message || 'Save failed', 'danger');
+          }
+        } catch (error) {
+          taSystem.showMessage(error.message || 'Save failed', 'danger');
+        }
+      });
+
+      // newPasswordCheck strength in real time as you type
+      document.getElementById('newPassword').addEventListener('input', (e) => {
+        checkPasswordStrength(e.target.value);
+      });
+
+      // PasswordReviseForm Submission
+      document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const oldPassword = document.getElementById('oldPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // ValidationOriginalPassword
+        if (oldPassword.length === 0) {
+          taSystem.showMessage('Please enter your current password', 'danger');
+          return;
+        }
+
+        // ValidationnewPasswordstrength
+        const validation = validatePassword(newPassword);
+        if (!validation.valid) {
+          taSystem.showMessage(validation.message, 'danger');
+          return;
+        }
+
+        // Validationtwice newPasswordconsistent
+        if (newPassword !== confirmPassword) {
+          taSystem.showMessage('The two new passwords do not match', 'danger');
+          return;
+        }
+
+        // Validationold and newPassworddifferent
+        if (oldPassword === newPassword) {
+          taSystem.showMessage('New password must be different from current password', 'warning');
+          return;
+        }
+
+        try {
+          const result = await API.changePassword(oldPassword, newPassword);
+          if (result.success) {
+            taSystem.showMessage('Password updated successfully. Please sign in again.', 'success');
+            setTimeout(async () => {
+              try {
+                await API.logout();
+              } catch (error) {
+              }
+              localStorage.clear();
+              window.location.href = 'login.html';
+            }, 1200);
+          } else {
+            taSystem.showMessage(result.message || 'Password update failed', 'danger');
+          }
+        } catch (error) {
+          taSystem.showMessage(error.message || 'Password update failed', 'danger');
+        }
+      });
+
+      // Avatar upload
+      document.getElementById('avatarInput').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          // Validationfile size（no more than5MB）
+          if (file.size > 5 * 1024 * 1024) {
+            taSystem.showMessage('Image size cannot exceed5MB', 'danger');
+            e.target.value = '';
+            return;
+          }
+          
+          // ValidationFile type
+          if (!file.type.startsWith('image/')) {
+            taSystem.showMessage('Only image files can be uploaded', 'danger');
+            e.target.value = '';
+            return;
+          }
+
+          const localPreview = URL.createObjectURL(file);
+          setAvatarImage(localPreview);
+
+          const formData = new FormData();
+          formData.append('avatarFile', file);
+
+          try {
+            const result = await API.uploadProfile(formData);
+            if (result && result.success) {
+              if (result.avatarUrl) {
+                setAvatarImage(result.avatarUrl);
+              }
+              taSystem.showMessage('Avatar updated', 'success');
+            } else {
+              taSystem.showMessage((result && result.message) || 'Avatar update failed', 'danger');
+            }
+          } catch (error) {
+            taSystem.showMessage(error.message || 'Avatar update failed', 'danger');
+          } finally {
+            URL.revokeObjectURL(localPreview);
+            e.target.value = '';
+          }
+        }
+      });
+
+      // LogoutLogin
+      document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (confirm('Are you sure you want to log out?')) {
+          localStorage.clear();
+          window.location.href = 'login.html';
+        }
+      });
+
+      if (approvalBtn && approvalModal) {
+        approvalBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          approvalModal.classList.add('show');
+          await loadPendingRegistrations();
+        });
+
+        const closeModal = () => approvalModal.classList.remove('show');
+        document.getElementById('approvalCloseBtn')?.addEventListener('click', closeModal);
+        document.getElementById('approvalCloseFooterBtn')?.addEventListener('click', closeModal);
+        document.getElementById('approvalRefreshBtn')?.addEventListener('click', loadPendingRegistrations);
+
+        document.getElementById('approvalList')?.addEventListener('click', async (e) => {
+          const btn = e.target.closest('button[data-action][data-user-id]');
+          if (!btn) return;
+          const action = btn.getAttribute('data-action');
+          const targetUserId = btn.getAttribute('data-user-id');
+          if (!action || !targetUserId) return;
+          await handleApprovalAction(targetUserId, action);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
