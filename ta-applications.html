@@ -142,7 +142,7 @@
     </div>
     <div class="topbar-nav">
       <a class="topbar-link" href="profile.html">Profile</a>
-      <div class="topbar-avatar">👤</div>
+      <div class="topbar-avatar">馃懁</div>
       <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
     </div>
   </div>
@@ -196,11 +196,15 @@
     let allApplications = [];
     let currentStatus = 'all';
 
+    // 功能：normalizeStatus。
+    // 实现：规范化或格式化数据，便于后续处理。
     function normalizeStatus(status) {
       // Normalize status text from backend to simplify filtering and styling.
       return String(status || 'pending').toLowerCase();
     }
 
+    // 功能：statusClass。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function statusClass(status) {
       // Map normalized status to semantic badge style class.
       const s = normalizeStatus(status);
@@ -210,6 +214,8 @@
       return 'status-pending';
     }
 
+    // 功能：applyFilter。
+    // 实现：按条件筛选数据并刷新展示。
     function applyFilter() {
       const tbody = document.querySelector('#applicationsTable tbody');
       if (!tbody) return;
@@ -241,6 +247,8 @@
       `).join('');
     }
 
+    // 功能：loadMyApplications。
+    // 实现：加载数据并同步界面状态。
     async function loadMyApplications() {
       try {
         // API contract: /application/my-list returns application status + feedback

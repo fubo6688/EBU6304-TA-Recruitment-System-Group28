@@ -1,10 +1,12 @@
 ﻿// TA Recruitment System - Common Functions
 class TARecruitmentSystem {
+  // 构造函数：初始化通用事件和顶部品牌区。
   constructor() {
     this.initEventListeners();
     this.initTopbarBranding();
   }
 
+  // 绑定全局交互事件：弹窗、标签切换、菜单、退出登录等。
   initEventListeners() {
     // Modal box closesbutton
     document.addEventListener('click', (e) => {
@@ -54,6 +56,7 @@ class TARecruitmentSystem {
     }
   }
 
+  // 初始化顶部头像显示（用户名首字母）。
   initTopbarBranding() {
     const avatarElements = document.querySelectorAll('.topbar-avatar');
     if (!avatarElements.length) {
@@ -79,7 +82,7 @@ class TARecruitmentSystem {
     });
   }
 
-  // Menu navigation map
+  // 初始化侧边栏菜单映射与点击跳转逻辑。
   initMenuNavigation() {
     // TA RoleMenu mapping
     const taMenuMap = {
@@ -137,6 +140,7 @@ class TARecruitmentSystem {
     this.setActiveMenu(menuMap);
   }
 
+  // 在管理员页面按配置动态重建侧边栏菜单，确保入口一致。
   ensureAdminSidebarMenu(adminMenuMap) {
     const titleEl = document.querySelector('.sidebar-title');
     const menuEl = document.querySelector('.sidebar-menu');
@@ -156,7 +160,7 @@ class TARecruitmentSystem {
     }).join('');
   }
 
-  // Set the active menu of the current page
+  // 根据当前页面 URL 高亮对应菜单项。
   setActiveMenu(menuMap) {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     const currentMenuItem = Object.entries(menuMap).find(([, page]) => page === currentPage)?.[0];
@@ -172,7 +176,7 @@ class TARecruitmentSystem {
     }
   }
 
-  // Open modal box
+  // 打开指定弹窗。
   openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -180,7 +184,7 @@ class TARecruitmentSystem {
     }
   }
 
-  // Close modal box
+  // 关闭指定弹窗。
   closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -188,7 +192,7 @@ class TARecruitmentSystem {
     }
   }
 
-  // formValidation
+  // 校验表单必填项，并在字段旁展示错误提示。
   validateForm(formId) {
     const form = document.getElementById(formId);
     if (!form) return false;
@@ -216,7 +220,7 @@ class TARecruitmentSystem {
     return isValid;
   }
 
-  // showTip
+  // 显示顶部浮动消息提示，3 秒后自动消失。
   showMessage(message, type = 'info') {
     const alert = document.createElement('div');
     alert.className = `alert alert-${type}`;
@@ -231,7 +235,7 @@ class TARecruitmentSystem {
     }, 3000);
   }
 
-  // File uploadPreview
+  // 绑定文件预览：读取文件并渲染到预览容器。
   setupFilePreview(inputId, previewId) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -251,7 +255,7 @@ class TARecruitmentSystem {
     });
   }
 
-  // Time table initialization
+  // 初始化时间表单元格点击选择行为。
   initTimeTable() {
     const cells = document.querySelectorAll('.time-cell');
     cells.forEach(cell => {
@@ -261,7 +265,7 @@ class TARecruitmentSystem {
     });
   }
 
-  // Initialize data table sorting
+  // 初始化表格排序：点击列头按数字/字符串切换排序方向。
   initTableSort() {
     const tableSortState = {};
     document.addEventListener('click', (e) => {
@@ -300,7 +304,7 @@ class TARecruitmentSystem {
     });
   }
 
-  // Initialization page permission check
+  // 本地角色权限校验，不通过则跳转登录页。
   checkPageAccess(requiredRole) {
     const userRole = localStorage.getItem('userRole');
     const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
@@ -311,6 +315,7 @@ class TARecruitmentSystem {
     }
   }
 
+  // 统一角色值格式，避免大小写差异导致判断失败。
   normalizeRole(role) {
     const value = (role || '').toString().trim().toLowerCase();
     if (value === 'ta') return 'TA';
@@ -319,6 +324,7 @@ class TARecruitmentSystem {
     return '';
   }
 
+  // 会话守卫：调用后端 session 接口校验登录与角色，失败则清理并跳转登录。
   async enforceSessionGuard(requiredRoles = []) {
     const allowed = (Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles])
       .map((r) => this.normalizeRole(r))
@@ -365,7 +371,7 @@ class TARecruitmentSystem {
     }
   }
 
-  // Initialize search function（With anti-shake）
+  // 初始化搜索过滤（带防抖），用于表格行快速筛选。
   initSearch(searchInputId, tableId) {
     const searchInput = document.getElementById(searchInputId);
     if (!searchInput) return;

@@ -161,7 +161,7 @@
     </div>
     <div class="topbar-nav">
       <a class="topbar-link" href="profile.html">Profile</a>
-      <div class="topbar-avatar">👤</div>
+      <div class="topbar-avatar">馃懁</div>
       <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
     </div>
   </div>
@@ -245,10 +245,14 @@
   <script>
     let allPositions = [];
 
+    // 功能：normalizeText。
+    // 实现：规范化或格式化数据，便于后续处理。
     function normalizeText(value) {
       return (value || '').toString().trim().toLowerCase();
     }
 
+    // 功能：renderSummary。
+    // 实现：渲染界面内容并更新可视结果。
     function renderSummary(summary) {
       const cards = document.getElementById('summaryCards');
       if (!cards) return;
@@ -268,6 +272,8 @@
       `).join('');
     }
 
+    // 功能：renderPositions。
+    // 实现：渲染界面内容并更新可视结果。
     function renderPositions(positions) {
       const tbody = document.querySelector('#positionsTable tbody');
       if (!tbody) return;
@@ -289,6 +295,8 @@
       `).join('');
     }
 
+    // 功能：applyPositionFilters。
+    // 实现：按条件筛选数据并刷新展示。
     function applyPositionFilters() {
       const status = normalizeText(document.getElementById('statusFilter')?.value || 'all');
       const course = normalizeText(document.getElementById('courseFilter')?.value || '');
@@ -308,6 +316,8 @@
       renderPositions(filtered);
     }
 
+    // 功能：clearPositionFilters。
+    // 实现：按条件筛选数据并刷新展示。
     function clearPositionFilters() {
       const statusEl = document.getElementById('statusFilter');
       const courseEl = document.getElementById('courseFilter');
@@ -316,6 +326,8 @@
       applyPositionFilters();
     }
 
+    // 功能：renderWorkload。
+    // 实现：加载数据并同步界面状态。
     function renderWorkload(items) {
       const tbody = document.querySelector('#workloadTable tbody');
       if (!tbody) return;
@@ -336,6 +348,8 @@
       `).join('');
     }
 
+    // 功能：loadDashboard。
+    // 实现：加载数据并同步界面状态。
     async function loadDashboard() {
       try {
         const result = await API.getAdminDashboard();

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -428,6 +428,8 @@
   <script src="js/api.js"></script>
   <script>
     // BackHome page
+    // 功能：goBackToHome。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function goBackToHome() {
       const userRole = localStorage.getItem('userRole') || 'TA';
       const rolePageMap = {
@@ -441,6 +443,8 @@
     let notificationData = [];
 
     // PasswordStrength check
+    // 功能：checkPasswordStrength。
+    // 实现：校验输入或当前状态，返回判断结果。
     function checkPasswordStrength(password) {
       const requirements = {
         length: password.length >= 8,
@@ -480,6 +484,8 @@
     }
 
     // PasswordValidationfunction
+    // 功能：validatePassword。
+    // 实现：校验输入或当前状态，返回判断结果。
     function validatePassword(password) {
       if (password.length < 8) {
         return { valid: false, message: 'Passwordlengthtofew8Bit' };
@@ -497,6 +503,8 @@
     }
 
     // renderingNotification List
+    // 功能：renderNotifications。
+    // 实现：渲染界面内容并更新可视结果。
     function renderNotifications(filter = 'all') {
       const notificationList = document.getElementById('notificationList');
       notificationList.innerHTML = '';
@@ -538,6 +546,8 @@
     }
 
     // marked asRead
+    // 功能：markAsRead。
+    // 实现：处理用户操作并调用后端接口完成数据更新。
     async function markAsRead(id, event) {
       event.preventDefault();
       event.stopPropagation();
@@ -555,6 +565,8 @@
     }
 
     // Deletenotify
+    // 功能：deleteNotification。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function deleteNotification(id, event) {
       event.preventDefault();
       event.stopPropagation();

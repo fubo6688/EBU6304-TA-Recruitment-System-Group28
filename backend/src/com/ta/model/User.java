@@ -11,8 +11,10 @@ public class User implements Serializable {
     private String qmId;
     private String status; // active, inactive
 
+    // 无参构造器：供序列化/反序列化或框架反射创建对象使用。
     public User() {}
 
+    // 业务构造器：创建系统用户并默认设置为 active 状态。
     public User(String userId, String userName, String email, String password, String role, String qmId) {
         this.userId = userId;
         this.userName = userName;
@@ -45,11 +47,14 @@ public class User implements Serializable {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    // 将用户对象序列化为文件存储格式（竖线分隔）。
     @Override
     public String toString() {
         return userId + "|" + userName + "|" + email + "|" + password + "|" + role + "|" + qmId + "|" + status;
     }
 
+    // 从文件中的一行文本反序列化为 User 对象。
+    // 当字段数量不足时返回 null，避免脏数据污染内存对象。
     public static User fromString(String line) {
         String[] parts = line.split("\\|");
         if (parts.length >= 7) {

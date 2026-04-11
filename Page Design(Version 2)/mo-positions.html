@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -469,6 +469,8 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
+    // 功能：mapStatusClass。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function mapStatusClass(status) {
       // Map backend status values to visual badge classes.
       const s = (status || '').toLowerCase();
@@ -478,6 +480,8 @@
       return 'status-open';
     }
 
+    // 功能：mapStatusText。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function mapStatusText(status) {
       // Map backend status values to user-facing status labels.
       const s = (status || '').toLowerCase();
@@ -487,6 +491,8 @@
       return 'Open';
     }
 
+    // 功能：renderPositions。
+    // 实现：渲染界面内容并更新可视结果。
     function renderPositions(positions) {
       // Render current position list and bind row-level actions.
       const tbody = document.querySelector('#positionsTable tbody');
@@ -516,6 +522,8 @@
       `).join('');
     }
 
+    // 功能：loadPositions。
+    // 实现：加载数据并同步界面状态。
     async function loadPositions() {
       // Fetch MO-visible positions from backend and refresh the table.
       try {
@@ -526,6 +534,8 @@
       }
     }
 
+    // 功能：filterStatus。
+    // 实现：按条件筛选数据并刷新展示。
     function filterStatus(element, status) {
       // Apply local row filtering by status without extra API calls.
       document.querySelectorAll('.filter-tag').forEach(tag => tag.classList.remove('active'));
@@ -543,6 +553,8 @@
       });
     }
 
+    // 功能：changeStatus。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     async function changeStatus(positionId, status) {
       // Update position open/closed status via backend endpoint and reload table.
       try {
@@ -558,10 +570,14 @@
       }
     }
 
+    // 功能：acceptApplicant。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function acceptApplicant() {
       taSystem.showMessage('请在 Application Review 页面操作', 'info');
     }
 
+    // 功能：rejectApplicant。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function rejectApplicant() {
       taSystem.showMessage('请在 Application Review 页面操作', 'info');
     }

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -479,6 +479,8 @@
   <script src="js/api.js"></script>
   <script>
     // BackHome page
+    // 功能：goBackToHome。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function goBackToHome() {
       const userRole = localStorage.getItem('userRole') || 'TA';
       const rolePageMap = {
@@ -489,6 +491,8 @@
       window.location.href = rolePageMap[userRole] || 'ta-profile.html';
     }
 
+    // 功能：setAvatarImage。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function setAvatarImage(url) {
       const avatarDisplay = document.getElementById('avatarDisplay');
       if (!avatarDisplay) return;
@@ -500,6 +504,8 @@
     }
 
     // PasswordStrength check
+    // 功能：checkPasswordStrength。
+    // 实现：校验输入或当前状态，返回判断结果。
     function checkPasswordStrength(password) {
       const requirements = {
         length: password.length >= 8,
@@ -540,6 +546,8 @@
     }
 
     // PasswordValidationfunction
+    // 功能：validatePassword。
+    // 实现：校验输入或当前状态，返回判断结果。
     function validatePassword(password) {
       if (password.length < 8) {
         return { valid: false, message: 'Password must be at least 8 characters long' };
@@ -559,6 +567,8 @@
       return { valid: true, message: 'Password meets all requirements' };
     }
 
+    // 功能：escapeHtml。
+    // 实现：规范化或格式化数据，便于后续处理。
     function escapeHtml(text) {
       return (text || '').replace(/[&<>"]/g, (ch) => {
         if (ch === '&') return '&amp;';
@@ -568,6 +578,8 @@
       });
     }
 
+    // 功能：loadPendingRegistrations。
+    // 实现：加载数据并同步界面状态。
     async function loadPendingRegistrations() {
       const list = document.getElementById('approvalList');
       list.innerHTML = '<div class="approval-empty">Loading pending registrations...</div>';
@@ -601,6 +613,8 @@
       }
     }
 
+    // 功能：handleApprovalAction。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     async function handleApprovalAction(userId, decision) {
       try {
         const result = await API.approveRegistration(userId, decision);

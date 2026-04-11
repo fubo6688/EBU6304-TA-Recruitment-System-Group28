@@ -226,7 +226,7 @@
           <label class="form-label required">Password</label>
           <div class="password-wrapper">
             <input type="password" id="registerPassword" class="form-control" placeholder="Create a strong password" required style="padding-right: 44px;">
-            <button type="button" class="password-toggle" id="registerPasswordToggle" aria-label="Show password">👁️</button>
+            <button type="button" class="password-toggle" id="registerPasswordToggle" aria-label="Show password">馃憗锔?/button>
           </div>
           <div class="password-rule">At least 8 characters, include uppercase, lowercase and number, letters/numbers only.</div>
         </div>
@@ -235,7 +235,7 @@
           <label class="form-label required">Confirm Password</label>
           <div class="password-wrapper">
             <input type="password" id="registerConfirmPassword" class="form-control" placeholder="Re-enter password" required style="padding-right: 44px;">
-            <button type="button" class="password-toggle" id="registerConfirmPasswordToggle" aria-label="Show confirm password">👁️</button>
+            <button type="button" class="password-toggle" id="registerConfirmPasswordToggle" aria-label="Show confirm password">馃憗锔?/button>
           </div>
         </div>
 
@@ -248,17 +248,21 @@
     </div>
 
     <div class="register-footer">
-      <p>©2025-26 EBU6304 Software Engineering Group28</p>
+      <p>漏2025-26 EBU6304 Software Engineering Group28</p>
     </div>
   </div>
 
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
+    // 功能：isStrongPassword。
+    // 实现：校验输入或当前状态，返回判断结果。
     function isStrongPassword(password) {
       return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
     }
 
+    // 功能：bindPasswordToggle。
+    // 实现：处理用户操作并调用后端接口完成数据更新。
     function bindPasswordToggle(inputId, toggleId) {
       const input = document.getElementById(inputId);
       const toggle = document.getElementById(toggleId);
@@ -269,10 +273,10 @@
       toggle.addEventListener('click', () => {
         if (input.type === 'password') {
           input.type = 'text';
-          toggle.textContent = '🙈';
+          toggle.textContent = '馃檲';
         } else {
           input.type = 'password';
-          toggle.textContent = '👁️';
+          toggle.textContent = '馃憗锔?;
         }
       });
     }

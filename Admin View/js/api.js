@@ -1,4 +1,5 @@
 class API {
+  // 计算后端 API 基础地址，兼容不同部署路径。
   static getBaseUrl() {
     if (window.API_BASE_URL) {
       return window.API_BASE_URL;
@@ -24,6 +25,7 @@ class API {
     return `${origin}/api`;
   }
 
+  // 统一请求入口：发送请求、解析 JSON、并将 HTTP 错误抛出。
   static async request(endpoint, options = {}) {
     const base = API.getBaseUrl();
     const url = `${base}${endpoint}`;
@@ -48,6 +50,7 @@ class API {
     return data;
   }
 
+  // 将普通对象编码为表单格式请求体。
   static formBody(params) {
     const form = new URLSearchParams();
     Object.keys(params).forEach((key) => {
@@ -58,6 +61,7 @@ class API {
     return form;
   }
 
+  // 登录接口。
   static login(userId, password, role) {
     return API.request("/login", {
       method: "POST",
@@ -66,18 +70,22 @@ class API {
     });
   }
 
+  // 获取会话状态。
   static session() {
     return API.request("/login");
   }
 
+  // 登出接口。
   static logout() {
     return API.request("/login?action=logout");
   }
 
+  // 获取当前用户资料。
   static getProfile() {
     return API.request("/user/profile");
   }
 
+  // 更新用户资料。
   static updateProfile(payload) {
     return API.request("/user/profile", {
       method: "POST",
@@ -86,6 +94,7 @@ class API {
     });
   }
 
+  // 上传用户资料（multipart）。
   static async uploadProfile(formData) {
     const base = API.getBaseUrl();
     const response = await fetch(`${base}/user/profile`, {
@@ -109,14 +118,17 @@ class API {
     return data;
   }
 
+  // 查询指定 TA 资料。
   static getTaProfile(userId) {
     return API.request(`/user/ta-profile?userId=${encodeURIComponent(userId)}`);
   }
 
+  // 生成简历预览地址。
   static getResumePreviewUrl(userId) {
     return `${API.getBaseUrl()}/user/resume?userId=${encodeURIComponent(userId)}`;
   }
 
+  // 修改密码。
   static changePassword(oldPassword, newPassword) {
     return API.request("/user/password", {
       method: "POST",
@@ -125,10 +137,12 @@ class API {
     });
   }
 
+  // 查询岗位列表。
   static getPositions() {
     return API.request("/position/list");
   }
 
+  // 创建岗位。
   static createPosition(payload) {
     return API.request("/position/create", {
       method: "POST",
@@ -137,6 +151,7 @@ class API {
     });
   }
 
+  // 更新岗位状态。
   static updatePositionStatus(positionId, status) {
     return API.request("/position/status", {
       method: "POST",
@@ -145,15 +160,18 @@ class API {
     });
   }
 
+  // 获取申请列表（旧接口兼容）。
   static getApplications() {
     return API.request("/application/list");
   }
 
+  // 获取审核申请列表。
   static getReviewApplications(positionId) {
     const qs = positionId ? `?positionId=${encodeURIComponent(positionId)}` : "";
     return API.request(`/application/review-list${qs}`);
   }
 
+  // 提交申请。
   static submitApplication(positionId, priority = "first") {
     return API.request("/application/submit", {
       method: "POST",
@@ -162,6 +180,7 @@ class API {
     });
   }
 
+  // 取消申请。
   static cancelApplication(applicationId) {
     return API.request("/application/cancel", {
       method: "POST",
@@ -170,6 +189,7 @@ class API {
     });
   }
 
+  // 处理申请审核。
   static processApplication(applicationId, decision, feedback = "") {
     return API.request("/application/process", {
       method: "POST",
@@ -178,6 +198,7 @@ class API {
     });
   }
 
+  // 更新申请优先级。
   static updateApplicationPriority(applicationId, priority) {
     return API.request("/application/priority", {
       method: "POST",
@@ -186,10 +207,12 @@ class API {
     });
   }
 
+  // 获取通知列表。
   static getNotifications() {
     return API.request("/notification/list");
   }
 
+  // 标记单条通知已读。
   static markNotificationRead(notificationId) {
     return API.request("/notification/read", {
       method: "POST",
@@ -198,12 +221,14 @@ class API {
     });
   }
 
+  // 标记全部通知已读。
   static markAllNotificationsRead() {
     return API.request("/notification/read-all", {
       method: "POST"
     });
   }
 
+  // 创建通知。
   static createNotification(payload) {
     return API.request("/notification/create", {
       method: "POST",
@@ -212,18 +237,22 @@ class API {
     });
   }
 
+  // 获取管理员分析数据。
   static adminAnalytics() {
     return API.request("/admin/analytics");
   }
 
+  // 获取管理员用户列表。
   static adminUsers() {
     return API.request("/admin/users");
   }
 
+  // 获取管理员日志列表。
   static adminLogs() {
     return API.request("/admin/logs");
   }
 
+  // 更新用户状态（Admin）。
   static adminUpdateUserStatus(userId, status) {
     return API.request("/admin/user-status", {
       method: "POST",
@@ -232,6 +261,7 @@ class API {
     });
   }
 
+  // 导出预览查询。
   static adminExportPreview(params = {}) {
     const q = new URLSearchParams();
     Object.keys(params || {}).forEach((key) => {
@@ -243,6 +273,7 @@ class API {
     return API.request(`/admin/export?${q.toString()}`);
   }
 
+  // 导出 CSV 并返回二进制与文件名。
   static async adminExportCsv(params = {}) {
     const base = API.getBaseUrl();
     const q = new URLSearchParams();

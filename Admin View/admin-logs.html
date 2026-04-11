@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -580,11 +580,15 @@
     let logsCache = [];
     let visibleLogsIndex = [];
 
+    // 功能：csvEscape。
+    // 实现：规范化或格式化数据，便于后续处理。
     function csvEscape(value) {
       const text = value == null ? '' : String(value);
       return '"' + text.replace(/"/g, '""') + '"';
     }
 
+    // 功能：downloadCsv。
+    // 实现：加载数据并同步界面状态。
     function downloadCsv(fileName, rows) {
       const csv = rows.map((row) => row.map(csvEscape).join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -597,6 +601,8 @@
       URL.revokeObjectURL(link.href);
     }
 
+    // 功能：openLogDetails。
+    // 实现：控制弹窗或页面区域的打开与关闭。
     function openLogDetails(index) {
       const log = logsCache[index];
       if (!log) return;
@@ -640,6 +646,8 @@
       taSystem.openModal('detailModal');
     }
 
+    // 功能：exportLogs。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function exportLogs(onlySelected) {
       const rows = [['logId', 'time', 'userId', 'userName', 'role', 'action', 'detail', 'result']];
 
@@ -679,6 +687,8 @@
       taSystem.showMessage('日志导出成功', 'success');
     }
 
+    // 功能：parseDateOnly。
+    // 实现：规范化或格式化数据，便于后续处理。
     function parseDateOnly(value) {
       const text = String(value || '').trim();
       if (text.length < 10) return null;
@@ -687,6 +697,8 @@
       return Number.isNaN(d.getTime()) ? null : d;
     }
 
+    // 功能：actionMatches。
+    // 实现：封装当前页面业务逻辑并维护界面与数据一致。
     function actionMatches(log, filterAction) {
       if (!filterAction) return true;
       const action = String(log.action || '').toLowerCase();
@@ -702,6 +714,8 @@
       return true;
     }
 
+    // 功能：renderLogsByIndexes。
+    // 实现：渲染界面内容并更新可视结果。
     function renderLogsByIndexes(indexes) {
       visibleLogsIndex = Array.isArray(indexes) ? indexes : [];
       const tbody = document.querySelector('.table-container tbody');
@@ -741,6 +755,8 @@
       }).join('');
     }
 
+    // 功能：applyFilters。
+    // 实现：按条件筛选数据并刷新展示。
     function applyFilters() {
       const filterAction = (document.getElementById('filterAction')?.value || '').toLowerCase();
       const filterOperator = (document.getElementById('filterOperator')?.value || '').trim().toLowerCase();
@@ -781,6 +797,8 @@
       renderLogsByIndexes(matchedIndexes);
     }
 
+    // 功能：resetFilters。
+    // 实现：按条件筛选数据并刷新展示。
     function resetFilters() {
       const actionEl = document.getElementById('filterAction');
       const operatorEl = document.getElementById('filterOperator');
@@ -797,6 +815,8 @@
       renderLogsByIndexes(logsCache.map((_, idx) => idx));
     }
 
+    // 功能：loadLogs。
+    // 实现：加载数据并同步界面状态。
     async function loadLogs() {
       try {
         const result = await API.adminLogs();
