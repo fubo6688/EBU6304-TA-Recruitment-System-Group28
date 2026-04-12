@@ -6,3 +6,4 @@ pos1774246445186|Database Systems TA|School of Computer Science|Negotiable|To be
 pos1774246502692|Web Development TA|School of Computer Science|Negotiable|To be completed by MO.|JavaScript, HTML, CSS|M001|3|2|0|open|2026-03-23|2026-03-23
 pos1775647626466|A|a|1000|111|111, Python, C|mo_smith|3|2|2|open|2026-04-08|2026-04-30
 pos1775835543560|DSD|CS|每节课100|111|良好的沟通, JAVA|mo_jones|6|1|1|open|2026-04-10|2026-04-20
+pos1775907225946|DSD|CS|100 RMB per class|111|111, hardware FPGA|231220965|5|0|0|open|2026-04-11|2026-04-20

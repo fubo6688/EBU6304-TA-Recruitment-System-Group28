@@ -18,3 +18,4 @@ ta_alice|Alice Zhang|ta_alice@qq.com|Qmta2026A|TA|ta_alice|active
 ta_emma|Emma Wilson|ta_emma@example.com|Qmta2026A|TA|ta_emma|active
 2023213242|付博|1499053486@qq.com|FuBo6688|TA|231220965|active
 ta_david|David Wang|ta_david@example.com|Qmta2026A|TA|ta_david|active
+231220965|petter|123456@qq.com|FuBo123456|MO|231220965|active

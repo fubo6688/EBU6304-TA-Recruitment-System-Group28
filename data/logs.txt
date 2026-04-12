@@ -388,3 +388,13 @@ log1775892902435|2026-04-11 15:35:02|ta_emma|Emma Wilson|TA|LOGIN|login|success
 log1775892986166|2026-04-11 15:36:26|ta_emma|Emma Wilson|TA|LOGOUT|logout|success
 log1775893084781|2026-04-11 15:38:04|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
 log1775895666303|2026-04-11 16:21:06|mo_jones|Prof. Jones (Agile Module)|MO|LOGIN|login|success
+log1775903738632|2026-04-11 18:35:38|ta_emma|Emma Wilson|TA|LOGIN|login|success
+log1775906907427|2026-04-11 19:28:27|231220965|petter|MO|REGISTER|pending approval|success
+log1775906936190|2026-04-11 19:28:56|admin_user|System Manager|Admin|LOGIN|login|success
+log1775906966122|2026-04-11 19:29:26|admin_user|System Manager|Admin|APPROVE_REGISTRATION|231220965 -> active|success
+log1775906972301|2026-04-11 19:29:32|admin_user|System Manager|Admin|LOGOUT|logout|success
+log1775907036797|2026-04-11 19:30:36|231220965|petter|MO|LOGIN|login|success
+log1775907225947|2026-04-11 19:33:45|231220965|petter|MO|CREATE_POSITION|DSD|success
+log1775907326324|2026-04-11 19:35:26|231220965|petter|MO|LOGOUT|logout|success
+log1775909060733|2026-04-11 20:04:20|mo_jones|Prof. Jones (Agile Module)|MO|LOGIN|login|success
+log1775909798366|2026-04-11 20:16:38|mo_jones|Prof. Jones (Agile Module)|MO|LOGOUT|logout|success
