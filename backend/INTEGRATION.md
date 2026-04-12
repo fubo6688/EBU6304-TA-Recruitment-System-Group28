@@ -71,7 +71,7 @@ http://localhost:8080/ta-system/
                     │
 ┌───────────────────▼─────────────────────────┐
 │     Data Layer (纯文本存储)                  │
-│  backend/data/                              │
+│  data/                                      │
 │  ├─ users.txt (用户数据)                     │
 │  ├─ positions.txt (职位数据)                 │
 │  └─ {userId}_notifications.txt (通知数据)   │

@@ -37,15 +37,21 @@
     body {
       position: relative;
       overflow: auto;
+      background-color: #4b5fd6;
       background:
-        radial-gradient(circle at top right, rgba(255, 255, 255, 0.10), transparent 20%),
-        radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.08), transparent 18%),
-        linear-gradient(135deg, #4f46e5 0%, #5b67d2 42%, #6d28d9 100%);
+        linear-gradient(135deg, rgba(38, 84, 218, 0.42) 0%, rgba(112, 52, 198, 0.34) 100%),
+        url('assetsauth_bg.jpg') center center / cover no-repeat fixed;
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
       padding: 24px 16px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        background-attachment: scroll;
+      }
     }
 
     .register-container {
@@ -255,10 +261,12 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
+    // 功能：判断条件是否成立。
     function isStrongPassword(password) {
       return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
     }
 
+    // 功能：处理 bindPasswordToggle 相关逻辑。
     function bindPasswordToggle(inputId, toggleId) {
       const input = document.getElementById(inputId);
       const toggle = document.getElementById(toggleId);
@@ -280,6 +288,7 @@
     bindPasswordToggle('registerPassword', 'registerPasswordToggle');
     bindPasswordToggle('registerConfirmPassword', 'registerConfirmPasswordToggle');
 
+    // 功能：处理当前回调逻辑。
     document.getElementById('registerForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 

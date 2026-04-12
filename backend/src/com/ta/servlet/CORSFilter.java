@@ -11,17 +11,30 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
+/**
+ * 全局 CORS 过滤器。
+ *
+ * <p>允许跨域访问 API，并支持带 Cookie 的会话请求；
+ * 对 OPTIONS 预检请求直接返回 200。</p>
+ */
 public class CORSFilter implements Filter {
     @Override
+    /**
+     * 过滤器初始化：当前无需额外配置。
+     */
     public void init(FilterConfig filterConfig) throws ServletException {
     }
 
+    /**
+     * 为响应注入 CORS 头并处理 OPTIONS 预检短路。
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
+        // 回显请求 Origin 以支持携带 Cookie 的跨域请求；无 Origin 时允许任意来源。
         String origin = req.getHeader("Origin");
         if (origin != null && !origin.trim().isEmpty()) {
             resp.setHeader("Access-Control-Allow-Origin", origin);
@@ -29,11 +42,13 @@ public class CORSFilter implements Filter {
         } else {
             resp.setHeader("Access-Control-Allow-Origin", "*");
         }
+        // 前后端分离场景需要允许凭证与常用请求头/方法。
         resp.setHeader("Access-Control-Allow-Credentials", "true");
         resp.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
         resp.setHeader("Access-Control-Max-Age", "3600");
 
+        // 预检请求直接返回，避免继续进入后端业务 Servlet。
         if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
             resp.setStatus(HttpServletResponse.SC_OK);
             return;
@@ -43,6 +58,9 @@ public class CORSFilter implements Filter {
     }
 
     @Override
+    /**
+     * 过滤器销毁：当前无资源清理逻辑。
+     */
     public void destroy() {
     }
 }

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -519,11 +519,15 @@
     let currentFilterStatus = 'all';
     let currentEditPositionId = '';
 
+    // 功能：标准化状态值，避免大小写与空值影响判断。
     function normalizeStatus(status) {
+      // Normalize backend status values for consistent UI comparisons.
       return String(status || '').toLowerCase();
     }
 
+    // 功能：标准化输入值，便于后续处理。
     function normalizeDeadlineInput(raw) {
+      // Accept common user date inputs and normalize to YYYY-MM-DD-like format.
       const value = String(raw || '').trim();
       if (!value) return '';
       return value
@@ -536,7 +540,9 @@
         .replace(/^-|-$/g, '');
     }
 
+    // 功能：判断条件是否成立。
     function isValidIsoDate(value) {
+      // Strictly validate real calendar dates to prevent invalid deadline writes.
       if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
         return false;
       }
@@ -548,7 +554,51 @@
       return d.getFullYear() === y && (d.getMonth() + 1) === m && d.getDate() === day;
     }
 
+    // 功能：判断条件是否成立。
+    function isPastDate(value) {
+      const normalized = normalizeDeadlineInput(value);
+      if (!isValidIsoDate(normalized)) {
+        return false;
+      }
+      const d = new Date(`${normalized}T00:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return d.getTime() < today.getTime();
+    }
+
+    // 功能：处理 promptDeadlineForExpiredReopen 相关逻辑。
+    function promptDeadlineForExpiredReopen(positionId) {
+      const position = allPositions.find((p) => p.id === positionId);
+      if (!position) {
+        return '';
+      }
+
+      if (!isPastDate(position.deadline)) {
+        return '';
+      }
+
+      const raw = window.prompt('Deadline has passed. Please enter a new deadline (YYYY-MM-DD) before reopen:', '');
+      if (raw === null) {
+        return null;
+      }
+
+      const normalized = normalizeDeadlineInput(raw);
+      if (!isValidIsoDate(normalized)) {
+        taSystem.showMessage('Deadline format must be YYYY-MM-DD', 'warning');
+        return null;
+      }
+
+      if (isPastDate(normalized)) {
+        taSystem.showMessage('New deadline cannot be earlier than today', 'warning');
+        return null;
+      }
+
+      return normalized;
+    }
+
+    // 功能：处理 bindDatePicker 相关逻辑。
     function bindDatePicker(displayId, pickerId) {
+      // Keep text input and native date picker synchronized bidirectionally.
       const display = document.getElementById(displayId);
       const picker = document.getElementById(pickerId);
       if (!display || !picker) {
@@ -568,7 +618,9 @@
       });
     }
 
+    // 功能：打开对应弹窗或视图。
     function openDatePicker(pickerId) {
+      // Trigger native picker where supported, with graceful fallback.
       const picker = document.getElementById(pickerId);
       if (!picker) {
         return;
@@ -582,8 +634,12 @@
       }
     }
 
+    // 功能：处理 collectPublishForm 相关逻辑。
     function collectPublishForm() {
       const normalizedDeadline = normalizeDeadlineInput(document.getElementById('publishDeadline')?.value || '');
+      // Consolidate inputs from all publish steps into one payload object.
+      // This keeps validation, confirmation rendering, and final submission
+      // reading from the same normalized source (single source of truth).
       return {
         title: (document.getElementById('publishTitle')?.value || '').trim(),
         openings: (document.getElementById('publishOpenings')?.value || '1').trim(),
@@ -599,7 +655,9 @@
       };
     }
 
+    // 功能：处理 updatePublishStepUI 相关逻辑。
     function updatePublishStepUI() {
+      // Single renderer for publish wizard: sections, progress indicator, and footer buttons.
       document.querySelectorAll('#publishModal .form-section').forEach((section, index) => {
         section.classList.toggle('active', index + 1 === publishStep);
       });
@@ -642,8 +700,13 @@
       }
     }
 
+    // 功能：校验当前输入或步骤是否合法。
     function validatePublishStep() {
       const data = collectPublishForm();
+      // Step-specific blocking checks:
+      // - step 1 ensures core posting identity exists (course + openings),
+      // - step 2 ensures recruitment requirements are not empty.
+      // Deeper checks (e.g., date format) are deferred to submit stage.
       if (publishStep === 1) {
         if (!data.title) {
           taSystem.showMessage('Course Name required', 'warning');
@@ -661,7 +724,9 @@
       return true;
     }
 
+    // 功能：进入下一步流程。
     function nextPublishStep() {
+      // Advance wizard or submit final payload at last step.
       if (!validatePublishStep()) {
         return;
       }
@@ -673,20 +738,30 @@
       submitPublishPosition();
     }
 
+    // 功能：返回上一步流程。
     function prevPublishStep() {
+      // Navigate backward inside publish wizard.
       if (publishStep > 1) {
         publishStep -= 1;
         updatePublishStepUI();
       }
     }
 
+    // 功能：提交发布岗位请求。
     async function submitPublishPosition() {
       const data = collectPublishForm();
       if (data.deadline && !isValidIsoDate(data.deadline)) {
         taSystem.showMessage('Deadline format must be YYYY-MM-DD', 'warning');
         return;
       }
+      if (data.deadline && isPastDate(data.deadline)) {
+        taSystem.showMessage('Deadline cannot be earlier than today', 'warning');
+        return;
+      }
       try {
+        // API.createPosition -> POST /api/position/create.
+        // Backend is responsible for generating unique positionId, setting default
+        // status=open, and persisting to positions.txt via DataManager.
         const result = await API.createPosition({
           title: data.title,
           department: data.department || 'School of Computer Science',
@@ -710,14 +785,18 @@
       }
     }
 
+    // 功能：应用当前设置并刷新结果。
     function applyCurrentFilter() {
+      // Apply toolbar status filter to locally cached position list.
       const list = currentFilterStatus === 'all'
         ? allPositions
         : allPositions.filter((p) => normalizeStatus(p.status || 'open') === currentFilterStatus);
       renderPositions(list);
     }
 
+    // 功能：渲染岗位列表视图。
     function renderPositions(positions) {
+      // Render position table rows with action buttons bound to each position record.
       const tbody = document.querySelector('#positionsTable tbody');
       if (!tbody) return;
 
@@ -746,7 +825,9 @@
       `).join('');
     }
 
+    // 功能：打开对应弹窗或视图。
     function openEditModal(positionId) {
+      // Load selected row data into edit modal controls.
       const position = allPositions.find((p) => p.id === positionId);
       if (!position) {
         taSystem.showMessage('Position not found', 'warning');
@@ -769,7 +850,9 @@
       taSystem.openModal('editModal');
     }
 
+    // 功能：保存岗位编辑结果。
     async function saveEditPosition() {
+      // Validate and send edit payload to backend update endpoint.
       if (!currentEditPositionId) {
         taSystem.showMessage('No position selected', 'warning');
         return;
@@ -805,8 +888,12 @@
       }
     }
 
+    // 功能：切换岗位开放/关闭状态。
     async function togglePositionStatus(positionId, status) {
       try {
+        // Status toggle path (POST /position/status):
+        // this is operational status management only (open/closed), no broadcast.
+        // Useful when MO wants to pause/reopen recruitment quietly.
         const result = await API.updatePositionStatus(positionId, status);
         if (!result || !result.success) {
           taSystem.showMessage((result && result.message) || 'Failed to update status', 'danger');
@@ -819,8 +906,12 @@
       }
     }
 
+    // 功能：执行岗位发布流程。
     async function publishPosition(positionId) {
       try {
+        // Publish path (POST /position/publish):
+        // backend normalizes status to open and sends TA notifications.
+        // This is the "announce recruitment" action, not just local state toggle.
         const result = await API.publishPosition(positionId);
         if (!result || !result.success) {
           taSystem.showMessage((result && result.message) || 'Failed to publish position', 'danger');
@@ -833,7 +924,9 @@
       }
     }
 
+    // 功能：加载岗位数据并更新页面。
     async function loadPositions() {
+      // Read current MO-visible positions from backend and re-render table.
       try {
         const list = await API.getPositions();
         allPositions = Array.isArray(list) ? list : [];
@@ -843,7 +936,9 @@
       }
     }
 
+    // 功能：按条件筛选数据。
     function filterStatus(element, status) {
+      // Update active filter chip and refresh filtered table.
       document.querySelectorAll('.filter-tag').forEach(tag => tag.classList.remove('active'));
       if (element) {
         element.classList.add('active');
@@ -853,12 +948,21 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Restrict page to MO role, then initialize date inputs and load initial data.
       const allowed = await taSystem.enforceSessionGuard(['MO']);
       if (!allowed) {
         return;
       }
       bindDatePicker('publishDeadline', 'publishDeadlinePicker');
       bindDatePicker('editDeadline', 'editDeadlinePicker');
+
+      const now = new Date();
+      const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const publishPicker = document.getElementById('publishDeadlinePicker');
+      if (publishPicker) {
+        publishPicker.min = todayIso;
+      }
+
       await loadPositions();
       updatePublishStepUI();
 

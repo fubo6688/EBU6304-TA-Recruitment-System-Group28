@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -489,6 +489,7 @@
       window.location.href = rolePageMap[userRole] || 'ta-profile.html';
     }
 
+    // 功能：设置并刷新头像展示。
     function setAvatarImage(url) {
       const avatarDisplay = document.getElementById('avatarDisplay');
       if (!avatarDisplay) return;
@@ -559,6 +560,7 @@
       return { valid: true, message: 'Password meets all requirements' };
     }
 
+    // 功能：转义 HTML 特殊字符，降低 XSS 风险。
     function escapeHtml(text) {
       return (text || '').replace(/[&<>"]/g, (ch) => {
         if (ch === '&') return '&amp;';
@@ -568,6 +570,7 @@
       });
     }
 
+    // 功能：加载待审批注册账号列表。
     async function loadPendingRegistrations() {
       const list = document.getElementById('approvalList');
       list.innerHTML = '<div class="approval-empty">Loading pending registrations...</div>';
@@ -601,6 +604,7 @@
       }
     }
 
+    // 功能：处理管理员对注册账号的审批操作。
     async function handleApprovalAction(userId, decision) {
       try {
         const result = await API.approveRegistration(userId, decision);

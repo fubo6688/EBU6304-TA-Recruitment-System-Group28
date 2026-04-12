@@ -83,6 +83,8 @@ Write-Step "Compiling backend Java sources"
 $classesDir = Join-Path $backendWebInf "classes"
 if (-not (Test-Path $classesDir)) {
     New-Item -ItemType Directory -Path $classesDir | Out-Null
+} else {
+    Get-ChildItem -Path $classesDir -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 $javaFiles = Get-ChildItem -Path (Join-Path $backendDir "src/com/ta") -Recurse -Filter "*.java" |
@@ -109,6 +111,8 @@ if (-not (Test-Path $rootWebInf)) {
 }
 if (-not (Test-Path (Join-Path $rootWebInf "classes"))) {
     New-Item -ItemType Directory -Path (Join-Path $rootWebInf "classes") | Out-Null
+} else {
+    Get-ChildItem -Path (Join-Path $rootWebInf "classes") -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 }
 if (-not (Test-Path (Join-Path $rootWebInf "lib"))) {
     New-Item -ItemType Directory -Path (Join-Path $rootWebInf "lib") | Out-Null
@@ -131,6 +135,11 @@ foreach ($contextName in $contexts) {
     $appDir = Join-Path $tomcatHome "webapps/$contextName"
     if (-not (Test-Path $appDir)) {
         New-Item -ItemType Directory -Path $appDir | Out-Null
+    }
+
+    $tomcatWorkDir = Join-Path $tomcatHome "work/Catalina/localhost/$contextName"
+    if (Test-Path $tomcatWorkDir) {
+        Remove-Item -Path $tomcatWorkDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     Write-Host "Deploying context: /$contextName"

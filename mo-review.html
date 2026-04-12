@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -478,10 +478,12 @@
     let applicantProfileMap = {};
     let currentApplications = [];
 
+    // 功能：标准化状态值，避免大小写与空值影响判断。
     function normalizeStatus(status) {
       return String(status || '').toLowerCase();
     }
 
+    // 功能：处理 statusText 相关逻辑。
     function statusText(status) {
       const s = normalizeStatus(status);
       if (s === 'approved') return 'approved';
@@ -490,6 +492,7 @@
       return 'pending';
     }
 
+    // 功能：处理 ensureProfileModal 相关逻辑。
     function ensureProfileModal() {
       if (document.getElementById('applicantProfileModal')) return;
       const modal = document.createElement('div');
@@ -510,6 +513,7 @@
       document.body.appendChild(modal);
     }
 
+    // 功能：渲染岗位列表视图。
     function renderPositions(positions) {
       const list = document.querySelector('.position-list-left');
       if (!list) return;
@@ -526,6 +530,7 @@
       }
     }
 
+    // 功能：渲染界面内容。
     function renderApplicants(apps) {
       const grid = document.querySelector('.applicants-grid');
       if (!grid) return;
@@ -569,6 +574,7 @@
       `).join('');
     }
 
+    // 功能：处理 preloadApplicantProfiles 相关逻辑。
     async function preloadApplicantProfiles(apps) {
       const ids = [...new Set((apps || []).map((a) => a.userId).filter(Boolean))];
       applicantProfileMap = {};
@@ -584,6 +590,7 @@
       }));
     }
 
+    // 功能：加载相关数据并更新页面。
     async function loadApplications() {
       try {
         const result = await API.getReviewApplications(currentPositionId);
@@ -597,6 +604,7 @@
       }
     }
 
+    // 功能：打开并预览用户简历。
     function openResume(userId) {
       if (!userId) return;
       if (typeof API.openResume === 'function') {
@@ -608,6 +616,7 @@
       window.open(API.getResumePreviewUrl(userId), '_blank');
     }
 
+    // 功能：处理 formatAvailability 相关逻辑。
     function formatAvailability(raw) {
       const text = (raw || '').toString().trim();
       if (!text) {
@@ -616,6 +625,7 @@
       return text.split(';').map((s) => s.trim()).filter(Boolean).join(' | ') || 'Not provided';
     }
 
+    // 功能：展示申请者详细资料。
     function showApplicantProfile(userId) {
       const result = applicantProfileMap[userId];
       const p = result && result.profile ? result.profile : null;
@@ -645,6 +655,7 @@
       taSystem.openModal('applicantProfileModal');
     }
 
+    // 功能：处理 selectPosition 相关逻辑。
     function selectPosition(positionId, element) {
       currentPositionId = positionId;
       document.querySelectorAll('.position-item').forEach(item => item.classList.remove('active'));
@@ -654,6 +665,7 @@
       loadApplications();
     }
 
+    // 功能：处理 reloadPositionsAndKeepSelection 相关逻辑。
     async function reloadPositionsAndKeepSelection() {
       const positions = await API.getPositions();
       const list = Array.isArray(positions) ? positions : [];
@@ -682,6 +694,7 @@
       }
     }
 
+    // 功能：处理申请审核结果并提交。
     async function reviewApplication(applicationId, decision) {
       if (!applicationId) return;
       const feedback = window.prompt('Optional feedback for applicant:', '') || '';
@@ -700,6 +713,7 @@
     }
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
+      // 功能：处理当前回调逻辑。
       btn.addEventListener('click', function() {
         const group = this.parentElement;
         group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));

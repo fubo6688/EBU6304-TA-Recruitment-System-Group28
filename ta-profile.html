@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -545,6 +545,7 @@
     };
     
     sidebarMenuItems.forEach(item => {
+      // 功能：处理当前回调逻辑。
       item.addEventListener('click', function() {
         const text = this.textContent.trim();
         const page = menuMap[text];
@@ -559,6 +560,7 @@
     });
 
     let currentStep = 1;
+    // In-memory wizard state; submitted as multipart form in submitProfile().
     let profileData = {
       grade: '',
       major: '',
@@ -570,7 +572,9 @@
       existingResumeName: ''
     };
 
+    // 功能：进入下一步流程。
     function nextStep() {
+      // Move forward only when current step validation passes.
       if (validateCurrentStep()) {
         currentStep++;
         if (currentStep <= 4) {
@@ -582,14 +586,21 @@
       }
     }
 
+    // 功能：返回上一步流程。
     function prevStep() {
+      // Allow users to go back without losing in-memory selections.
       currentStep--;
       if (currentStep >= 1) {
         updateStepView();
       }
     }
 
+    // 功能：校验当前输入或步骤是否合法。
     function validateCurrentStep() {
+      // Wizard-level gate:
+      // Step 1 must have identity/academic fields, Step 2 must have at least
+      // one skill + one time slot, Step 3 must have an uploaded or existing resume.
+      // This mirrors the feature acceptance criteria before data is submitted.
       if (currentStep === 1) {
         const grade = document.getElementById('grade').value;
         const major = document.getElementById('major').value;
@@ -624,7 +635,9 @@
       return true;
     }
 
+    // 功能：处理 updateStepView 相关逻辑。
     function updateStepView() {
+      // Sync both the content section and stepper UI with currentStep.
       document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.form-section[data-section="' + currentStep + '"]').forEach(s => s.classList.add('active'));
 
@@ -638,20 +651,29 @@
       });
     }
 
+    // 功能：切换当前状态或选中项。
     function toggleSkill(element) {
+      // Multi-select skills and keep profileData.skills in sync with selected tags.
       element.classList.toggle('selected');
       profileData.skills = Array.from(document.querySelectorAll('.skill-tag.selected')).map(e => e.textContent);
     }
 
+    // 功能：处理 collectAvailableTime 相关逻辑。
     function collectAvailableTime() {
+      // Convert selected timetable cells into stable slot keys for persistence.
       profileData.availableTime = Array.from(document.querySelectorAll('.time-cell.selected'))
         .map((cell) => cell.getAttribute('data-slot'))
         .filter(Boolean);
     }
 
+    // 功能：处理 handleFileUpload 相关逻辑。
     function handleFileUpload(input) {
       const file = input.files[0];
       if (file) {
+        // Frontend pre-checks before hitting backend:
+        // 1) only PDF is accepted (UserServlet also validates),
+        // 2) max 10MB to avoid oversized multipart uploads.
+        // Doing this here gives immediate user feedback.
         if (!file.name.toLowerCase().endsWith('.pdf')) {
           taSystem.showMessage('Only PDF files are supported', 'danger');
           input.value = '';
@@ -680,7 +702,9 @@
       }
     }
 
+    // 功能：返回上一步流程。
     function previewResume() {
+      // Preview order: newly uploaded file -> backend stored resume -> fallback URL path.
       if (profileData.resume) {
         const url = URL.createObjectURL(profileData.resume);
         window.open(url, '_blank');
@@ -705,7 +729,9 @@
       }
     }
 
+    // 功能：处理 uploadProfileRequest 相关逻辑。
     async function uploadProfileRequest(formData) {
+      // Prefer centralized API helper; fallback keeps page runnable in standalone deployments.
       if (typeof API !== 'undefined' && typeof API.uploadProfile === 'function') {
         return API.uploadProfile(formData);
       }
@@ -732,7 +758,9 @@
       return data;
     }
 
+    // 功能：处理 populateConfirmData 相关逻辑。
     function populateConfirmData() {
+      // Render step-4 summary from current wizard state before final submit.
       document.getElementById('confirmGrade').textContent = profileData.grade;
       document.getElementById('confirmMajor').textContent = profileData.major;
       document.getElementById('confirmGPA').textContent = profileData.gpa;
@@ -742,12 +770,16 @@
       document.getElementById('confirmResume').textContent = profileData.resume ? profileData.resume.name : (profileData.existingResumeName || '-');
     }
 
+    // 功能：提交个人档案信息到后端。
     async function submitProfile() {
       if (!validateCurrentStep()) {
         return;
       }
 
       try {
+        // Field names in FormData intentionally match UserServlet:/profile params
+        // so both normal fields and multipart file can be processed in one request.
+        // This is the single write path for TA profile create/update.
         const form = new FormData();
         form.append('userName', localStorage.getItem('userName') || '');
         form.append('email', profileData.email || '');
@@ -763,6 +795,8 @@
 
         const result = await uploadProfileRequest(form);
         if (result.success) {
+          // Use backend-confirmed filename as source of truth after save.
+          // This keeps "view/edit profile" stable across refreshes and revisits.
           profileData.existingResumeName = result.resumeFileName || profileData.existingResumeName;
           profileData.resume = null;
           currentStep = 4;
@@ -798,7 +832,9 @@
       }
     });
 
+    // 功能：初始化页面或组件状态。
     function initTimeCells() {
+      // Build deterministic slot identifiers (e.g., "Mon 9:00-12:00") for each cell.
       document.querySelectorAll('.time-table tbody tr').forEach((row) => {
         const slotLabel = row.querySelector('td')?.textContent?.trim() || '';
         const dayHeaders = Array.from(document.querySelectorAll('.time-table thead th')).map((th) => th.textContent.trim());
@@ -822,7 +858,9 @@
       collectAvailableTime();
     }
 
+    // 功能：处理 restoreAvailableTime 相关逻辑。
     function restoreAvailableTime(raw) {
+      // Rehydrate timetable selections from persisted semicolon-delimited slots.
       const slots = String(raw || '').split(';').map((s) => s.trim()).filter(Boolean);
 
       document.querySelectorAll('.time-cell').forEach((cell) => {
@@ -834,6 +872,7 @@
       collectAvailableTime();
     }
 
+    // 功能：判断条件是否成立。
     function isStep1Complete() {
       return Boolean(
         String(profileData.grade || '').trim() &&
@@ -843,15 +882,19 @@
       );
     }
 
+    // 功能：判断条件是否成立。
     function isStep2Complete() {
       return profileData.skills.length > 0 && profileData.availableTime.length > 0;
     }
 
+    // 功能：判断条件是否成立。
     function isStep3Complete() {
       return Boolean(profileData.resume || profileData.existingResumeName);
     }
 
+    // 功能：处理 resolveCurrentStepByCompleteness 相关逻辑。
     function resolveCurrentStepByCompleteness() {
+      // Resume wizard at the first incomplete step to support edit/resume workflow.
       if (!isStep1Complete()) {
         return 1;
       }
@@ -864,7 +907,9 @@
       return 4;
     }
 
+    // 功能：处理 ensureSelectOption 相关逻辑。
     function ensureSelectOption(selectId, value) {
+      // Backward compatibility: add unknown option values from old profile records.
       const select = document.getElementById(selectId);
       const v = String(value || '').trim();
       if (!select || !v) return;
@@ -878,8 +923,12 @@
       }
     }
 
+    // 功能：加载并回填已有个人档案。
     async function loadExistingProfile() {
       try {
+        // Read persisted profile from backend and hydrate the wizard state.
+        // The page then behaves as "edit existing profile" instead of "new profile",
+        // including restoring selected skills, available-time grid, and resume preview.
         const profile = await API.getProfile();
         if (!profile || !profile.userId) return;
 
@@ -930,6 +979,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Guard page access by role, then initialize interactive controls and saved profile.
       const allowed = await taSystem.enforceSessionGuard(['TA']);
       if (!allowed) {
         return;

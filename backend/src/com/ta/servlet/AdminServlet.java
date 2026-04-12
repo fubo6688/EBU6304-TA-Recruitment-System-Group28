@@ -16,14 +16,24 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 管理员后台聚合接口。
+ *
+ * <p>提供 dashboard、positions、ta-workload 等只读管理视图数据，
+ * 并在入口处统一校验会话与 Admin 角色。</p>
+ */
 public class AdminServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
+    /**
+     * 处理管理员 GET 接口：dashboard、positions、ta-workload。
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
         PrintWriter out = resp.getWriter();
 
+        // Admin 专属接口统一入口校验。
         User user = requireAdmin(req, resp, out);
         if (user == null) {
             return;
@@ -31,6 +41,7 @@ public class AdminServlet extends HttpServlet {
 
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
         if ("/dashboard".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
+            // 仪表盘聚合：岗位、申请、TA 工作负载。
             List<Map<String, String>> positions = dataManager.getAllPositions();
             List<Map<String, Object>> taWorkload = dataManager.getTaWorkloadSummary();
 
@@ -61,6 +72,7 @@ public class AdminServlet extends HttpServlet {
                 }
             }
 
+            // 最新创建的岗位优先展示。
             positions.sort(Comparator.comparing((Map<String, String> p) -> value(p.get("createdAt"))).reversed());
 
             JSONObject summary = new JSONObject();
@@ -82,11 +94,13 @@ public class AdminServlet extends HttpServlet {
         }
 
         if ("/positions".equalsIgnoreCase(path)) {
+            // 提供原始岗位列表给管理员页面使用。
             out.print(new JSONObject().put("success", true).put("positions", new JSONArray(dataManager.getAllPositions())).toString());
             return;
         }
 
         if ("/ta-workload".equalsIgnoreCase(path)) {
+            // 提供 TA 负载统计独立接口，便于前端按需刷新。
             out.print(new JSONObject().put("success", true).put("taWorkload", new JSONArray(dataManager.getTaWorkloadSummary())).toString());
             return;
         }
@@ -95,6 +109,9 @@ public class AdminServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
+    /**
+     * 统一 Admin 权限校验：未登录/停用/非管理员均拦截。
+     */
     private User requireAdmin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -110,6 +127,14 @@ public class AdminServlet extends HttpServlet {
             return null;
         }
 
+        if (!"active".equalsIgnoreCase(value(user.getStatus()))) {
+            // 停用管理员账号后，旧会话不得继续访问管理接口。
+            session.invalidate();
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            out.print(new JSONObject().put("success", false).put("message", "Account is inactive").toString());
+            return null;
+        }
+
         if (!"Admin".equalsIgnoreCase(value(user.getRole()))) {
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
             out.print(new JSONObject().put("success", false).put("message", "Admin only").toString());
@@ -119,6 +144,9 @@ public class AdminServlet extends HttpServlet {
         return user;
     }
 
+    /**
+     * 空值安全取值并去首尾空白。
+     */
     private String value(String s) {
         return s == null ? "" : s.trim();
     }

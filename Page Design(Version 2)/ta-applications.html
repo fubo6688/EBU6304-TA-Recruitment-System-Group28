@@ -393,6 +393,7 @@
     let selectedApplicationId = '';
 
     function mapStatusToClass(status) {
+      // Convert status value to semantic CSS class for badge styling.
       const s = (status || '').toLowerCase();
       if (s === 'approved') return 'status-approved';
       if (s === 'rejected') return 'status-rejected';
@@ -401,6 +402,7 @@
     }
 
     function mapStatusToText(status) {
+      // Convert status value to user-facing label text.
       const s = (status || '').toLowerCase();
       if (s === 'approved') return 'alreadyApprove';
       if (s === 'rejected') return 'alreadyReject';
@@ -409,6 +411,7 @@
     }
 
     function renderApplications(apps) {
+      // Render application rows and attach row metadata used by filters/actions.
       const tbody = document.querySelector('#applicationsTable tbody');
       if (!tbody) return;
 
@@ -437,6 +440,7 @@
     }
 
     async function loadApplications() {
+      // Pull applications from backend and apply currently selected filter.
       try {
         const list = await API.getApplications();
         const apps = Array.isArray(list) ? list : [];
@@ -448,6 +452,7 @@
     }
 
     function applyFilter(status) {
+      // Client-side filter to show/hide rows by status tag.
       const table = document.getElementById('applicationsTable');
       const rows = table.querySelectorAll('tbody tr');
       rows.forEach((row) => {
@@ -460,6 +465,7 @@
     }
 
     function filterStatus(element, status) {
+      // Update active filter chip and refresh visible rows.
       document.querySelectorAll('.filter-tag').forEach(tag => tag.classList.remove('active'));
       element.classList.add('active');
       currentFilter = status;
@@ -467,18 +473,21 @@
     }
 
     function toggleSelectAll() {
+      // Bulk checkbox toggle for priority/cancel operations.
       const selectAll = document.getElementById('selectAll');
       const checkboxes = document.querySelectorAll('.row-checkbox');
       checkboxes.forEach(cb => cb.checked = selectAll.checked);
     }
 
     function updateSelectAllState() {
+      // Keep header checkbox synchronized with row selection state.
       const checkboxes = document.querySelectorAll('.row-checkbox');
       const selectAll = document.getElementById('selectAll');
       selectAll.checked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
     }
 
     async function cancelApplication(applicationId) {
+      // Cancel application via backend, then refresh list on success.
       if (!confirm('ConfirmwantDeleteThis application?？')) return;
       try {
         const result = await API.cancelApplication(applicationId);
@@ -494,12 +503,14 @@
     }
 
     function selectPriority(element, priority) {
+      // Record selected priority option in modal state.
       document.querySelectorAll('.priority-option').forEach(opt => opt.classList.remove('selected'));
       element.classList.add('selected');
       selectedPriority = priority;
     }
 
     async function savePriority() {
+      // Persist selected priority for current application, then reload table.
       if (!selectedPriority || !selectedApplicationId) {
         taSystem.showMessage('Please select a priority', 'danger');
         return;
@@ -519,11 +530,13 @@
     }
 
     function showDetail(applicationId) {
+      // Set current target application before opening detail modal.
       selectedApplicationId = applicationId;
       taSystem.openModal('detailModal');
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Initial page load: fetch data and bind toolbar priority action.
       await loadApplications();
 
       const openPriorityBtn = document.querySelector('.toolbar .btn.btn-primary');

@@ -1,2 +1,4 @@
 ntf1775651577330|position|New Position Published|A position has been published: A|2026-04-08 20:32:57|0
 ntf1775652124055|position|New Position Published|A position has been published: A|2026-04-08 20:42:04|0
+ntf1775821754678|application|Application Submitted|Your application was submitted.|2026-04-10 19:49:14|0
+ntf1775822373016|application|Application Result|Your application has been rejected|2026-04-10 19:59:33|0

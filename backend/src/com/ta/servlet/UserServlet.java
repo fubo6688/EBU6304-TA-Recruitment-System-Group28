@@ -9,9 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
@@ -30,9 +27,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 用户域 Servlet。
+ *
+ * <p>处理个人资料读取/更新、头像与简历上传下载、改密、
+ * 以及管理员的注册审批与账号启停等管理操作。</p>
+ */
 @MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 15 * 1024 * 1024)
 public class UserServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
+    // 可查看 TA 资料的角色白名单（本人始终可看）
     private static final Set<String> PROFILE_VIEW_ROLES = new HashSet<>();
 
     static {
@@ -40,6 +44,9 @@ public class UserServlet extends HttpServlet {
         PROFILE_VIEW_ROLES.add("Admin");
     }
 
+    /**
+     * 处理用户读取类 GET 接口（profile/avatar/resume/审批列表等）。
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -72,7 +79,45 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
+        if ("/managed-users".equalsIgnoreCase(path)) {
+            if (!isAdmin(user)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Admin only").toString());
+                return;
+            }
+
+            // 返回可由 Admin 直接启停的账号：仅 TA/MO 且状态为 active/inactive。
+            List<User> managed = new ArrayList<>();
+            for (User item : dataManager.getAllUsers()) {
+                String role = value(item.getRole());
+                String status = value(item.getStatus());
+                // 关键角色过滤变量：只纳入 TA/MO。
+                boolean isTaOrMo = "TA".equalsIgnoreCase(role) || "MO".equalsIgnoreCase(role);
+                // 关键状态过滤变量：排除 pending，避免和注册审批流程混淆。
+                boolean manageableStatus = "active".equalsIgnoreCase(status) || "inactive".equalsIgnoreCase(status);
+                if (isTaOrMo && manageableStatus) {
+                    managed.add(item);
+                }
+            }
+
+            managed.sort((a, b) -> {
+                int roleCmp = value(a.getRole()).compareToIgnoreCase(value(b.getRole()));
+                if (roleCmp != 0) {
+                    return roleCmp;
+                }
+                return value(a.getUserId()).compareToIgnoreCase(value(b.getUserId()));
+            });
+
+            JSONArray items = new JSONArray();
+            for (User item : managed) {
+                items.put(toUserJson(item));
+            }
+            resp.getWriter().print(new JSONObject().put("success", true).put("users", items).toString());
+            return;
+        }
+
         if ("/avatar".equalsIgnoreCase(path)) {
+            // 头像读取支持 userId/qmId 混用，便于历史账号兼容。
             String targetUserId = value(req.getParameter("userId"));
             if (targetUserId.isEmpty()) {
                 targetUserId = user.getUserId();
@@ -129,6 +174,7 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("/resume".equalsIgnoreCase(path)) {
+            // 简历下载同样支持跨 ID 映射，并统一以 inline 方式预览 PDF。
             String targetUserId = value(req.getParameter("userId"));
             if (targetUserId.isEmpty()) {
                 targetUserId = user.getUserId();
@@ -186,6 +232,9 @@ public class UserServlet extends HttpServlet {
             return;
         }
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
+            // GET /api/user/profile
+            // Returns the logged-in user's profile aggregate (account fields + profile fields)
+            // used by TA profile page to prefill and continue the multi-step form.
             JSONObject result = toUserJson(user);
             Map<String, String> profile = dataManager.getProfile(user.getUserId());
             if (profile != null) {
@@ -207,6 +256,9 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("/ta-profile".equalsIgnoreCase(path)) {
+            // GET /api/user/ta-profile?userId=...
+            // Cross-user read endpoint for MO/Admin review scenarios:
+            // returns TA profile data plus resume preview URL.
             String targetUserId = value(req.getParameter("userId"));
             if (targetUserId.isEmpty()) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -261,6 +313,9 @@ public class UserServlet extends HttpServlet {
         resp.getWriter().print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
+    /**
+     * 处理用户写操作 POST 接口（资料更新、改密、审批、账号状态变更）。
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -291,6 +346,7 @@ public class UserServlet extends HttpServlet {
                 out.print(new JSONObject().put("success", false).put("message", "Target user not found").toString());
                 return;
             }
+            // 注册审批仅处理 pending 账号，避免覆盖既有 active/inactive 状态。
             if (!"pending".equalsIgnoreCase(target.getStatus())) {
                 out.print(new JSONObject().put("success", false).put("message", "Target user is not pending").toString());
                 return;
@@ -313,8 +369,62 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
+        if ("/account-status".equalsIgnoreCase(path)) {
+            if (!isAdmin(user)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print(new JSONObject().put("success", false).put("message", "Admin only").toString());
+                return;
+            }
+
+            // Admin 手动启停账号入口（de-active / re-active）。
+            String targetUserId = value(req.getParameter("userId"));
+            String requestedStatus = value(req.getParameter("status"));
+            if (targetUserId.isEmpty() || requestedStatus.isEmpty()) {
+                out.print(new JSONObject().put("success", false).put("message", "Missing userId or status").toString());
+                return;
+            }
+
+            User target = dataManager.getUserById(targetUserId);
+            if (target == null) {
+                out.print(new JSONObject().put("success", false).put("message", "Target user not found").toString());
+                return;
+            }
+
+            String role = value(target.getRole());
+            if (!("TA".equalsIgnoreCase(role) || "MO".equalsIgnoreCase(role))) {
+                out.print(new JSONObject().put("success", false).put("message", "Only TA/MO accounts can be managed here").toString());
+                return;
+            }
+
+            if ("pending".equalsIgnoreCase(value(target.getStatus()))) {
+                out.print(new JSONObject().put("success", false).put("message", "Pending accounts should be handled in Registration Approvals").toString());
+                return;
+            }
+
+            // 将前端输入（active/inactive/deactive/reactive...）统一映射为标准状态。
+            String nextStatus = normalizeManagedAccountStatus(requestedStatus);
+            if (nextStatus.isEmpty()) {
+                out.print(new JSONObject().put("success", false).put("message", "Invalid status. Use active/inactive or reactivate/deactivate").toString());
+                return;
+            }
+
+            if (nextStatus.equalsIgnoreCase(value(target.getStatus()))) {
+                out.print(new JSONObject().put("success", true).put("message", "Account status unchanged").put("status", nextStatus).toString());
+                return;
+            }
+
+            target.setStatus(nextStatus);
+            dataManager.saveUser(target);
+            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "UPDATE_ACCOUNT_STATUS", targetUserId + " -> " + nextStatus, "success");
+            out.print(new JSONObject().put("success", true).put("message", "Account status updated").put("status", nextStatus).toString());
+            return;
+        }
+
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
             req.setCharacterEncoding("UTF-8");
+            // POST /api/user/profile
+            // Accepts multipart form from TA profile wizard; supports partial updates
+            // by falling back to old stored values when a field is omitted.
             String userName = value(req.getParameter("userName"));
             String email = value(req.getParameter("email"));
             String grade = value(req.getParameter("grade"));
@@ -355,6 +465,7 @@ public class UserServlet extends HttpServlet {
             String contentType = req.getContentType();
             if (contentType != null && contentType.toLowerCase().startsWith("multipart/")) {
                 try {
+                    // 头像与简历上传同一个 multipart 提交，先处理头像再处理简历。
                     Part avatarPart = req.getPart("avatarFile");
                     if (avatarPart != null && avatarPart.getSize() > 0) {
                         if (avatarPart.getSize() > 5L * 1024L * 1024L) {
@@ -383,6 +494,9 @@ public class UserServlet extends HttpServlet {
 
                     Part part = req.getPart("resumeFile");
                     if (part != null && part.getSize() > 0) {
+                        // Storage strategy:
+                        // - physical file name is normalized to {userId}.pdf for deterministic overwrite,
+                        // - original uploaded file name is preserved for UI display.
                         String submitted = value(part.getSubmittedFileName());
                         String lower = submitted.toLowerCase();
                         if (!lower.endsWith(".pdf")) {
@@ -447,6 +561,7 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("/password".equalsIgnoreCase(path)) {
+            // 改密强制校验旧密码与复杂度，避免弱口令回写。
             String oldPassword = value(req.getParameter("oldPassword"));
             String newPassword = value(req.getParameter("newPassword"));
             if (oldPassword.isEmpty() || newPassword.isEmpty()) {
@@ -475,6 +590,9 @@ public class UserServlet extends HttpServlet {
         out.print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
 
+    /**
+     * 统一登录态校验：要求存在会话且账号为 active。
+     */
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp) {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -495,9 +613,22 @@ public class UserServlet extends HttpServlet {
             }
             return null;
         }
+        // 账号已被停用时，立即失效当前会话，避免“已登录还能继续操作”。
+        if (!"active".equalsIgnoreCase(value(user.getStatus()))) {
+            session.invalidate();
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            try {
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Account is inactive").toString());
+            } catch (IOException ignore) {
+            }
+            return null;
+        }
         return user;
     }
 
+    /**
+     * 将用户实体转为对外返回的标准 JSON 结构。
+     */
     private JSONObject toUserJson(User user) {
         return new JSONObject()
                 .put("userId", user.getUserId())
@@ -509,14 +640,40 @@ public class UserServlet extends HttpServlet {
                 .put("status", user.getStatus());
     }
 
+    /**
+     * 空值安全取值并去首尾空白。
+     */
     private String value(String s) {
         return s == null ? "" : s.trim();
     }
 
+    /**
+     * 判断是否管理员角色。
+     */
     private boolean isAdmin(User user) {
         return user != null && "Admin".equalsIgnoreCase(value(user.getRole()));
     }
 
+    // 统一解析账号状态输入，兼容 de-active / re-active 等写法。
+    private String normalizeManagedAccountStatus(String status) {
+        String raw = value(status).toLowerCase(Locale.ROOT);
+        if (raw.isEmpty()) {
+            return "";
+        }
+        String normalized = raw.replace("_", "").replace("-", "").replace(" ", "");
+
+        if ("active".equals(normalized) || "reactivate".equals(normalized) || "reactive".equals(normalized) || "enable".equals(normalized)) {
+            return "active";
+        }
+        if ("inactive".equals(normalized) || "deactive".equals(normalized) || "deactivate".equals(normalized) || "disable".equals(normalized)) {
+            return "inactive";
+        }
+        return "";
+    }
+
+    /**
+     * 校验密码复杂度是否满足系统策略。
+     */
     private boolean isPasswordComplex(String password) {
         if (password == null) {
             return false;
@@ -524,6 +681,9 @@ public class UserServlet extends HttpServlet {
         return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$");
     }
 
+    /**
+     * 判断是否允许查看目标用户资料（本人/MO/Admin）。
+     */
     private boolean canViewProfile(User currentUser, String targetUserId) {
         if (targetUserId == null || targetUserId.trim().isEmpty()) {
             return false;
@@ -534,6 +694,9 @@ public class UserServlet extends HttpServlet {
         return PROFILE_VIEW_ROLES.contains(currentUser.getRole());
     }
 
+    /**
+     * 清理非法文件名字符，避免路径注入与文件系统异常。
+     */
     private String sanitizeFileName(String name) {
         if (name == null || name.isEmpty()) {
             return "resume.pdf";
@@ -541,6 +704,9 @@ public class UserServlet extends HttpServlet {
         return name.replaceAll("[\\\\/:*?\"<>|]", "_");
     }
 
+    /**
+     * 推断头像扩展名（优先文件名，其次 Content-Type）。
+     */
     private String guessAvatarExtension(String fileName, String contentType) {
         String name = value(fileName).toLowerCase(Locale.ROOT);
         if (name.endsWith(".png")) return ".png";
@@ -556,6 +722,9 @@ public class UserServlet extends HttpServlet {
         return ".png";
     }
 
+    /**
+     * 生成头像访问 URL（附时间戳避免缓存）。
+     */
     private String buildAvatarUrl(HttpServletRequest req, String userId, String avatarStoredName) {
         if (value(avatarStoredName).isEmpty()) {
             return "";
@@ -563,6 +732,9 @@ public class UserServlet extends HttpServlet {
         return req.getContextPath() + "/api/user/avatar?userId=" + userId + "&t=" + System.currentTimeMillis();
     }
 
+    /**
+     * 解析简历文件实际路径（兼容历史路径与命名策略）。
+     */
     private Path resolveResumeFile(String userId, String storedName, String originalName) {
         Path dataDir = dataManager.getDataDirPath();
         Path resumesDir = dataDir.resolve("resumes");
@@ -615,6 +787,9 @@ public class UserServlet extends HttpServlet {
         return resumesDir.resolve(storedName.isEmpty() ? originalName : storedName);
     }
 
+    /**
+     * 解析头像文件实际路径并支持按用户匹配最新文件回退。
+     */
     private Path resolveAvatarFile(String userId, String storedName) {
         Path dataDir = dataManager.getDataDirPath();
         Path avatarsDir = dataDir.resolve("avatars");
@@ -651,7 +826,11 @@ public class UserServlet extends HttpServlet {
         return avatarsDir.resolve(storedName);
     }
 
+    /**
+     * 兼容 userId 与 qmId 的资料解析，减少历史数据键不一致问题。
+     */
     private ResolvedProfile resolveProfileByAnyId(String targetUserId) {
+        // 解析顺序：直接 userId -> 该用户 qmId -> 反查 qmId 对应用户。
         String id = value(targetUserId);
         if (id.isEmpty()) {
             return new ResolvedProfile("", null);
@@ -691,6 +870,9 @@ public class UserServlet extends HttpServlet {
         return new ResolvedProfile(id, null);
     }
 
+    /**
+     * 通过 qmId 反查用户实体。
+     */
     private User findUserByQmId(String qmId) {
         String target = value(qmId);
         if (target.isEmpty()) {
@@ -708,6 +890,9 @@ public class UserServlet extends HttpServlet {
         private final String resolvedUserId;
         private final Map<String, String> profile;
 
+        /**
+         * 封装解析后的档案定位结果。
+         */
         private ResolvedProfile(String resolvedUserId, Map<String, String> profile) {
             this.resolvedUserId = resolvedUserId;
             this.profile = profile;
