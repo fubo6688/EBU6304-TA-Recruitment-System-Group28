@@ -71,6 +71,12 @@
       flex-wrap: wrap;
     }
 
+    .toolbar .keyword-input {
+      min-width: 220px;
+      height: 36px;
+      font-size: 13px;
+    }
+
     .status-filter {
       padding: 8px 12px;
       border: 1px solid var(--gray-300);
@@ -167,6 +173,8 @@
           <button type="button" class="status-filter" data-status="pending">Pending</button>
           <button type="button" class="status-filter" data-status="approved">Approved</button>
           <button type="button" class="status-filter" data-status="rejected">Rejected</button>
+          <input type="text" id="appKeyword" class="form-control keyword-input" placeholder="Search by position / department / feedback">
+          <button type="button" class="btn btn-secondary" id="clearAppFilterBtn">Clear</button>
         </div>
       </div>
 
@@ -195,6 +203,11 @@
   <script>
     let allApplications = [];
     let currentStatus = 'all';
+
+    // 功能：标准化文本输入，便于比较与搜索。
+    function normalizeText(value) {
+      return String(value || '').trim().toLowerCase();
+    }
 
     // 功能：标准化状态值，避免大小写与空值影响判断。
     function normalizeStatus(status) {
@@ -228,9 +241,27 @@
       if (!tbody) return;
 
       const statusFilter = normalizeStatusFilter(currentStatus);
-      const list = statusFilter === 'all'
-        ? allApplications
-        : allApplications.filter((a) => normalizeStatus(a.status) === statusFilter);
+      const keyword = normalizeText(document.getElementById('appKeyword')?.value || '');
+      const list = allApplications.filter((a) => {
+        const statusMatched = statusFilter === 'all' || normalizeStatus(a.status) === statusFilter;
+        if (!statusMatched) {
+          return false;
+        }
+
+        if (!keyword) {
+          return true;
+        }
+
+        const searchable = [
+          a.positionTitle,
+          a.positionDepartment,
+          a.positionId,
+          a.feedback,
+          a.priority,
+          a.status
+        ].map((x) => normalizeText(x)).join(' ');
+        return searchable.includes(keyword);
+      });
 
       if (!list.length) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">No applications found</td></tr>';
@@ -282,6 +313,21 @@
           applyFilter();
         });
       }
+
+      document.getElementById('appKeyword')?.addEventListener('input', applyFilter);
+      document.getElementById('clearAppFilterBtn')?.addEventListener('click', () => {
+        const keywordInput = document.getElementById('appKeyword');
+        if (keywordInput) {
+          keywordInput.value = '';
+        }
+        document.querySelectorAll('.status-filter').forEach((x) => x.classList.remove('active'));
+        const allBtn = document.querySelector('.status-filter[data-status="all"]');
+        if (allBtn) {
+          allBtn.classList.add('active');
+        }
+        currentStatus = 'all';
+        applyFilter();
+      });
     });
   </script>
 </body>

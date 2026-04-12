@@ -65,6 +65,19 @@
       gap: 12px;
     }
 
+    .toolbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-controls .form-control {
+      min-width: 180px;
+      height: 36px;
+      font-size: 13px;
+    }
+
     .filter-tags {
       display: flex;
       gap: 8px;
@@ -213,6 +226,34 @@
       display: block;
     }
 
+    .skills-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .skill-tag {
+      padding: 8px 14px;
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+      border-radius: 18px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .skill-tag:hover {
+      background-color: #dbeafe;
+    }
+
+    .skill-tag.selected {
+      background-color: var(--primary-color);
+      color: #fff;
+    }
+
     .date-input-row {
       position: relative;
       display: flex;
@@ -286,10 +327,17 @@
       <!-- Action Bar -->
       <div class="toolbar">
         <button class="btn btn-primary" onclick="taSystem.openModal('publishModal')">+ Post New Position</button>
-        <div class="filter-tags">
-          <div class="filter-tag active" onclick="filterStatus(this, 'all')">All</div>
-          <div class="filter-tag" onclick="filterStatus(this, 'open')">Open</div>
-          <div class="filter-tag" onclick="filterStatus(this, 'closed')">Closed</div>
+        <div class="toolbar-controls">
+          <input id="positionKeywordFilter" type="text" class="form-control" placeholder="Search by ID / title / requirement">
+          <select id="positionDeptFilter" class="form-control" aria-label="Filter by department">
+            <option value="all">All Departments</option>
+          </select>
+          <button class="btn btn-secondary" id="clearPositionFilterBtn">Clear</button>
+          <div class="filter-tags">
+            <div class="filter-tag active" onclick="filterStatus(this, 'all')">All</div>
+            <div class="filter-tag" onclick="filterStatus(this, 'open')">Open</div>
+            <div class="filter-tag" onclick="filterStatus(this, 'closed')">Closed</div>
+          </div>
         </div>
       </div>
 
@@ -354,7 +402,9 @@
             </div>
             <div class="form-group">
               <label class="form-label required">Department</label>
-              <input id="publishDepartment" type="text" class="form-control" placeholder="e.g. Computer Science">
+              <select id="publishDepartment" class="form-control">
+                <option value="">-- Select Department --</option>
+              </select>
             </div>
           </div>
           <div class="form-group">
@@ -366,7 +416,7 @@
         <div id="step2" class="form-section">
           <div class="form-group">
             <label class="form-label required">Recruitment requirements</label>
-            <textarea id="publishRequirements" class="form-control" placeholder="Skills and prerequisites"></textarea>
+            <div id="publishRequirementTags" class="skills-container"></div>
           </div>
           <div class="form-group">
             <label class="form-label">Preferred background</label>
@@ -428,7 +478,9 @@
           </div>
           <div class="form-group">
             <label class="form-label required">Department</label>
-            <input id="editDepartment" type="text" class="form-control">
+            <select id="editDepartment" class="form-control">
+              <option value="">-- Select Department --</option>
+            </select>
           </div>
         </div>
         <div class="form-two-col">
@@ -447,7 +499,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">Requirements</label>
-          <textarea id="editRequirements" class="form-control" placeholder="Skills and prerequisites"></textarea>
+          <div id="editRequirementTags" class="skills-container"></div>
         </div>
         <div class="form-group">
           <label class="form-label">Job Description</label>
@@ -518,11 +570,40 @@
     let allPositions = [];
     let currentFilterStatus = 'all';
     let currentEditPositionId = '';
+    const DEPARTMENT_OPTIONS = [
+      'School of Computer Science',
+      'Software Engineering',
+      'Data Science',
+      'Artificial Intelligence',
+      'Information Systems',
+      'Cyber Security',
+      'Mathematics',
+      'Statistics'
+    ];
+    const REQUIREMENT_SKILLS = [
+      'Python',
+      'Java',
+      'C++',
+      'JavaScript',
+      'SQL',
+      'Linux',
+      'Git',
+      'Docker',
+      'Data Structures',
+      'Algorithms',
+      'Communication',
+      'Teaching Experience'
+    ];
 
     // 功能：标准化状态值，避免大小写与空值影响判断。
     function normalizeStatus(status) {
       // Normalize backend status values for consistent UI comparisons.
       return String(status || '').toLowerCase();
+    }
+
+    // 功能：标准化文本输入，便于比较与搜索。
+    function normalizeText(value) {
+      return String(value || '').trim().toLowerCase();
     }
 
     // 功能：标准化输入值，便于后续处理。
@@ -634,9 +715,85 @@
       }
     }
 
+    // 功能：初始化部门下拉选项。
+    function renderDepartmentOptions(selectId) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      const current = String(select.value || '').trim();
+      select.innerHTML = '<option value="">-- Select Department --</option>' + DEPARTMENT_OPTIONS
+        .map((name) => `<option value="${name}">${name}</option>`)
+        .join('');
+
+      if (current) {
+        const exists = Array.from(select.options).some((opt) => opt.value === current);
+        if (!exists) {
+          const option = document.createElement('option');
+          option.value = current;
+          option.textContent = current;
+          select.appendChild(option);
+        }
+        select.value = current;
+      }
+    }
+
+    // 功能：渲染技能多选标签。
+    function renderRequirementTags(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = REQUIREMENT_SKILLS
+        .map((name) => `<div class="skill-tag" onclick="toggleRequirementTag(this)">${name}</div>`)
+        .join('');
+    }
+
+    // 功能：切换技能标签选中状态。
+    function toggleRequirementTag(element) {
+      if (!element) return;
+      element.classList.toggle('selected');
+    }
+
+    // 功能：读取指定技能容器中被选中的标签。
+    function getSelectedRequirementSkills(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return [];
+      return Array.from(container.querySelectorAll('.skill-tag.selected'))
+        .map((el) => String(el.textContent || '').trim())
+        .filter(Boolean);
+    }
+
+    // 功能：按文本需求回填技能标签选中状态。
+    function setSelectedRequirementSkills(containerId, requirementsText) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      container.querySelectorAll('.skill-tag').forEach((el) => el.classList.remove('selected'));
+
+      const selectedTokens = String(requirementsText || '')
+        .split(/[|,，;；/、\n\r]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      selectedTokens.forEach((token) => {
+        const hit = Array.from(container.querySelectorAll('.skill-tag')).find(
+          (el) => String(el.textContent || '').trim().toLowerCase() === token.toLowerCase()
+        );
+        if (hit) {
+          hit.classList.add('selected');
+          return;
+        }
+
+        const custom = document.createElement('div');
+        custom.className = 'skill-tag selected';
+        custom.textContent = token;
+        custom.setAttribute('onclick', 'toggleRequirementTag(this)');
+        container.appendChild(custom);
+      });
+    }
+
     // 功能：处理 collectPublishForm 相关逻辑。
     function collectPublishForm() {
       const normalizedDeadline = normalizeDeadlineInput(document.getElementById('publishDeadline')?.value || '');
+      const selectedSkills = getSelectedRequirementSkills('publishRequirementTags');
+      const preferred = (document.getElementById('publishPreferred')?.value || '').trim();
       // Consolidate inputs from all publish steps into one payload object.
       // This keeps validation, confirmation rendering, and final submission
       // reading from the same normalized source (single source of truth).
@@ -644,15 +801,36 @@
         title: (document.getElementById('publishTitle')?.value || '').trim(),
         openings: (document.getElementById('publishOpenings')?.value || '1').trim(),
         department: (document.getElementById('publishDepartment')?.value || '').trim(),
-        requirements: [
-          (document.getElementById('publishRequirements')?.value || '').trim(),
-          (document.getElementById('publishPreferred')?.value || '').trim()
-        ].filter(Boolean).join(', '),
+        requirements: selectedSkills.join(', '),
+        preferred,
         salary: (document.getElementById('publishSalary')?.value || '').trim(),
         description: (document.getElementById('publishDescription')?.value || '').trim(),
         notes: (document.getElementById('publishNotes')?.value || '').trim(),
         deadline: normalizedDeadline
       };
+    }
+
+    // 功能：根据岗位数据刷新部门筛选选项。
+    function populateDepartmentFilter(positions) {
+      const select = document.getElementById('positionDeptFilter');
+      if (!select) return;
+
+      const current = normalizeText(select.value || 'all');
+      const departments = Array.from(new Set((positions || [])
+        .map((p) => String(p.department || '').trim())
+        .filter(Boolean)))
+        .sort((a, b) => a.localeCompare(b, 'en'));
+
+      select.innerHTML = '<option value="all">All Departments</option>' + departments
+        .map((dept) => `<option value="${dept}">${dept}</option>`)
+        .join('');
+
+      const hasCurrent = Array.from(select.options).some((opt) => normalizeText(opt.value) === current);
+      if (hasCurrent) {
+        select.value = current === 'all' ? 'all' : Array.from(select.options).find((opt) => normalizeText(opt.value) === current).value;
+      } else {
+        select.value = 'all';
+      }
     }
 
     // 功能：处理 updatePublishStepUI 相关逻辑。
@@ -692,6 +870,7 @@
             <div><strong>Department:</strong> ${data.department || '-'}</div>
             <div><strong>Salary:</strong> ${data.salary || '-'}</div>
             <div><strong>Requirements:</strong> ${data.requirements || '-'}</div>
+            <div><strong>Preferred:</strong> ${data.preferred || '-'}</div>
             <div><strong>Work Description:</strong> ${data.description || '-'}</div>
             <div><strong>Deadline:</strong> ${data.deadline || '-'}</div>
             <div style="grid-column: 1 / span 2;"><strong>Notes:</strong> ${data.notes || '-'}</div>
@@ -716,9 +895,13 @@
           taSystem.showMessage('Openings required', 'warning');
           return false;
         }
+        if (!data.department) {
+          taSystem.showMessage('Please select a department', 'warning');
+          return false;
+        }
       }
       if (publishStep === 2 && !data.requirements) {
-        taSystem.showMessage('Please fill recruitment requirements', 'warning');
+        taSystem.showMessage('Please choose at least one required skill', 'warning');
         return false;
       }
       return true;
@@ -767,7 +950,7 @@
           department: data.department || 'School of Computer Science',
           salary: data.salary || 'Negotiable',
           description: data.description || 'To be completed by MO',
-          requirements: data.requirements || 'To be completed by MO',
+          requirements: [data.requirements, data.preferred].filter(Boolean).join(', ') || 'To be completed by MO',
           openings: data.openings || '1',
           deadline: data.deadline || ''
         });
@@ -788,9 +971,28 @@
     // 功能：应用当前设置并刷新结果。
     function applyCurrentFilter() {
       // Apply toolbar status filter to locally cached position list.
-      const list = currentFilterStatus === 'all'
-        ? allPositions
-        : allPositions.filter((p) => normalizeStatus(p.status || 'open') === currentFilterStatus);
+      const keyword = normalizeText(document.getElementById('positionKeywordFilter')?.value || '');
+      const department = normalizeText(document.getElementById('positionDeptFilter')?.value || 'all');
+
+      const list = allPositions.filter((p) => {
+        if (currentFilterStatus !== 'all' && normalizeStatus(p.status || 'open') !== currentFilterStatus) {
+          return false;
+        }
+
+        if (department !== 'all' && normalizeText(p.department) !== department) {
+          return false;
+        }
+
+        if (!keyword) {
+          return true;
+        }
+
+        const searchable = [p.id, p.title, p.department, p.requirements, p.description]
+          .map((x) => normalizeText(x))
+          .join(' ');
+        return searchable.includes(keyword);
+      });
+
       renderPositions(list);
     }
 
@@ -837,6 +1039,7 @@
 
       document.getElementById('editTitle').value = position.title || '';
       document.getElementById('editOpenings').value = position.openings || '1';
+      renderDepartmentOptions('editDepartment');
       document.getElementById('editDepartment').value = position.department || '';
       document.getElementById('editSalary').value = position.salary || '';
       document.getElementById('editDeadline').value = position.deadline || '';
@@ -844,7 +1047,7 @@
       if (editDeadlinePicker) {
         editDeadlinePicker.value = position.deadline || '';
       }
-      document.getElementById('editRequirements').value = position.requirements || '';
+      setSelectedRequirementSkills('editRequirementTags', position.requirements || '');
       document.getElementById('editDescription').value = position.description || '';
 
       taSystem.openModal('editModal');
@@ -855,6 +1058,12 @@
       // Validate and send edit payload to backend update endpoint.
       if (!currentEditPositionId) {
         taSystem.showMessage('No position selected', 'warning');
+        return;
+      }
+
+      const selectedRequirementSkills = getSelectedRequirementSkills('editRequirementTags');
+      if (!selectedRequirementSkills.length) {
+        taSystem.showMessage('Please choose at least one required skill', 'warning');
         return;
       }
 
@@ -872,7 +1081,7 @@
           department: (document.getElementById('editDepartment')?.value || '').trim(),
           salary: (document.getElementById('editSalary')?.value || '').trim(),
           deadline: editDeadline,
-          requirements: (document.getElementById('editRequirements')?.value || '').trim(),
+          requirements: selectedRequirementSkills.join(', '),
           description: (document.getElementById('editDescription')?.value || '').trim()
         });
         if (!result || !result.success) {
@@ -930,6 +1139,7 @@
       try {
         const list = await API.getPositions();
         allPositions = Array.isArray(list) ? list : [];
+        populateDepartmentFilter(allPositions);
         applyCurrentFilter();
       } catch (error) {
         taSystem.showMessage(error.message || 'Failed to load positions', 'danger');
@@ -955,6 +1165,10 @@
       }
       bindDatePicker('publishDeadline', 'publishDeadlinePicker');
       bindDatePicker('editDeadline', 'editDeadlinePicker');
+      renderDepartmentOptions('publishDepartment');
+      renderDepartmentOptions('editDepartment');
+      renderRequirementTags('publishRequirementTags');
+      renderRequirementTags('editRequirementTags');
 
       const now = new Date();
       const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -973,6 +1187,20 @@
           updatePublishStepUI();
         });
       }
+
+      document.getElementById('positionKeywordFilter')?.addEventListener('input', applyCurrentFilter);
+      document.getElementById('positionDeptFilter')?.addEventListener('change', applyCurrentFilter);
+      document.getElementById('clearPositionFilterBtn')?.addEventListener('click', () => {
+        const keywordEl = document.getElementById('positionKeywordFilter');
+        const deptEl = document.getElementById('positionDeptFilter');
+        if (keywordEl) keywordEl.value = '';
+        if (deptEl) deptEl.value = 'all';
+        currentFilterStatus = 'all';
+        document.querySelectorAll('.filter-tag').forEach((tag) => tag.classList.remove('active'));
+        const allTag = Array.from(document.querySelectorAll('.filter-tag')).find((tag) => normalizeText(tag.textContent) === 'all');
+        if (allTag) allTag.classList.add('active');
+        applyCurrentFilter();
+      });
     });
   </script>
 </body>

@@ -421,3 +421,27 @@ log1775924584744|2026-04-12 00:23:04|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|
 log1775924590042|2026-04-12 00:23:10|ta001|luming|TA|LOGIN|login|success
 log1775924599339|2026-04-12 00:23:19|ta001|luming|TA|LOGOUT|logout|success
 log1775924603508|2026-04-12 00:23:23|admin001|管理员|Admin|LOGIN|login|success
+log1775978553702|2026-04-12 15:22:33|ta001|luming|TA|LOGIN|login|success
+log1775978579608|2026-04-12 15:22:59|ta001|luming|TA|LOGOUT|logout|success
+log1775978582728|2026-04-12 15:23:02|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775978622725|2026-04-12 15:23:42|mo_smith|Dr. Smith (Java Module)|MO|CREATE_POSITION|D|success
+log1775978686689|2026-04-12 15:24:46|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775983141235|2026-04-12 16:39:01|ta001|luming|TA|LOGIN|login|success
+log1775983145017|2026-04-12 16:39:05|ta001|luming|TA|LOGOUT|logout|success
+log1775983148493|2026-04-12 16:39:08|ta001||TA|LOGIN|login|failed
+log1775983175677|2026-04-12 16:39:35|ta001|luming|TA|LOGIN|login|success
+log1775983206510|2026-04-12 16:40:06|ta001|luming|TA|UPDATE_PROFILE|profile|success
+log1775983241928|2026-04-12 16:40:41|ta001|luming|TA|SUBMIT_APPLICATION|pos1775823635943|success
+log1775983291388|2026-04-12 16:41:31|ta001|luming|TA|LOGOUT|logout|success
+log1775983296934|2026-04-12 16:41:36|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775983307054|2026-04-12 16:41:47|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775983313479|2026-04-12 16:41:53|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775983338597|2026-04-12 16:42:18|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION|pos1775647626466|success
+log1775983344128|2026-04-12 16:42:24|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION|pos1775647626466|success
+log1775983371383|2026-04-12 16:42:51|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775647667256 -> reject|success
+log1775983376688|2026-04-12 16:42:56|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775924115139 -> accept|success
+log1775983442008|2026-04-12 16:44:02|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775983447803|2026-04-12 16:44:07|admin001|管理员|Admin|LOGIN|login|success
+log1775983626885|2026-04-12 16:47:06|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|2023213247 -> inactive|success
+log1775983634028|2026-04-12 16:47:14|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|2023213247 -> active|success
+log1775983647592|2026-04-12 16:47:27|admin001|管理员|Admin|LOGOUT|logout|success
