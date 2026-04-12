@@ -1,0 +1,3 @@
+ntf1775924115139|application|Application Submitted|Your application was submitted.|2026-04-12 00:15:15|0
+ntf1775924544963|application|Application Submitted|Your application was submitted.|2026-04-12 00:22:24|0
+ntf1775924574710|application|Application Result|Your application has been accepted|2026-04-12 00:22:54|0

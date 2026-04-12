@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -599,10 +599,12 @@
     let profileCompleteForApply = false;
     const profileApplyHint = 'Please complete your profile (basic information, skills & availability, resume) before applying';
 
+    // 功能：标准化文本输入，便于比较与搜索。
     function normalizeText(value) {
       return String(value || '').trim().toLowerCase();
     }
 
+    // 功能：标准化筛选状态值。
     function normalizeStatusFilter(value) {
       const v = normalizeText(value);
       if (!v || v === 'all' || v.includes('all status') || v.includes('all')) {
@@ -617,14 +619,17 @@
       return 'all';
     }
 
+    // 功能：判断条件是否成立。
     function isClosedPosition(position) {
       return normalizeText(position && position.status) === 'closed';
     }
 
+    // 功能：判断是否具备指定状态。
     function hasApplied(positionId) {
       return !!positionId && appliedPositionIds.has(String(positionId));
     }
 
+    // 功能：判断条件是否成立。
     function isProfileComplete(profile) {
       if (!profile || typeof profile !== 'object') {
         return false;
@@ -643,6 +648,7 @@
       );
     }
 
+    // 功能：转义 HTML 特殊字符，降低 XSS 风险。
     function escapeHtml(value) {
       return String(value || '')
         .replace(/&/g, '&amp;')
@@ -652,6 +658,7 @@
         .replace(/'/g, '&#39;');
     }
 
+    // 功能：判断条件是否成立。
     function isMeaningfulFilterOption(value) {
       const v = normalizeText(value).trim();
       if (!v) return false;
@@ -666,6 +673,7 @@
       return true;
     }
 
+    // 功能：处理 extractTokens 相关逻辑。
     function extractTokens(text) {
       const source = String(text || '');
       return source
@@ -675,6 +683,7 @@
         .filter((s) => isMeaningfulFilterOption(s));
     }
 
+    // 功能：渲染界面内容。
     function renderDynamicFilterGroup(containerId, cssClass, options, idPrefix) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -697,6 +706,7 @@
       }).join('');
     }
 
+    // 功能：处理 buildDynamicFilterOptions 相关逻辑。
     function buildDynamicFilterOptions(positions) {
       const majorSet = new Set();
       const skillSet = new Set();
@@ -733,12 +743,14 @@
       renderDynamicFilterGroup('skillOptions', 'filter-skill', skills, 'skillDynamic');
     }
 
+    // 功能：获取当前所需数据。
     function getCheckedValues(selector) {
       return Array.from(document.querySelectorAll(selector))
         .filter((el) => el.checked)
         .map((el) => normalizeText(el.value));
     }
 
+    // 功能：判断条件是否成立。
     function isClosingSoon(deadline) {
       if (!deadline) return false;
       const d = new Date(deadline + 'T23:59:59');
@@ -748,12 +760,14 @@
       return days >= 0 && days <= 3;
     }
 
+    // 功能：处理 matchAnyKeyword 相关逻辑。
     function matchAnyKeyword(haystack, keywords) {
       if (!keywords.length) return true;
       const text = normalizeText(haystack);
       return keywords.some((k) => text.includes(k));
     }
 
+    // 功能：应用当前筛选条件并刷新结果。
     function applyFilters() {
       const courseName = normalizeText(document.getElementById('filterCourseName')?.value || '');
       const majors = getCheckedValues('.filter-major');
@@ -803,6 +817,7 @@
       renderPositions(currentPositions);
     }
 
+    // 功能：处理 resetFilters 相关逻辑。
     function resetFilters() {
       const nameInput = document.getElementById('filterCourseName');
       const statusSelect = document.getElementById('filterStatus');
@@ -815,6 +830,7 @@
       renderPositions(currentPositions);
     }
 
+    // 功能：渲染岗位列表视图。
     function renderPositions(list) {
       const container = document.querySelector('.position-list');
       if (!container) {
@@ -864,6 +880,7 @@
       }).join('');
     }
 
+    // 功能：打开岗位详情弹窗并填充内容。
     function openPositionDetail(positionId) {
       selectedPositionId = positionId;
       const p = currentPositions.find((item) => item.id === positionId);
@@ -904,6 +921,7 @@
       taSystem.openModal('detailModal');
     }
 
+    // 功能：提交 TA 对岗位的申请。
     async function applyPosition(positionId) {
       const position = allPositions.find((item) => item.id === positionId);
       if (position && isClosedPosition(position)) {
@@ -934,6 +952,7 @@
       }
     }
 
+    // 功能：加载岗位数据并更新页面。
     async function loadPositions() {
       try {
         const [list, myAppsResult, profileResult] = await Promise.all([
@@ -1016,6 +1035,7 @@
 
       const applyInModal = document.querySelector('#detailModal .modal-footer .btn-primary');
       if (applyInModal) {
+        // 功能：处理当前回调逻辑。
         applyInModal.onclick = async function() {
           if (!selectedPositionId) {
             taSystem.showMessage('Please select a position first', 'warning');

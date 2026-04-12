@@ -227,6 +227,7 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
+    // 功能：转义 HTML 特殊字符，降低 XSS 风险。
     function escapeHtml(text) {
       return String(text || '')
         .replace(/&/g, '&amp;')
@@ -236,10 +237,12 @@
         .replace(/'/g, '&#39;');
     }
 
+    // 功能：标准化状态值，避免大小写与空值影响判断。
     function normalizeStatus(value) {
       return String(value || '').trim().toLowerCase();
     }
 
+    // 功能：处理 statusBadge 相关逻辑。
     function statusBadge(status) {
       const s = normalizeStatus(status);
       if (s === 'inactive') {
@@ -248,6 +251,7 @@
       return '<span class="status-badge status-active">active</span>';
     }
 
+    // 功能：渲染界面内容。
     function renderManagedUsers(listId, users, roleLabel) {
       // 渲染单个分区（TA 或 MO）的账号卡片。
       const list = document.getElementById(listId);
@@ -283,6 +287,7 @@
       }).join('');
     }
 
+    // 功能：加载相关数据并更新页面。
     async function loadManagedUsers() {
       // 分区容器与标题元素：用于 TA/MO 分区加载与数量展示。
       const taList = document.getElementById('taUserList');
@@ -311,6 +316,7 @@
       }
     }
 
+    // 功能：处理 handleAccountStatusAction 相关逻辑。
     async function handleAccountStatusAction(userId, status) {
       // 提交启停后立即刷新两个分区，保持页面与后端状态一致。
       try {

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -545,6 +545,7 @@
     };
     
     sidebarMenuItems.forEach(item => {
+      // 功能：处理当前回调逻辑。
       item.addEventListener('click', function() {
         const text = this.textContent.trim();
         const page = menuMap[text];
@@ -571,6 +572,7 @@
       existingResumeName: ''
     };
 
+    // 功能：进入下一步流程。
     function nextStep() {
       // Move forward only when current step validation passes.
       if (validateCurrentStep()) {
@@ -584,6 +586,7 @@
       }
     }
 
+    // 功能：返回上一步流程。
     function prevStep() {
       // Allow users to go back without losing in-memory selections.
       currentStep--;
@@ -592,6 +595,7 @@
       }
     }
 
+    // 功能：校验当前输入或步骤是否合法。
     function validateCurrentStep() {
       // Wizard-level gate:
       // Step 1 must have identity/academic fields, Step 2 must have at least
@@ -631,6 +635,7 @@
       return true;
     }
 
+    // 功能：处理 updateStepView 相关逻辑。
     function updateStepView() {
       // Sync both the content section and stepper UI with currentStep.
       document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
@@ -646,12 +651,14 @@
       });
     }
 
+    // 功能：切换当前状态或选中项。
     function toggleSkill(element) {
       // Multi-select skills and keep profileData.skills in sync with selected tags.
       element.classList.toggle('selected');
       profileData.skills = Array.from(document.querySelectorAll('.skill-tag.selected')).map(e => e.textContent);
     }
 
+    // 功能：处理 collectAvailableTime 相关逻辑。
     function collectAvailableTime() {
       // Convert selected timetable cells into stable slot keys for persistence.
       profileData.availableTime = Array.from(document.querySelectorAll('.time-cell.selected'))
@@ -659,6 +666,7 @@
         .filter(Boolean);
     }
 
+    // 功能：处理 handleFileUpload 相关逻辑。
     function handleFileUpload(input) {
       const file = input.files[0];
       if (file) {
@@ -694,6 +702,7 @@
       }
     }
 
+    // 功能：返回上一步流程。
     function previewResume() {
       // Preview order: newly uploaded file -> backend stored resume -> fallback URL path.
       if (profileData.resume) {
@@ -720,6 +729,7 @@
       }
     }
 
+    // 功能：处理 uploadProfileRequest 相关逻辑。
     async function uploadProfileRequest(formData) {
       // Prefer centralized API helper; fallback keeps page runnable in standalone deployments.
       if (typeof API !== 'undefined' && typeof API.uploadProfile === 'function') {
@@ -748,6 +758,7 @@
       return data;
     }
 
+    // 功能：处理 populateConfirmData 相关逻辑。
     function populateConfirmData() {
       // Render step-4 summary from current wizard state before final submit.
       document.getElementById('confirmGrade').textContent = profileData.grade;
@@ -759,6 +770,7 @@
       document.getElementById('confirmResume').textContent = profileData.resume ? profileData.resume.name : (profileData.existingResumeName || '-');
     }
 
+    // 功能：提交个人档案信息到后端。
     async function submitProfile() {
       if (!validateCurrentStep()) {
         return;
@@ -820,6 +832,7 @@
       }
     });
 
+    // 功能：初始化页面或组件状态。
     function initTimeCells() {
       // Build deterministic slot identifiers (e.g., "Mon 9:00-12:00") for each cell.
       document.querySelectorAll('.time-table tbody tr').forEach((row) => {
@@ -845,6 +858,7 @@
       collectAvailableTime();
     }
 
+    // 功能：处理 restoreAvailableTime 相关逻辑。
     function restoreAvailableTime(raw) {
       // Rehydrate timetable selections from persisted semicolon-delimited slots.
       const slots = String(raw || '').split(';').map((s) => s.trim()).filter(Boolean);
@@ -858,6 +872,7 @@
       collectAvailableTime();
     }
 
+    // 功能：判断条件是否成立。
     function isStep1Complete() {
       return Boolean(
         String(profileData.grade || '').trim() &&
@@ -867,14 +882,17 @@
       );
     }
 
+    // 功能：判断条件是否成立。
     function isStep2Complete() {
       return profileData.skills.length > 0 && profileData.availableTime.length > 0;
     }
 
+    // 功能：判断条件是否成立。
     function isStep3Complete() {
       return Boolean(profileData.resume || profileData.existingResumeName);
     }
 
+    // 功能：处理 resolveCurrentStepByCompleteness 相关逻辑。
     function resolveCurrentStepByCompleteness() {
       // Resume wizard at the first incomplete step to support edit/resume workflow.
       if (!isStep1Complete()) {
@@ -889,6 +907,7 @@
       return 4;
     }
 
+    // 功能：处理 ensureSelectOption 相关逻辑。
     function ensureSelectOption(selectId, value) {
       // Backward compatibility: add unknown option values from old profile records.
       const select = document.getElementById(selectId);
@@ -904,6 +923,7 @@
       }
     }
 
+    // 功能：加载并回填已有个人档案。
     async function loadExistingProfile() {
       try {
         // Read persisted profile from backend and hydrate the wizard state.

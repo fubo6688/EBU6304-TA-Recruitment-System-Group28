@@ -323,11 +323,10 @@ Validated from `data/users.txt`.
 | Username | Password | Role |
 |---|---|---|
 | ta002 | Ta002SecureA1 | TA |
+| ta001 | Ta001SecureA1 | TA |
+| 2023213247 | Ta2023213247A1B | TA |
 | mo001 | Mo001SecureA1 | MO |
 | admin001 | Admin001SafeA1 | Admin |
-| 20210001 | Ta20210001SafeA1 | TA |
-| M001 | MoM001SafeA1 | MO |
-| ADM001 | AdminADM001A1 | Admin |
 | admin_user | AdminUserSafeA1 | Admin |
 | admin_02 | Admin02SafeA1 | Admin |
 | mo_smith | MoSmithSafeA1 | MO |
@@ -408,7 +407,10 @@ Admin:
    - `GET /api/user/pending-registrations`
    - `POST /api/user/approve-registration`
 5. Registration no longer requires TA-only fields in register page (skills/available time).
-6. Password complexity (registration and password change):
+6. Registration uniqueness guard:
+   - Backend rejects registration when another account already has the same `role + qmId`.
+   - This prevents alias/duplicate accounts for the same person.
+7. Password complexity (registration and password change):
    - At least 8 characters
    - Must contain uppercase + lowercase + digit
    - Letters and digits only (no symbols)
