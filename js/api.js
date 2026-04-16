@@ -189,6 +189,30 @@ class API {
     });
   }
 
+  // 获取当前用户通知列表。
+  static getNotifications(type = "") {
+    const qs = type ? `?type=${encodeURIComponent(type)}` : "";
+    return API.request(`/notification/list${qs}`);
+  }
+
+  // 标记单条通知已读。
+  static markNotificationRead(notificationId) {
+    return API.request("/notification/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody({ notificationId })
+    });
+  }
+
+  // 标记所有通知已读。
+  static markAllNotificationsRead() {
+    return API.request("/notification/read-all", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody({})
+    });
+  }
+
   // 获取待审批注册账号（Admin）。
   static getPendingRegistrations() {
     return API.request("/user/pending-registrations");

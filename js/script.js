@@ -88,6 +88,7 @@ class TARecruitmentSystem {
       'My Profile': 'ta-profile.html',
       'Browse Positions': 'ta-positions.html',
       'My Applications': 'ta-applications.html',
+      'Notifications': 'ta-notifications.html',
       'Profile': 'profile.html'
     };
 
@@ -102,7 +103,6 @@ class TARecruitmentSystem {
     // Admin 角色菜单
     const adminMenuMap = {
       'Admin Dashboard': 'admin-dashboard.html',
-      'Registration Approvals': 'admin-approvals.html',
       'Account Status': 'admin-account-status.html',
       'Profile': 'profile.html'
     };
@@ -131,8 +131,6 @@ class TARecruitmentSystem {
           
           // 跳转到目标页面
           window.location.href = page;
-        } else if (userRole === 'TA' && menuText === 'Notifications') {
-          this.showMessage('This page is not available yet.', 'info');
         }
       }
     });

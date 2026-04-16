@@ -115,8 +115,28 @@ public class PositionServlet extends HttpServlet {
             }
 
             Map<String, String> created = dataManager.createPosition(title, department, salary, description, requirements, moId, openings, deadline);
+            int sentCount = 0;
+            for (User taUser : dataManager.getAllUsers()) {
+                if (!"TA".equalsIgnoreCase(value(taUser.getRole()))) {
+                    continue;
+                }
+                if (!"active".equalsIgnoreCase(value(taUser.getStatus()))) {
+                    continue;
+                }
+                dataManager.saveNotification(
+                        taUser.getUserId(),
+                        "position",
+                        "New Position Published",
+                        "A position has been published: " + title);
+                sentCount++;
+            }
             dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "CREATE_POSITION", title, "success");
-            out.print(new JSONObject().put("success", true).put("message", "Position created").put("position", new JSONObject(created)).toString());
+            out.print(new JSONObject()
+                    .put("success", true)
+                    .put("message", "Position created")
+                    .put("position", new JSONObject(created))
+                    .put("notifiedCount", sentCount)
+                    .toString());
             return;
         }
 

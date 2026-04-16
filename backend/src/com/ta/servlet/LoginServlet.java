@@ -139,15 +139,16 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        // 账号存在但非 active：给出明确提示（pending 与 inactive 区分）。
+        // 历史兼容：旧的 pending 账号在首次正确登录时自动激活。
         User existing = dataManager.getUserById(userId);
-        if (existing != null && !"active".equalsIgnoreCase(existing.getStatus()) && existing.getPassword().equals(password)) {
+        if (existing != null && existing.getPassword().equals(password)) {
             if ("pending".equalsIgnoreCase(existing.getStatus())) {
-                out.print(new JSONObject().put("success", false).put("message", "Account pending admin approval").toString());
+                existing.setStatus("active");
+                dataManager.saveUser(existing);
+            } else if (!"active".equalsIgnoreCase(existing.getStatus())) {
+                out.print(new JSONObject().put("success", false).put("message", "Account is not active").toString());
                 return;
             }
-            out.print(new JSONObject().put("success", false).put("message", "Account is not active").toString());
-            return;
         }
 
         // 统一认证失败处理：记录失败次数、可能触发锁定、写审计日志。
@@ -219,6 +220,11 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
+        if (!isAllowedRegisterEmail(email)) {
+            out.print(new JSONObject().put("success", false).put("message", "Email must end with @bupt.cn or @qmul.ac.uk").toString());
+            return;
+        }
+
         if (!isPasswordComplex(password)) {
             out.print(new JSONObject().put("success", false)
                     .put("message", "Password must be at least 8 chars with uppercase, lowercase, digit, and letters/digits only")
@@ -240,15 +246,15 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        // 新注册默认进入 pending，等待管理员审批。
+        // 新注册直接激活，不再要求管理员审批。
         User user = new User(userId, userName, email, password, normalizedRole, effectiveQmId);
-        user.setStatus("pending");
+        user.setStatus("active");
         dataManager.saveUser(user);
-        dataManager.writeLog(userId, userName, normalizedRole, "REGISTER", "pending approval", "success");
+        dataManager.writeLog(userId, userName, normalizedRole, "REGISTER", "active", "success");
 
         out.print(new JSONObject()
                 .put("success", true)
-                .put("message", "Registration submitted. Please wait for admin approval")
+            .put("message", "Registration successful. You can log in now")
                 .toString());
     }
 
@@ -260,6 +266,14 @@ public class LoginServlet extends HttpServlet {
             return false;
         }
         return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$");
+    }
+
+    /**
+     * 注册邮箱域名白名单校验。
+     */
+    private boolean isAllowedRegisterEmail(String email) {
+        String value = value(email).toLowerCase(Locale.ROOT);
+        return value.endsWith("@bupt.cn") || value.endsWith("@qmul.ac.uk");
     }
 
     /**

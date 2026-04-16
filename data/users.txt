@@ -1,15 +1,15 @@
-mo001|王老师|wangteacher@example.com|Mo001SecureA1|MO|M001|active
-admin001|管理员|admin@example.com|Admin001SafeA1|Admin|ADM001|active
-admin_user|System Manager|admin_user@example.com|AdminUserSafeA1|Admin|admin_user|active
-admin_02|Office Coordinator|admin_02@example.com|Admin02SafeA1|Admin|admin_02|active
-mo_smith|Dr. Smith (Java Module)|mo_smith@example.com|MoSmithSafeA1|MO|mo_smith|active
-mo_jones|Prof. Jones (Agile Module)|mo_jones@example.com|MoJonesSafeA1|MO|mo_jones|active
-mo_wang|Dr. Wang (Network Module)|mo_wang@example.com|MoWangSafeA1|MO|mo_wang|active
-ta_bob|Bob Li|ta_bob@example.com|TaBobSafeA1|TA|ta_bob|active
-ta_charlie|Charlie Brown|ta_charlie@example.com|TaCharlieSafeA1|TA|ta_charlie|active
-ta_david|David Wang|ta_david@example.com|TaDavidSafeA1|TA|ta_david|active
-ta_emma|Emma Wilson|ta_emma@example.com|TaEmmaSafeA1|TA|ta_emma|active
+mo001|王老师|wangteacher@qmul.ac.uk|Mo001SecureA1|MO|M001|active
+admin001|管理员|admin@bupt.cn|Admin001SafeA1|Admin|ADM001|active
+admin_user|System Manager|admin_user@bupt.cn|AdminUserSafeA1|Admin|admin_user|active
+admin_02|Office Coordinator|admin_02@bupt.cn|Admin02SafeA1|Admin|admin_02|active
+mo_smith|Dr. Smith (Java Module)|mo_smith@qmul.ac.uk|MoSmithSafeA1|MO|mo_smith|active
+mo_jones|Prof. Jones (Agile Module)|mo_jones@qmul.ac.uk|MoJonesSafeA1|MO|mo_jones|active
+mo_wang|Dr. Wang (Network Module)|mo_wang@qmul.ac.uk|MoWangSafeA1|MO|mo_wang|active
+ta_bob|Bob Li|ta_bob@bupt.cn|TaBobSafeA1|TA|ta_bob|active
+ta_charlie|Charlie Brown|ta_charlie@bupt.cn|TaCharlieSafeA1|TA|ta_charlie|active
+ta_david|David Wang|ta_david@bupt.cn|TaDavidSafeA1|TA|ta_david|active
+ta_emma|Emma Wilson|ta_emma@bupt.cn|TaEmmaSafeA1|TA|ta_emma|active
+ta_alice|Alice Zhang|ta_alice@bupt.cn|TaAliceSafeA1|TA|ta_alice|inactive
+ta002|李四|lisi@bupt.cn|Ta002SecureA1|TA|20210002|active
+ta001|luming|luming@bupt.cn|Aa123321|TA|20210001|active
 2023213247|Junyi Yan|jp2023213247@qmul.ac.uk|Ta2023213247A1B|TA|2023213247|active
-ta_alice|Alice Zhang|ta_alice@qq.com|TaAliceSafeA1|TA|ta_alice|inactive
-ta002|李四|lisi@example.com|Ta002SecureA1|TA|20210002|active
-ta001|luming|zhangsan@example.com|Aa123321|TA|20210001|active

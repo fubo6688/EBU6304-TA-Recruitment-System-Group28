@@ -1,4 +1,8 @@
-﻿20210001|Year 1|Software Engineering|0.03|zhangsan@example.com|Linux|20210001.pdf|20210001.pdf|Mon 9:00-12:00;Tue 9:00-12:00;Wed 9:00-12:00;Thu 9:00-12:00;Fri 9:00-12:00;Mon 13:00-17:00;Tue 13:00-17:00;Wed 13:00-17:00;Thu 13:00-17:00;Fri 13:00-17:00;Sat 13:00-17:00;Sun 13:00-17:00;Thu 18:00-20:00;Sat 18:00-20:00;Sun 18:00-20:00|20210001_1774257062748.jpg|2026-03-23 17:11:05
-ADM001||||admin@example.com|||||ADM001_1774258650833.png|2026-03-23 17:37:30
-ta_alice|Year 3|Computer Science and Technology|3.73|ta_alice@qq.com|Java,C++|EBU6304_01_Introduction to Software Engineering.pdf|ta_alice.pdf|Mon 9:00-12:00;Tue 9:00-12:00;Thu 9:00-12:00;Fri 9:00-12:00;Mon 13:00-17:00;Fri 13:00-17:00||2026-04-07 23:26:04
-ta001|Year 3|Software Engineering|3.60|zhangsan@example.com|Java|EBU6304_03_Requirements.pdf|ta001.pdf|Tue 9:00-12:00;Wed 13:00-17:00;Thu 18:00-20:00|ta001_1775923879807.png|2026-04-12 00:11:49
+﻿ta001|Year 3|Software Engineering|3.60|luming@bupt.cn|Java,Git,Linux|EBU6304_03_Requirements.pdf|ta001.pdf|Tue 9:00-12:00;Wed 13:00-17:00;Thu 18:00-20:00|ta001_1775923879807.png|Yes|2026-04-12 16:40:06
+ta002|Year 2|Computer Science and Technology|3.50|lisi@bupt.cn|Python,Data Structures,Algorithms|ta002_resume.pdf|ta002_resume.pdf|Mon 9:00-12:00;Tue 13:00-17:00||No|2026-04-12 18:10:00
+ta_alice|Year 3|Computer Science and Technology|3.73|ta_alice@bupt.cn|Java,C++,Python|EBU6304_01_Introduction to Software Engineering.pdf|ta_alice.pdf|Mon 9:00-12:00;Tue 9:00-12:00;Thu 9:00-12:00;Fri 13:00-17:00||No|2026-04-07 23:26:04
+ta_bob|Year 2|Software Engineering|3.45|ta_bob@bupt.cn|Java,SQL,Docker|bob_resume.pdf|bob_resume.pdf|Mon 13:00-17:00;Wed 9:00-12:00||No|2026-04-12 18:10:00
+ta_charlie|Postgraduate|Data Science|3.88|ta_charlie@bupt.cn|Python,SQL,Machine Learning|charlie_resume.pdf|charlie_resume.pdf|Tue 13:00-17:00;Thu 9:00-12:00||Yes|2026-04-12 18:10:00
+ta_david|Year 4|Cybersecurity|3.30|ta_david@bupt.cn|Linux,C++,Teaching Experience|david_resume.pdf|david_resume.pdf|Mon 9:00-12:00;Fri 9:00-12:00||No|2026-04-12 18:10:00
+ta_emma|Year 1|Information Systems|3.70|ta_emma@bupt.cn|JavaScript,SQL,Communication|emma_resume.pdf|emma_resume.pdf|Tue 9:00-12:00;Thu 13:00-17:00||No|2026-04-12 18:10:00
+2023213247|Postgraduate|Artificial Intelligence|3.92|jp2023213247@qmul.ac.uk|Python,Docker,Algorithms|junyi_resume.pdf|junyi_resume.pdf|Mon 13:00-17:00;Wed 13:00-17:00||Yes|2026-04-12 18:10:00

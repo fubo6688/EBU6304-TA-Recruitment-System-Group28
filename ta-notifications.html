@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MO Notifications - TARecruitment system</title>
+  <title>TA Notifications - TARecruitment system</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .main-layout {
@@ -156,10 +156,11 @@
 
   <div class="main-layout">
     <div class="sidebar">
-      <div class="sidebar-title">MO Function</div>
+      <div class="sidebar-title">TA Function</div>
       <ul class="sidebar-menu">
-        <li class="sidebar-menu-item">Position Management</li>
-        <li class="sidebar-menu-item">Application Review</li>
+        <li class="sidebar-menu-item">My Profile</li>
+        <li class="sidebar-menu-item">Browse Positions</li>
+        <li class="sidebar-menu-item">My Applications</li>
         <li class="sidebar-menu-item active">Notifications</li>
         <li class="sidebar-menu-item">Profile</li>
       </ul>
@@ -278,7 +279,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      const allowed = await taSystem.enforceSessionGuard(['MO']);
+      const allowed = await taSystem.enforceSessionGuard(['TA']);
       if (!allowed) {
         return;
       }

@@ -1,10 +1,6 @@
-pos1774242667613|Data Structures TA|School of Computer Science|Negotiable|Support students with tutorials, labs, and assignment guidance.|Python, Data Structures, Algorithms|M001|2|2|1|closed|2026-03-23|2026-03-23
-pos1774243599623|Algorithms TA|School of Computer Science|Negotiable|To be completed by MO.|Java, Algorithms, Problem Solving|M001|1|1|1|closed|2026-03-23|2026-03-23
-pos1774246156520|Software Engineering TA|School of Computer Science|Negotiable|To be completed by MO.|Software Engineering, Git, Teamwork|M001|1|1|0|closed|2026-03-23|2026-03-23
-pos1774246224278|Operating Systems TA|School of Computer Science|Negotiable|To be completed by MO.|Linux, C++, Operating Systems|M001|1|2|0|closed|2026-03-23|2026-03-23
-pos1774246445186|Database Systems TA|School of Computer Science|Negotiable|To be completed by MO.|SQL, Databases, Data Modeling|M001|3|0|0|closed|2026-03-23|2026-03-23
-pos1774246502692|Web Development TA|School of Computer Science|Negotiable|To be completed by MO.|JavaScript, HTML, CSS|M001|3|1|0|closed|2026-03-23|2026-03-23
-pos1775647626466|A|a|1000|111|111, Python, C|mo_smith|3|2|1|open|2026-04-08|2026-04-30
-pos1775822811757|B|b|2000|To be completed by MO|222, Python, Java|M001|2|0|0|open|2026-04-10|2026-05-01
-pos1775823635943|C|c|3000|To be completed by MO|333, Java|mo_smith|3|0|0|open|2026-04-10|2026-04-24
-pos1775924484337|base|333|Negotiable|To be completed by MO|jjjjj|mo_smith|4|1|1|open|2026-04-12|2026-04-14
+pos1775647626466|Java Programming TA|School of Computer Science|1000|Support Java labs and tutorials.|Java, Git, Communication|mo_smith|3|2|1|open|2026-04-08|2026-04-14
+pos1775822811757|Agile Development TA|Software Engineering|2000|Assist scrum workshops and project mentoring.|Java, Communication, Teaching Experience|mo_jones|2|1|0|open|2026-04-10|2026-04-22
+pos1775823635943|Network Security TA|Cyber Security|3000|Support network security labs and office hours.|Linux, C++, Teaching Experience|mo_wang|2|2|1|open|2026-04-10|2026-04-13
+pos1775924484337|Database Systems TA|Data Science|Negotiable|Help with SQL labs and assignment Q&A.|SQL, Python, Data Structures|mo_smith|2|1|1|open|2026-04-12|2026-04-24
+pos1775978622722|Machine Learning TA|Artificial Intelligence|200|Assist model implementation sessions.|Python, Docker, Algorithms|mo_smith|3|2|0|open|2026-04-12|2026-05-10
+pos1774242667613|Data Structures TA|School of Computer Science|Negotiable|Support students with tutorials and labs.|Python, Data Structures, Algorithms|M001|2|1|1|closed|2026-03-23|2026-03-23

@@ -24,6 +24,10 @@
     <url-pattern>/api/*</url-pattern>
   </filter-mapping>
 
+  <listener>
+    <listener-class>com.ta.servlet.DeadlineReminderSchedulerListener</listener-class>
+  </listener>
+
   <servlet>
     <servlet-name>LoginServlet</servlet-name>
     <servlet-class>com.ta.servlet.LoginServlet</servlet-class>
@@ -67,6 +71,15 @@
   <servlet-mapping>
     <servlet-name>AdminServlet</servlet-name>
     <url-pattern>/api/admin/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>NotificationServlet</servlet-name>
+    <servlet-class>com.ta.servlet.NotificationServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>NotificationServlet</servlet-name>
+    <url-pattern>/api/notification/*</url-pattern>
   </servlet-mapping>
 
 </web-app>

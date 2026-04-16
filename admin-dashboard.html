@@ -171,7 +171,6 @@
       <div class="sidebar-title">Admin Function</div>
       <ul class="sidebar-menu">
         <li class="sidebar-menu-item active">Admin Dashboard</li>
-        <li class="sidebar-menu-item">Registration Approvals</li>
         <li class="sidebar-menu-item">Account Status</li>
         <li class="sidebar-menu-item">Profile</li>
       </ul>
@@ -189,7 +188,7 @@
               <option value="open">Open</option>
               <option value="closed">Closed</option>
             </select>
-            <input type="text" id="courseFilter" class="form-control course-input" placeholder="Filter by course name" aria-label="Filter by course name">
+            <input type="text" id="courseFilter" class="form-control course-input" placeholder="Search by title / course / MO / ID" aria-label="Search by title / course / MO / ID">
             <button class="btn btn-sm btn-secondary" id="clearFiltersBtn">Clear</button>
             <button class="btn btn-sm btn-secondary" id="refreshBtn">Refresh</button>
           </div>
@@ -296,15 +295,17 @@
     // 功能：应用当前设置并刷新结果。
     function applyPositionFilters() {
       const status = normalizeText(document.getElementById('statusFilter')?.value || 'all');
-      const course = normalizeText(document.getElementById('courseFilter')?.value || '');
+      const keyword = normalizeText(document.getElementById('courseFilter')?.value || '');
 
       const filtered = allPositions.filter((p) => {
         const pStatus = normalizeText(p.status || 'open');
-        const pCourse = normalizeText(p.department || '');
+        const searchable = [p.id, p.title, p.department, p.moId]
+          .map((x) => normalizeText(x))
+          .join(' ');
         if (status !== 'all' && pStatus !== status) {
           return false;
         }
-        if (course && !pCourse.includes(course)) {
+        if (keyword && !searchable.includes(keyword)) {
           return false;
         }
         return true;
