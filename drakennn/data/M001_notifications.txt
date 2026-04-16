@@ -1,0 +1,15 @@
+ntf1774242715722|application|New Application|A new application needs review.|2026-03-23 13:11:55|0
+ntf1774244690916|application|New Application|A new application needs review.|2026-03-23 13:44:50|0
+ntf1774245097333|application|New Application|A new application needs review.|2026-03-23 13:51:37|0
+ntf1774255805073|application|New Application|A new application needs review.|2026-03-23 16:50:05|0
+ntf1774255818958|application|New Application|A new application needs review.|2026-03-23 16:50:18|0
+ntf1774255844190|application|New Application|A new application needs review.|2026-03-23 16:50:44|0
+ntf1774255873423|application|New Application|A new application needs review.|2026-03-23 16:51:13|0
+ntf1774259145618|application|New Application|A new application needs review.|2026-03-23 17:45:45|0
+ntf1774259475801|application|New Application|A new application needs review.|2026-03-23 17:51:15|0
+ntf1774259476722|application|New Application|A new application needs review.|2026-03-23 17:51:16|0
+ntf1774267679634|application|New Application|A new application needs review.|2026-03-23 20:07:59|0
+ntf1774267682754|application|New Application|A new application needs review.|2026-03-23 20:08:02|0
+ntf1775801924875|application|New Application|A new application needs review.|2026-04-10 14:18:44|0
+ntf1775803035655|application|New Application|A new application needs review.|2026-04-10 14:37:15|0
+ntf1775803050651|application|New Application|A new application needs review.|2026-04-10 14:37:30|0
