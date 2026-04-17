@@ -29,12 +29,12 @@ Enabled Sprint 2 workflow:
 5. MO create/edit positions, close/reopen positions, and publish notices
 6. MO review applications and process Accept/Reject decisions
 7. Admin dashboard for overall positions and TA workload monitoring
-8. Admin registration approval page in Admin sidebar
-9. Admin account status page (separate TA/MO areas) for de-active/re-active operations
+8. Admin account status page (separate TA/MO areas) for de-active/re-active operations
+9. TA and MO notification center pages
+10. Independent deadline reminder scheduler (backend timed task)
 
 Partially implemented / placeholder:
-1. MO notification page UI exists (`mo-notifications.html`), business logic pending
-2. Legacy `admin-analytics/admin-users/admin-logs` pages are replaced by current admin pages
+1. Legacy `admin-analytics/admin-users/admin-logs` pages are replaced by current admin pages
 
 ## Detailed Implemented Features (Current)
 
@@ -47,14 +47,13 @@ This section summarizes all currently implemented and testable features in this 
    - Enter account first, then login button label changes to TA Login / MO Login / Admin Login.
 3. Logout support through API and frontend state cleanup.
 4. TA/MO self-registration:
-   - New TA/MO accounts are created with `pending` status.
-   - Pending users cannot log in before admin approval.
+   - Registration email must end with `@bupt.cn` or `@qmul.ac.uk`.
+   - New TA/MO accounts are activated immediately after successful registration.
 5. Account status semantics:
    - `active`: account is enabled and can log in/use protected APIs.
    - `inactive`: account is disabled and login/protected APIs are blocked.
-   - `pending`: waiting for admin registration approval.
-6. Admin registration approval flow:
-   - Admin can approve/reject pending TA/MO accounts.
+6. Registration uniqueness guard:
+   - Backend rejects registration when another account already has the same `role + qmId`.
 7. Password policy enforcement for registration and password change:
    - Minimum 8 characters.
    - Must contain uppercase + lowercase + digit.
@@ -111,8 +110,7 @@ This section summarizes all currently implemented and testable features in this 
 4. Ownership boundaries:
    - MO can manage/review only positions/applications belonging to self (or own QM ID mapping).
 5. MO notification page:
-   - Page entry and access control are available.
-   - Full notification center business workflow remains pending.
+   - Full notification center is available (filter/search/mark-read/mark-all-read).
 
 ### 4. Admin Features
 
@@ -125,10 +123,7 @@ This section summarizes all currently implemented and testable features in this 
      - Filter by course name.
 2. TA workload monitoring:
    - Per-TA total apps, pending, approved, rejected, and current load.
-3. Registration approvals (`admin-approvals.html`):
-   - List all pending TA/MO registrations.
-   - Approve/Reject actions with immediate refresh.
-4. TA/MO account status management (`admin-account-status.html`):
+3. TA/MO account status management (`admin-account-status.html`):
    - Admin can de-active or re-active active/inactive TA and MO accounts.
    - TA and MO accounts are displayed in two separate sections.
    - Inactive accounts are blocked from protected API access and new login sessions.
@@ -142,13 +137,14 @@ This section summarizes all currently implemented and testable features in this 
 3. Notification persistence:
    - Application submitted/review result notifications.
    - Published position notifications.
+   - Deadline reminder notifications by independent timed scheduler.
 4. Operation audit logging:
-   - Login/logout, profile updates, password changes, position operations, review operations, approval operations.
+   - Login/logout, profile updates, password changes, position operations, review operations, account-status operations.
 
 ### 6. API and Permission Enforcement
 
 1. API groups:
-   - `/api/login`, `/api/user/*`, `/api/position/*`, `/api/application/*`, `/api/admin/*`.
+   - `/api/login`, `/api/user/*`, `/api/position/*`, `/api/application/*`, `/api/admin/*`, `/api/notification/*`.
 2. Backend permission checks are role-aware:
    - Admin-only endpoints for admin operations.
    - MO/Admin checks for position/review management.
@@ -178,7 +174,6 @@ This section summarizes all currently implemented and testable features in this 
 |- mo-notifications.html
 |- mo-review.html
 |- admin-dashboard.html
-|- admin-approvals.html
 |- admin-account-status.html
 |- css/
 |- js/
@@ -323,7 +318,7 @@ Validated from `data/users.txt`.
 | Username | Password | Role |
 |---|---|---|
 | ta002 | Ta002SecureA1 | TA |
-| ta001 | Ta001SecureA1 | TA |
+| ta001 | Aa123321 | TA |
 | 2023213247 | Ta2023213247A1B | TA |
 | mo001 | Mo001SecureA1 | MO |
 | admin001 | Admin001SafeA1 | Admin |
@@ -362,7 +357,7 @@ Detailed Sprint 2 API endpoints:
 Authentication:
 1. `POST /api/login`
 2. `GET /api/login?action=logout`
-3. `POST /api/login` with `action=register` (TA/MO self-registration, pending admin approval)
+3. `POST /api/login` with `action=register` (TA/MO self-registration, direct activation)
 
 User:
 1. `GET /api/user/profile`
@@ -370,10 +365,13 @@ User:
 3. `POST /api/user/password`
 4. `GET /api/user/ta-profile`
 5. `GET /api/user/resume`
-6. `GET /api/user/pending-registrations` (Admin only)
-7. `POST /api/user/approve-registration` (Admin only, decision=`approve|reject`)
-8. `GET /api/user/managed-users` (Admin only, active/inactive TA/MO list)
-9. `POST /api/user/account-status` (Admin only, status=`active|inactive|deactive|reactive`)
+6. `GET /api/user/managed-users` (Admin only, active/inactive TA/MO list)
+7. `POST /api/user/account-status` (Admin only, status=`active|inactive|deactive|reactive`)
+
+Notification:
+1. `GET /api/notification/list`
+2. `POST /api/notification/read`
+3. `POST /api/notification/read-all`
 
 Admin account status page behavior:
 1. Location: `admin-account-status.html` in Admin sidebar.
@@ -401,19 +399,24 @@ Admin:
 ## Registration and Password Policy
 
 1. TA and MO users can register on the login page.
-2. New registrations are created with `pending` status.
-3. Pending users cannot log in until Admin approval.
-4. Admin can approve/reject from API:
-   - `GET /api/user/pending-registrations`
-   - `POST /api/user/approve-registration`
-5. Registration no longer requires TA-only fields in register page (skills/available time).
-6. Registration uniqueness guard:
+2. Registration email must end with `@bupt.cn` or `@qmul.ac.uk`.
+3. New registrations are activated immediately after registration success.
+4. Registration no longer requires TA-only fields in register page (skills/available time).
+5. Registration uniqueness guard:
    - Backend rejects registration when another account already has the same `role + qmId`.
    - This prevents alias/duplicate accounts for the same person.
-7. Password complexity (registration and password change):
+6. Password complexity (registration and password change):
    - At least 8 characters
    - Must contain uppercase + lowercase + digit
    - Letters and digits only (no symbols)
+
+## Deadline Reminder Scheduler
+
+1. Deadline reminders now run as an independent backend timed task (`DeadlineReminderSchedulerListener`).
+2. Default scan interval is every 60 minutes.
+3. Optional runtime system properties:
+   - `ta.deadline.reminder.interval.minutes`
+   - `ta.deadline.reminder.initial.delay.seconds`
 
 ## Backend Build and Deployment Details
 
@@ -465,7 +468,7 @@ Use this order during demo/viva:
 5. Login as TA -> browse positions and apply
 6. Login as TA -> open `ta-applications.html` and check status is pending
 7. Login as MO -> open `mo-review.html` and Accept/Reject applicants
-8. Login as Admin -> open `admin-dashboard.html` and `admin-approvals.html`
+8. Login as Admin -> open `admin-dashboard.html`
 9. Login as Admin -> open `admin-account-status.html` and test De-active/Re-active on TA/MO accounts
 
 ## Troubleshooting

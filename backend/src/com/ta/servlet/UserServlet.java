@@ -241,6 +241,7 @@ public class UserServlet extends HttpServlet {
                 result.put("grade", profile.get("grade"));
                 result.put("major", profile.get("major"));
                 result.put("gpa", profile.get("gpa"));
+                result.put("taExperience", profile.get("taExperience"));
                 result.put("skills", profile.get("skills"));
                 result.put("resumeFileName", profile.get("resumeFileName"));
                 result.put("availableTime", profile.get("availableTime"));
@@ -294,6 +295,7 @@ public class UserServlet extends HttpServlet {
                 result.put("grade", profile.get("grade"));
                 result.put("major", profile.get("major"));
                 result.put("gpa", profile.get("gpa"));
+                result.put("taExperience", profile.get("taExperience"));
                 result.put("skills", profile.get("skills"));
                 result.put("resumeFileName", profile.get("resumeFileName"));
                 result.put("availableTime", profile.get("availableTime"));
@@ -397,7 +399,7 @@ public class UserServlet extends HttpServlet {
             }
 
             if ("pending".equalsIgnoreCase(value(target.getStatus()))) {
-                out.print(new JSONObject().put("success", false).put("message", "Pending accounts should be handled in Registration Approvals").toString());
+                out.print(new JSONObject().put("success", false).put("message", "Pending accounts are deprecated in current flow").toString());
                 return;
             }
 
@@ -430,6 +432,7 @@ public class UserServlet extends HttpServlet {
             String grade = value(req.getParameter("grade"));
             String major = value(req.getParameter("major"));
             String gpa = value(req.getParameter("gpa"));
+            String taExperience = value(req.getParameter("taExperience"));
             String skills = value(req.getParameter("skills"));
             String availableTime = value(req.getParameter("availableTime"));
             String resumeFileName = value(req.getParameter("resumeFileName"));
@@ -447,6 +450,9 @@ public class UserServlet extends HttpServlet {
                 }
                 if (gpa.isEmpty()) {
                     gpa = value(oldProfile.get("gpa"));
+                }
+                if (taExperience.isEmpty()) {
+                    taExperience = value(oldProfile.get("taExperience"));
                 }
                 if (email.isEmpty()) {
                     email = value(oldProfile.get("email"));
@@ -539,8 +545,9 @@ public class UserServlet extends HttpServlet {
                     skills,
                     resumeFileName,
                     resumeStoredName,
-                        availableTime,
-                        avatarStoredName);
+                    availableTime,
+                    avatarStoredName,
+                    taExperience);
             dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "UPDATE_PROFILE", "profile", "success");
 
             HttpSession session = req.getSession(false);
@@ -554,6 +561,7 @@ public class UserServlet extends HttpServlet {
                     .put("message", "Profile updated")
                     .put("resumeFileName", resumeFileName)
                     .put("availableTime", availableTime)
+                    .put("taExperience", taExperience)
                     .put("avatarUrl", buildAvatarUrl(req, user.getUserId(), avatarStoredName))
                     .put("user", toUserJson(user))
                     .toString());

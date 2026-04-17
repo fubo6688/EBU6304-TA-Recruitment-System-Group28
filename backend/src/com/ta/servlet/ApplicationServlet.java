@@ -13,8 +13,10 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 申请流程 Servlet。
@@ -24,6 +26,8 @@ import java.util.Map;
  */
 public class ApplicationServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
+    private static final int MAX_ACTIVE_APPLICATIONS = 5;
+    private static final int MAX_APPROVED_APPLICATIONS = 3;
 
     /**
      * 处理申请查询类 GET 接口（审核列表、我的申请）。
@@ -136,6 +140,57 @@ public class ApplicationServlet extends HttpServlet {
                 return;
             }
 
+            Map<String, String> profile = getProfileForApply(user);
+            if (!isProfileCompleteForApply(profile)) {
+                out.print(new JSONObject()
+                        .put("success", false)
+                        .put("message", "Please complete your profile (grade, major, email, skills, available time, resume) before applying")
+                        .toString());
+                return;
+            }
+
+            int approvedCount = dataManager.countApprovedApplicationsForUser(user.getUserId());
+            if (approvedCount >= MAX_APPROVED_APPLICATIONS) {
+                List<Map<String, String>> autoRejected = dataManager.rejectPendingApplicationsForUser(
+                        user.getUserId(),
+                        "",
+                        "Auto rejected: reached accepted quota (max 3).");
+
+                if (!autoRejected.isEmpty()) {
+                    dataManager.saveNotification(
+                            user.getUserId(),
+                            "application",
+                            "Pending Applications Auto Rejected",
+                            autoRejected.size() + " pending application(s) were auto rejected because you already have 3 accepted positions.");
+
+                    Set<String> notifiedMoUserIds = new LinkedHashSet<>();
+                    for (Map<String, String> rejected : autoRejected) {
+                        String moId = value(rejected.get("moId"));
+                        notifyMoUsers(
+                                moId,
+                                "application",
+                                "Application Auto Rejected",
+                                "A pending application was auto rejected because the TA has reached the accepted quota.",
+                                notifiedMoUserIds);
+                    }
+                }
+
+                out.print(new JSONObject()
+                        .put("success", false)
+                        .put("message", "You already have 3 accepted positions and cannot submit new applications")
+                        .toString());
+                return;
+            }
+
+            int activeCount = dataManager.countActiveApplicationsForUser(user.getUserId());
+            if (activeCount >= MAX_ACTIVE_APPLICATIONS) {
+                out.print(new JSONObject()
+                        .put("success", false)
+                        .put("message", "You can hold at most 5 active applications (pending + approved)")
+                        .toString());
+                return;
+            }
+
             // Submission rule for TA flow:
             // only allow apply when target position exists and is not closed,
             // then create pending application + related notifications.
@@ -166,10 +221,7 @@ public class ApplicationServlet extends HttpServlet {
 
             // 提交后双向通知：TA 收到提交成功，MO 收到待审核提醒。
             dataManager.saveNotification(user.getUserId(), "application", "Application Submitted", "Your application was submitted.");
-            String moId = app.get("moId");
-            if (moId != null && !moId.isEmpty()) {
-                dataManager.saveNotification(moId, "application", "New Application", "A new application needs review.");
-            }
+            notifyMoUsers(value(app.get("moId")), "application", "New Application", "A new application needs review.");
             dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "SUBMIT_APPLICATION", positionId, "success");
 
             out.print(new JSONObject().put("success", true).put("message", "Application submitted").put("application", new JSONObject(app)).toString());
@@ -211,6 +263,22 @@ public class ApplicationServlet extends HttpServlet {
                 return;
             }
 
+            String taUserId = value(app.get("userId"));
+            boolean tryApprove = "accept".equals(normalizedDecision)
+                    || "accepted".equals(normalizedDecision)
+                    || "approve".equals(normalizedDecision)
+                    || "approved".equals(normalizedDecision);
+            if (tryApprove && !"approved".equalsIgnoreCase(value(app.get("status")))) {
+                int approvedCount = dataManager.countApprovedApplicationsForUser(taUserId);
+                if (approvedCount >= MAX_APPROVED_APPLICATIONS) {
+                    out.print(new JSONObject()
+                            .put("success", false)
+                            .put("message", "This TA already has 3 accepted positions. Cannot approve more applications")
+                            .toString());
+                    return;
+                }
+            }
+
             boolean ok = dataManager.processApplication(applicationId, decision, feedback);
             if (!ok) {
                 out.print(new JSONObject().put("success", false).put("message", "Failed to update application").toString());
@@ -218,7 +286,7 @@ public class ApplicationServlet extends HttpServlet {
             }
 
             Map<String, String> updated = dataManager.getApplicationById(applicationId);
-            String taUserId = value(app.get("userId"));
+            int autoRejectedCount = 0;
             if (!taUserId.isEmpty()) {
                 // 按最终状态生成面向 TA 的结果通知文案。
                 String actionText = "Application reviewed";
@@ -229,10 +297,43 @@ public class ApplicationServlet extends HttpServlet {
                     actionText = "Your application has been rejected";
                 }
                 dataManager.saveNotification(taUserId, "application", "Application Result", actionText);
+
+                if ("approved".equalsIgnoreCase(status)
+                        && dataManager.countApprovedApplicationsForUser(taUserId) >= MAX_APPROVED_APPLICATIONS) {
+                    List<Map<String, String>> autoRejected = dataManager.rejectPendingApplicationsForUser(
+                            taUserId,
+                            applicationId,
+                            "Auto rejected: reached accepted quota (max 3).");
+                    autoRejectedCount = autoRejected.size();
+
+                    if (!autoRejected.isEmpty()) {
+                        dataManager.saveNotification(
+                                taUserId,
+                                "application",
+                                "Pending Applications Auto Rejected",
+                                autoRejected.size() + " pending application(s) were auto rejected because you already have 3 accepted positions.");
+
+                        Set<String> notifiedMoUserIds = new LinkedHashSet<>();
+                        for (Map<String, String> rejected : autoRejected) {
+                            String moId = value(rejected.get("moId"));
+                            notifyMoUsers(
+                                    moId,
+                                    "application",
+                                    "Application Auto Rejected",
+                                    "A pending application was auto rejected because the TA has reached the accepted quota.",
+                                    notifiedMoUserIds);
+                        }
+                    }
+                }
             }
             dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "REVIEW_APPLICATION", applicationId + " -> " + decision, "success");
 
-            out.print(new JSONObject().put("success", true).put("message", "Application updated").put("application", new JSONObject(updated)).toString());
+            out.print(new JSONObject()
+                    .put("success", true)
+                    .put("message", "Application updated")
+                    .put("application", new JSONObject(updated))
+                    .put("autoRejectedCount", autoRejectedCount)
+                    .toString());
             return;
         }
 
@@ -308,6 +409,43 @@ public class ApplicationServlet extends HttpServlet {
     }
 
     /**
+     * 按 moId（兼容 userId/qmId）向对应 MO 账号发送通知。
+     */
+    private void notifyMoUsers(String moId, String type, String title, String message) {
+        notifyMoUsers(moId, type, title, message, null);
+    }
+
+    /**
+     * 发送 MO 通知并可选按 userId 去重，避免同一批次重复提醒。
+     */
+    private void notifyMoUsers(String moId,
+                               String type,
+                               String title,
+                               String message,
+                               Set<String> dedupeUserIds) {
+        String target = value(moId);
+        Set<String> moUserIds = dataManager.resolveMoNotificationUserIds(target);
+
+        if (moUserIds.isEmpty() && !target.isEmpty()) {
+            // 兜底：未知标识时按原始值写入，兼容历史脏数据场景。
+            if (dedupeUserIds == null || dedupeUserIds.add(target)) {
+                dataManager.saveNotification(target, type, title, message);
+            }
+            return;
+        }
+
+        for (String moUserId : moUserIds) {
+            if (moUserId.isEmpty()) {
+                continue;
+            }
+            if (dedupeUserIds != null && !dedupeUserIds.add(moUserId)) {
+                continue;
+            }
+            dataManager.saveNotification(moUserId, type, title, message);
+        }
+    }
+
+    /**
      * 获取投递校验所需档案，兼容 userId 与 qmId 双键。
      */
     private Map<String, String> getProfileForApply(User user) {
@@ -337,7 +475,6 @@ public class ApplicationServlet extends HttpServlet {
 
         String grade = value(profile.get("grade"));
         String major = value(profile.get("major"));
-        String gpa = value(profile.get("gpa"));
         String email = value(profile.get("email"));
         String skills = value(profile.get("skills"));
         String availableTime = value(profile.get("availableTime"));
@@ -346,7 +483,6 @@ public class ApplicationServlet extends HttpServlet {
 
         return !grade.isEmpty()
                 && !major.isEmpty()
-                && !gpa.isEmpty()
                 && !email.isEmpty()
                 && !skills.isEmpty()
                 && !availableTime.isEmpty()

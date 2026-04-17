@@ -368,6 +368,7 @@
                 <option value="Year 2">Year 2</option>
                 <option value="Year 3">Year 3</option>
                 <option value="Year 4">Year 4</option>
+                <option value="Postgraduate">Postgraduate</option>
               </select>
             </div>
             <div class="form-group">
@@ -377,15 +378,26 @@
                 <option value="Computer Science and Technology">Computer Science and Technology</option>
                 <option value="Software Engineering">Software Engineering</option>
                 <option value="Cybersecurity">Cybersecurity</option>
+                <option value="Data Science">Data Science</option>
+                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                <option value="Information Systems">Information Systems</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label required">GPA</label>
-              <input type="number" class="form-control" id="gpa" placeholder="Enter GPA" step="0.01" min="0" max="4" required>
+              <label class="form-label">GPA (optional)</label>
+              <input type="number" class="form-control" id="gpa" placeholder="Enter GPA" step="0.01" min="0" max="4">
             </div>
             <div class="form-group">
               <label class="form-label required">Contact Email</label>
               <input type="email" class="form-control" id="email" placeholder="Enter email" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">TA Experience (optional)</label>
+              <select class="form-control" id="taExperience">
+                <option value="">-- Select --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
             </div>
           </div>
           <div class="form-controls">
@@ -503,8 +515,12 @@
               <span class="confirm-value" id="confirmMajor">-</span>
             </div>
             <div class="confirm-row">
-              <span class="confirm-label">GPA</span>
+              <span class="confirm-label">GPA (optional)</span>
               <span class="confirm-value" id="confirmGPA">-</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">TA Experience</span>
+              <span class="confirm-value" id="confirmTaExperience">-</span>
             </div>
             <div class="confirm-row">
               <span class="confirm-label">Mail</span>
@@ -541,6 +557,8 @@
     const menuMap = {
       'My Profile': 'ta-profile.html',
       'Browse Positions': 'ta-positions.html',
+      'My Applications': 'ta-applications.html',
+      'Notifications': 'ta-notifications.html',
       'Profile': 'profile.html'
     };
     
@@ -565,6 +583,7 @@
       grade: '',
       major: '',
       gpa: '',
+      taExperience: '',
       email: '',
       skills: [],
       availableTime: [],
@@ -605,9 +624,10 @@
         const grade = document.getElementById('grade').value;
         const major = document.getElementById('major').value;
         const gpa = document.getElementById('gpa').value;
+        const taExperience = document.getElementById('taExperience').value;
         const email = document.getElementById('email').value;
 
-        if (!grade || !major || !gpa || !email) {
+        if (!grade || !major || !email) {
           taSystem.showMessage('Please complete all required fields', 'danger');
           return false;
         }
@@ -615,6 +635,7 @@
         profileData.grade = grade;
         profileData.major = major;
         profileData.gpa = gpa;
+        profileData.taExperience = taExperience;
         profileData.email = email;
       } else if (currentStep === 2) {
         if (profileData.skills.length === 0) {
@@ -763,7 +784,8 @@
       // Render step-4 summary from current wizard state before final submit.
       document.getElementById('confirmGrade').textContent = profileData.grade;
       document.getElementById('confirmMajor').textContent = profileData.major;
-      document.getElementById('confirmGPA').textContent = profileData.gpa;
+      document.getElementById('confirmGPA').textContent = profileData.gpa || '-';
+      document.getElementById('confirmTaExperience').textContent = profileData.taExperience || '-';
       document.getElementById('confirmEmail').textContent = profileData.email;
       document.getElementById('confirmSkills').textContent = profileData.skills.length ? profileData.skills.join(', ') : '-';
       document.getElementById('confirmAvailableTime').textContent = profileData.availableTime.length ? profileData.availableTime.join('; ') : '-';
@@ -786,6 +808,7 @@
         form.append('grade', profileData.grade || '');
         form.append('major', profileData.major || '');
         form.append('gpa', profileData.gpa || '');
+        form.append('taExperience', profileData.taExperience || '');
         form.append('skills', (profileData.skills || []).join(','));
         form.append('availableTime', (profileData.availableTime || []).join(';'));
         form.append('resumeFileName', profileData.resume ? profileData.resume.name : (profileData.existingResumeName || ''));
@@ -877,7 +900,6 @@
       return Boolean(
         String(profileData.grade || '').trim() &&
         String(profileData.major || '').trim() &&
-        String(profileData.gpa || '').trim() &&
         String(profileData.email || '').trim()
       );
     }
@@ -935,16 +957,19 @@
         profileData.grade = profile.grade || '';
         profileData.major = profile.major || '';
         profileData.gpa = profile.gpa || '';
+        profileData.taExperience = profile.taExperience || '';
         profileData.email = profile.email || '';
         profileData.skills = (profile.skills || '').split(',').map((s) => s.trim()).filter(Boolean);
         profileData.existingResumeName = profile.resumeFileName || '';
 
         ensureSelectOption('grade', profileData.grade);
         ensureSelectOption('major', profileData.major);
+        ensureSelectOption('taExperience', profileData.taExperience);
 
         document.getElementById('grade').value = profileData.grade;
         document.getElementById('major').value = profileData.major;
         document.getElementById('gpa').value = profileData.gpa;
+        document.getElementById('taExperience').value = profileData.taExperience;
         document.getElementById('email').value = profileData.email;
 
         document.querySelectorAll('.skill-tag').forEach((el) => {

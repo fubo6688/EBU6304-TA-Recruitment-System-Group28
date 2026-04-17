@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TA Notifications - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: var(--gray-100);
+      padding: 20px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .sidebar-menu-item:hover {
+      background-color: var(--gray-200);
+      color: var(--primary-color);
+    }
+
+    .sidebar-menu-item.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      border: 1px solid var(--gray-300);
+      background: #fff;
+      color: #334155;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: #fff;
+    }
+
+    .list-wrap {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .notification-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .notification-item:last-child {
+      border-bottom: none;
+    }
+
+    .notification-item.unread {
+      background: #f8fbff;
+    }
+
+    .notification-title {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .notification-meta {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 6px;
+    }
+
+    .notification-text {
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.6;
+    }
+
+    .notification-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--gray-500);
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">TA</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a class="topbar-link" href="profile.html">Profile</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="sidebar-title">TA Function</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item">My Profile</li>
+        <li class="sidebar-menu-item">Browse Positions</li>
+        <li class="sidebar-menu-item">My Applications</li>
+        <li class="sidebar-menu-item active">Notifications</li>
+        <li class="sidebar-menu-item">Profile</li>
+      </ul>
+    </div>
+
+    <div class="content">
+      <div class="toolbar">
+        <h2 style="margin:0;">Notifications</h2>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input id="notificationKeyword" type="text" class="form-control" placeholder="Search notifications" style="min-width:220px;height:34px;font-size:12px;">
+          <button class="btn btn-secondary btn-sm" id="clearKeywordBtn">Clear</button>
+          <button class="btn btn-secondary btn-sm" id="markAllBtn">Mark All Read</button>
+          <button class="btn btn-outline btn-sm" id="refreshBtn">Refresh</button>
+        </div>
+      </div>
+
+      <div class="filters" id="filters">
+        <button type="button" class="filter-btn active" data-type="all">All</button>
+        <button type="button" class="filter-btn" data-type="application">Application</button>
+        <button type="button" class="filter-btn" data-type="position">Position</button>
+        <button type="button" class="filter-btn" data-type="deadline">Deadline</button>
+      </div>
+
+      <div class="list-wrap" style="margin-top:12px;">
+        <div id="notificationList" class="empty">Loading notifications...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    let allNotifications = [];
+    let currentType = 'all';
+    let currentKeyword = '';
+
+    function normalizeType(value) {
+      const v = String(value || '').trim().toLowerCase();
+      if (!v) return 'system';
+      return v;
+    }
+
+    function renderNotifications() {
+      const listEl = document.getElementById('notificationList');
+      if (!listEl) return;
+
+      const listByType = (currentType === 'all')
+        ? allNotifications
+        : allNotifications.filter((item) => normalizeType(item.type) === currentType);
+
+      const list = listByType.filter((item) => {
+        if (!currentKeyword) {
+          return true;
+        }
+        const searchable = [item.title, item.message, item.time, item.type]
+          .map((x) => String(x || '').toLowerCase())
+          .join(' ');
+        return searchable.includes(currentKeyword);
+      });
+
+      if (!list.length) {
+        listEl.className = 'empty';
+        listEl.innerHTML = 'No notifications';
+        return;
+      }
+
+      listEl.className = '';
+      listEl.innerHTML = list.map((item) => {
+        const isRead = String(item.read || '0') === '1';
+        const type = normalizeType(item.type);
+        return `
+          <div class="notification-item ${isRead ? '' : 'unread'}" data-id="${item.id || ''}">
+            <div>
+              <div class="notification-title">${item.title || 'Notification'}</div>
+              <div class="notification-meta">${type.toUpperCase()} · ${item.time || '-'}</div>
+              <div class="notification-text">${item.message || ''}</div>
+            </div>
+            <div class="notification-actions">
+              ${isRead ? '<span style="font-size:12px;color:var(--gray-500);">Read</span>' : `<button class="btn btn-outline btn-sm" data-action="read" data-id="${item.id || ''}">Mark Read</button>`}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadNotifications() {
+      try {
+        const result = await API.getNotifications();
+        const items = result && Array.isArray(result.notifications) ? result.notifications : [];
+        allNotifications = items;
+        renderNotifications();
+      } catch (error) {
+        const listEl = document.getElementById('notificationList');
+        if (listEl) {
+          listEl.className = 'empty';
+          listEl.innerHTML = error.message || 'Failed to load notifications';
+        }
+      }
+    }
+
+    async function markRead(id) {
+      try {
+        const result = await API.markNotificationRead(id);
+        if (!result || !result.success) {
+          taSystem.showMessage((result && result.message) || 'Failed to mark notification', 'danger');
+          return;
+        }
+        const target = allNotifications.find((item) => String(item.id) === String(id));
+        if (target) {
+          target.read = '1';
+        }
+        renderNotifications();
+      } catch (error) {
+        taSystem.showMessage(error.message || 'Failed to mark notification', 'danger');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const allowed = await taSystem.enforceSessionGuard(['TA']);
+      if (!allowed) {
+        return;
+      }
+
+      await loadNotifications();
+
+      document.getElementById('refreshBtn')?.addEventListener('click', loadNotifications);
+      document.getElementById('notificationKeyword')?.addEventListener('input', (e) => {
+        currentKeyword = String(e.target.value || '').trim().toLowerCase();
+        renderNotifications();
+      });
+      document.getElementById('clearKeywordBtn')?.addEventListener('click', () => {
+        const input = document.getElementById('notificationKeyword');
+        if (input) input.value = '';
+        currentKeyword = '';
+        renderNotifications();
+      });
+      document.getElementById('markAllBtn')?.addEventListener('click', async () => {
+        try {
+          const result = await API.markAllNotificationsRead();
+          if (!result || !result.success) {
+            taSystem.showMessage((result && result.message) || 'Failed to mark all', 'danger');
+            return;
+          }
+          allNotifications.forEach((item) => {
+            item.read = '1';
+          });
+          renderNotifications();
+        } catch (error) {
+          taSystem.showMessage(error.message || 'Failed to mark all', 'danger');
+        }
+      });
+
+      document.getElementById('filters')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-btn[data-type]');
+        if (!btn) return;
+        document.querySelectorAll('.filter-btn').forEach((item) => item.classList.remove('active'));
+        btn.classList.add('active');
+        currentType = normalizeType(btn.getAttribute('data-type'));
+        renderNotifications();
+      });
+
+      document.getElementById('notificationList')?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-action="read"][data-id]');
+        if (!btn) return;
+        await markRead(btn.getAttribute('data-id'));
+      });
+    });
+  </script>
+</body>
+</html>

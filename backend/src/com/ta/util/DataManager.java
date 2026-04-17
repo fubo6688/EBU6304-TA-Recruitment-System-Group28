@@ -5,6 +5,7 @@ import java.nio.file.*;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -284,14 +285,14 @@ public class DataManager {
      */
     private void initDefaultUsers() {
         List<User> users = new ArrayList<>();
-        users.add(new User("ta001", "张三", "zhangsan@example.com", "123456", "TA", "20210001"));
-        users.add(new User("ta002", "李四", "lisi@example.com", "123456", "TA", "20210002"));
-        users.add(new User("mo001", "王老师", "wangteacher@example.com", "123456", "MO", "M001"));
-        users.add(new User("admin001", "管理员", "admin@example.com", "admin123", "Admin", "ADM001"));
-        users.add(new User("20210001", "张三", "zhangsan@example.com", "123456", "TA", "20210001"));
-        users.add(new User("20210002", "李四", "lisi@example.com", "123456", "TA", "20210002"));
-        users.add(new User("M001", "王老师", "wangteacher@example.com", "123456", "MO", "M001"));
-        users.add(new User("ADM001", "管理员", "admin@example.com", "admin123", "Admin", "ADM001"));
+        users.add(new User("ta001", "张三", "zhangsan@bupt.cn", "Ta001SafeA1", "TA", "20210001"));
+        users.add(new User("ta002", "李四", "lisi@bupt.cn", "Ta002SafeA1", "TA", "20210002"));
+        users.add(new User("mo001", "王老师", "wangteacher@qmul.ac.uk", "Mo001SafeA1", "MO", "M001"));
+        users.add(new User("admin001", "管理员", "admin@bupt.cn", "Admin001SafeA1", "Admin", "ADM001"));
+        users.add(new User("20210001", "张三", "zhangsan@bupt.cn", "Ta20210001A1", "TA", "20210001"));
+        users.add(new User("20210002", "李四", "lisi@bupt.cn", "Ta20210002A1", "TA", "20210002"));
+        users.add(new User("M001", "王老师", "wangteacher@qmul.ac.uk", "MoM001SafeA1", "MO", "M001"));
+        users.add(new User("ADM001", "管理员", "admin@bupt.cn", "AdminAdm001A1", "Admin", "ADM001"));
         saveAllUsers(users);
     }
 
@@ -327,6 +328,14 @@ public class DataManager {
             positions.add(item);
         }
         return positions;
+    }
+
+    /**
+     * 执行一次截止提醒扫描任务（由独立定时任务触发）。
+     */
+    public synchronized void runDeadlineReminderSweep() {
+        List<Map<String, String>> positions = getAllPositions();
+        notifyUpcomingDeadlinePositions(positions);
     }
 
     /**
@@ -382,6 +391,135 @@ public class DataManager {
         } catch (DateTimeParseException ignore) {
             return false;
         }
+    }
+
+    /**
+     * 对 open 且 3 天内到期的岗位发送截止提醒。
+     *
+     * <p>提醒对象：</p>
+     * <ul>
+     *   <li>岗位负责人 MO（兼容 userId/qmId）</li>
+     *   <li>已申请该岗位且账号 active 的 TA（pending/approved）</li>
+     * </ul>
+     */
+    private void notifyUpcomingDeadlinePositions(List<Map<String, String>> positions) {
+        if (positions == null || positions.isEmpty()) {
+            return;
+        }
+
+        // 预先构建 active TA 集合，避免在岗位循环中重复遍历用户数据。
+        Set<String> activeTaUserIds = new LinkedHashSet<>();
+        for (User user : getAllUsers()) {
+            if (!"TA".equalsIgnoreCase(safe(user.getRole()))) {
+                continue;
+            }
+            if (!"active".equalsIgnoreCase(safe(user.getStatus()))) {
+                continue;
+            }
+            activeTaUserIds.add(safe(user.getUserId()));
+        }
+
+        // 按岗位聚合申请中的 TA，便于对临近截止岗位做定向提醒。
+        Map<String, Set<String>> taApplicantsByPosition = new HashMap<>();
+        for (Map<String, String> app : getAllApplications()) {
+            String status = safe(app.get("status")).toLowerCase(Locale.ROOT);
+            if (!("pending".equals(status) || "approved".equals(status))) {
+                continue;
+            }
+
+            String positionId = safe(app.get("positionId"));
+            String taUserId = safe(app.get("userId"));
+            if (positionId.isEmpty() || taUserId.isEmpty()) {
+                continue;
+            }
+
+            taApplicantsByPosition
+                    .computeIfAbsent(positionId, k -> new LinkedHashSet<>())
+                    .add(taUserId);
+        }
+
+        LocalDate today = LocalDate.now();
+        for (Map<String, String> p : positions) {
+            if (!"open".equalsIgnoreCase(safe(p.get("status")))) {
+                continue;
+            }
+
+            String deadlineRaw = safe(p.get("deadline"));
+            if (deadlineRaw.isEmpty()) {
+                continue;
+            }
+
+            LocalDate deadline;
+            try {
+                deadline = LocalDate.parse(deadlineRaw);
+            } catch (DateTimeParseException ex) {
+                continue;
+            }
+
+            long days = ChronoUnit.DAYS.between(today, deadline);
+            if (days < 0 || days > 3) {
+                continue;
+            }
+
+            String positionId = safe(p.get("id"));
+            String positionTitle = safe(p.get("title"));
+            String moId = safe(p.get("moId"));
+            String key = "deadlineSoon:" + positionId + ":" + deadlineRaw;
+
+            String message;
+            if (days == 0) {
+                message = "Position \"" + positionTitle + "\" closes today (" + deadlineRaw + ").";
+            } else {
+                message = "Position \"" + positionTitle + "\" closes in " + days + " day(s) (" + deadlineRaw + ").";
+            }
+
+            for (String ownerUserId : resolveMoOwnerUserIds(moId)) {
+                saveNotificationIfAbsent(ownerUserId, "position", "Position Deadline Reminder", message, key);
+            }
+
+            // 同时通知该岗位已申请且仍 active 的 TA。
+            Set<String> taUserIds = taApplicantsByPosition.getOrDefault(positionId, Collections.emptySet());
+            String taMessage;
+            if (days == 0) {
+                taMessage = "A position you applied for (\"" + positionTitle + "\") closes today (" + deadlineRaw + ").";
+            } else {
+                taMessage = "A position you applied for (\"" + positionTitle + "\") closes in " + days + " day(s) (" + deadlineRaw + ").";
+            }
+            for (String taUserId : taUserIds) {
+                if (!activeTaUserIds.contains(taUserId)) {
+                    continue;
+                }
+                saveNotificationIfAbsent(taUserId, "position", "Application Deadline Reminder", taMessage, key);
+            }
+        }
+    }
+
+    /**
+     * 根据岗位负责人标识（可能是 userId 或 qmId）解析对应 MO 的 userId 集合。
+     */
+    private Set<String> resolveMoOwnerUserIds(String moId) {
+        Set<String> userIds = new LinkedHashSet<>();
+        if (moId == null || moId.trim().isEmpty()) {
+            return userIds;
+        }
+
+        String target = moId.trim();
+        for (User user : getAllUsers()) {
+            if (!"MO".equalsIgnoreCase(safe(user.getRole()))) {
+                continue;
+            }
+            if (target.equalsIgnoreCase(safe(user.getUserId())) || target.equalsIgnoreCase(safe(user.getQmId()))) {
+                userIds.add(safe(user.getUserId()));
+            }
+        }
+        return userIds;
+    }
+
+    /**
+     * 对外暴露的 MO 标识解析：把 moId(userId/qmId) 统一解析为可通知的 MO userId 集合。
+     */
+    public synchronized Set<String> resolveMoNotificationUserIds(String moId) {
+        return new LinkedHashSet<>(resolveMoOwnerUserIds(moId));
     }
 
     /**
@@ -580,6 +718,78 @@ public class DataManager {
     }
 
     /**
+     * 统计指定 TA 已通过（approved）的申请数量。
+     */
+    public synchronized int countApprovedApplicationsForUser(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        for (Map<String, String> app : getAllApplications()) {
+            if (userId.equalsIgnoreCase(safe(app.get("userId"))) && "approved".equalsIgnoreCase(safe(app.get("status")))) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * 统计指定 TA 当前有效申请数（pending + approved）。
+     */
+    public synchronized int countActiveApplicationsForUser(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        for (Map<String, String> app : getAllApplications()) {
+            if (!userId.equalsIgnoreCase(safe(app.get("userId")))) {
+                continue;
+            }
+            String status = safe(app.get("status")).toLowerCase(Locale.ROOT);
+            if ("pending".equals(status) || "approved".equals(status)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * 当 TA 达到录用上限时，批量自动驳回其其余 pending 申请。
+     */
+    public synchronized List<Map<String, String>> rejectPendingApplicationsForUser(String userId,
+                                                                                     String excludeApplicationId,
+                                                                                     String feedback) {
+        List<Map<String, String>> apps = getAllApplications();
+        List<Map<String, String>> changed = new ArrayList<>();
+        List<String> lines = new ArrayList<>();
+        boolean found = false;
+
+        String excludeId = excludeApplicationId == null ? "" : excludeApplicationId.trim();
+        for (Map<String, String> app : apps) {
+            String appUserId = safe(app.get("userId"));
+            String appId = safe(app.get("id"));
+            String status = safe(app.get("status"));
+
+            if (userId != null
+                    && userId.equalsIgnoreCase(appUserId)
+                    && "pending".equalsIgnoreCase(status)
+                    && (excludeId.isEmpty() || !excludeId.equalsIgnoreCase(appId))) {
+                app.put("status", "rejected");
+                app.put("feedback", safe(feedback));
+                changed.add(new LinkedHashMap<>(app));
+                found = true;
+            }
+
+            lines.add(toApplicationLine(app));
+        }
+
+        if (found) {
+            writeLinesSafe(resolve(APPLICATIONS_FILE), lines);
+        }
+        return changed;
+    }
+
+    /**
      * 提交申请并联动岗位 appliedCount 计数。
      */
     public synchronized Map<String, String> submitApplication(String userId,
@@ -737,6 +947,45 @@ public class DataManager {
      * 保存结构化通知到用户专属通知文件。
      */
     public synchronized void saveNotification(String userId, String type, String title, String message) {
+        saveNotificationWithDedupeKey(userId, type, title, message, "");
+    }
+
+    /**
+     * 在 dedupeKey 不为空时按 key 去重保存通知。
+     */
+    public synchronized void saveNotificationIfAbsent(String userId,
+                                                      String type,
+                                                      String title,
+                                                      String message,
+                                                      String dedupeKey) {
+        String key = safe(dedupeKey);
+        if (key.isEmpty()) {
+            saveNotificationWithDedupeKey(userId, type, title, message, "");
+            return;
+        }
+
+        Path path = resolve(userId + "_notifications.txt");
+        for (String line : readLinesSafe(path)) {
+            if (line == null || line.trim().isEmpty()) {
+                continue;
+            }
+            String[] p = line.split("\\|", -1);
+            if (p.length >= 7 && key.equalsIgnoreCase(safe(p[6]))) {
+                return;
+            }
+        }
+
+        saveNotificationWithDedupeKey(userId, type, title, message, key);
+    }
+
+    /**
+     * 保存结构化通知到用户专属通知文件（含可选去重键）。
+     */
+    private void saveNotificationWithDedupeKey(String userId,
+                                               String type,
+                                               String title,
+                                               String message,
+                                               String dedupeKey) {
         // 每个用户独立通知文件，读写简单且便于按用户隔离。
         String line = String.join("|",
                 nextId("ntf"),
@@ -744,7 +993,8 @@ public class DataManager {
                 safe(title),
                 safe(message),
                 nowDateTime(),
-                "0");
+                "0",
+                safe(dedupeKey));
         appendLineSafe(resolve(userId + "_notifications.txt"), line);
     }
 
@@ -767,6 +1017,7 @@ public class DataManager {
                 item.put("message", p[3]);
                 item.put("time", p[4]);
                 item.put("read", p[5]);
+                item.put("dedupeKey", p.length >= 7 ? p[6] : "");
             } else {
                 // 兼容历史旧格式（纯文本一行），读取时补齐结构化字段。
                 item.put("id", nextId("legacy"));
@@ -775,6 +1026,7 @@ public class DataManager {
                 item.put("message", line);
                 item.put("time", nowDateTime());
                 item.put("read", "0");
+                item.put("dedupeKey", "");
             }
             notifications.add(item);
         }
@@ -824,7 +1076,8 @@ public class DataManager {
                 safe(n.get("title")),
                 safe(n.get("message")),
                 safe(n.get("time")),
-                safe(n.get("read")));
+            safe(n.get("read")),
+            safe(n.get("dedupeKey")));
     }
 
     /**
@@ -839,7 +1092,8 @@ public class DataManager {
                                          String resumeFileName,
                                          String resumeStoredName,
                                          String availableTime,
-                                         String avatarStoredName) {
+                                         String avatarStoredName,
+                                         String taExperience) {
         // Profile persistence strategy: upsert by userId in profiles.txt.
         // This allows repeated edits from TA profile page without duplicate rows.
         List<String> lines = readLinesSafe(resolve(PROFILES_FILE));
@@ -859,6 +1113,7 @@ public class DataManager {
                         safe(resumeStoredName),
                         safe(availableTime),
                         safe(avatarStoredName),
+                        safe(taExperience),
                         nowDateTime()));
                 replaced = true;
             } else {
@@ -877,6 +1132,7 @@ public class DataManager {
                     safe(resumeStoredName),
                     safe(availableTime),
                     safe(avatarStoredName),
+                    safe(taExperience),
                     nowDateTime()));
         }
         writeLinesSafe(resolve(PROFILES_FILE), updated);
@@ -888,7 +1144,7 @@ public class DataManager {
     public synchronized Map<String, String> getProfile(String userId) {
         // Backward compatibility:
         // support both legacy profile rows and newer extended rows
-        // (resumeStoredName/availableTime/avatarStoredName/updatedAt).
+        // (resumeStoredName/availableTime/avatarStoredName/taExperience/updatedAt).
         for (String line : readLinesSafe(resolve(PROFILES_FILE))) {
             String[] p = line.split("\\|", -1);
             if (p.length >= 8 && userId.equals(p[0])) {
@@ -900,21 +1156,30 @@ public class DataManager {
                 result.put("email", p[4]);
                 result.put("skills", p[5]);
                 result.put("resumeFileName", p[6]);
-                // 兼容历史字段版本：老数据缺 avatar/availableTime 时给默认值。
-                if (p.length >= 11) {
+                // 兼容历史字段版本：老数据缺 taExperience/avatar/availableTime 时给默认值。
+                if (p.length >= 12) {
                     result.put("resumeStoredName", p[7]);
                     result.put("availableTime", p[8]);
                     result.put("avatarStoredName", p[9]);
+                    result.put("taExperience", p[10]);
+                    result.put("updatedAt", p[11]);
+                } else if (p.length >= 11) {
+                    result.put("resumeStoredName", p[7]);
+                    result.put("availableTime", p[8]);
+                    result.put("avatarStoredName", p[9]);
+                    result.put("taExperience", "");
                     result.put("updatedAt", p[10]);
                 } else if (p.length >= 10) {
                     result.put("resumeStoredName", p[7]);
                     result.put("availableTime", p[8]);
                     result.put("avatarStoredName", "");
+                    result.put("taExperience", "");
                     result.put("updatedAt", p[9]);
                 } else {
                     result.put("resumeStoredName", p[6]);
                     result.put("availableTime", "");
                     result.put("avatarStoredName", "");
+                    result.put("taExperience", "");
                     result.put("updatedAt", p[7]);
                 }
                 return result;

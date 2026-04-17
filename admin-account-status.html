@@ -65,6 +65,19 @@
       flex-wrap: wrap;
     }
 
+    .toolbar-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-right .form-control {
+      min-width: 180px;
+      height: 36px;
+      font-size: 13px;
+    }
+
     .section-title {
       margin: 0 0 12px;
       font-size: 18px;
@@ -198,7 +211,6 @@
       <div class="sidebar-title">ADMIN FUNCTION</div>
       <ul class="sidebar-menu">
         <li class="sidebar-menu-item">Admin Dashboard</li>
-        <li class="sidebar-menu-item">Registration Approvals</li>
         <li class="sidebar-menu-item active">Account Status</li>
         <li class="sidebar-menu-item">Profile</li>
       </ul>
@@ -207,7 +219,16 @@
     <div class="content">
       <div class="toolbar">
         <h2 style="margin:0;">TA/MO Account Status Management</h2>
-        <button class="btn btn-secondary" id="refreshBtn">Refresh</button>
+        <div class="toolbar-right">
+          <select id="managedStatusFilter" class="form-control" aria-label="Filter by account status">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <input type="text" id="managedKeyword" class="form-control" placeholder="Search account / name / email">
+          <button class="btn btn-secondary" id="clearBtn">Clear</button>
+          <button class="btn btn-secondary" id="refreshBtn">Refresh</button>
+        </div>
       </div>
 
       <div class="sections-grid">
@@ -227,6 +248,8 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
+    let allManagedUsers = [];
+
     // 功能：转义 HTML 特殊字符，降低 XSS 风险。
     function escapeHtml(text) {
       return String(text || '')
@@ -239,6 +262,11 @@
 
     // 功能：标准化状态值，避免大小写与空值影响判断。
     function normalizeStatus(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    // 功能：标准化文本输入，便于比较与搜索。
+    function normalizeText(value) {
       return String(value || '').trim().toLowerCase();
     }
 
@@ -287,28 +315,55 @@
       }).join('');
     }
 
+    // 功能：应用搜索与状态筛选后渲染 TA/MO 分区。
+    function applyManagedFilters() {
+      const taTitle = document.getElementById('taTitle');
+      const moTitle = document.getElementById('moTitle');
+      const statusFilter = normalizeStatus(document.getElementById('managedStatusFilter')?.value || 'all');
+      const keyword = normalizeText(document.getElementById('managedKeyword')?.value || '');
+
+      const filtered = allManagedUsers.filter((u) => {
+        const statusMatched = statusFilter === 'all' || normalizeStatus(u.status) === statusFilter;
+        if (!statusMatched) {
+          return false;
+        }
+
+        if (!keyword) {
+          return true;
+        }
+
+        const searchable = [u.userId, u.userName, u.email, u.qmId, u.role, u.status]
+          .map((x) => normalizeText(x))
+          .join(' ');
+        return searchable.includes(keyword);
+      });
+
+      const taUsers = filtered.filter((u) => String(u.role || '').toUpperCase() === 'TA');
+      const moUsers = filtered.filter((u) => String(u.role || '').toUpperCase() === 'MO');
+      const taTotal = allManagedUsers.filter((u) => String(u.role || '').toUpperCase() === 'TA').length;
+      const moTotal = allManagedUsers.filter((u) => String(u.role || '').toUpperCase() === 'MO').length;
+      const hasFilter = !!keyword || statusFilter !== 'all';
+
+      if (taTitle) taTitle.textContent = hasFilter ? `TA Account Area (${taUsers.length}/${taTotal})` : `TA Account Area (${taUsers.length})`;
+      if (moTitle) moTitle.textContent = hasFilter ? `MO Account Area (${moUsers.length}/${moTotal})` : `MO Account Area (${moUsers.length})`;
+
+      renderManagedUsers('taUserList', taUsers, 'TA');
+      renderManagedUsers('moUserList', moUsers, 'MO');
+    }
+
     // 功能：加载相关数据并更新页面。
     async function loadManagedUsers() {
       // 分区容器与标题元素：用于 TA/MO 分区加载与数量展示。
       const taList = document.getElementById('taUserList');
       const moList = document.getElementById('moUserList');
-      const taTitle = document.getElementById('taTitle');
-      const moTitle = document.getElementById('moTitle');
       if (taList) taList.innerHTML = '<div class="approval-empty">Loading TA accounts...</div>';
       if (moList) moList.innerHTML = '<div class="approval-empty">Loading MO accounts...</div>';
 
       try {
         const result = await API.getManagedUsers();
         const users = Array.isArray(result && result.users) ? result.users : [];
-        // 关键分组变量：确保 TA/MO 绝不混在同一区域。
-        const taUsers = users.filter((u) => String(u.role || '').toUpperCase() === 'TA');
-        const moUsers = users.filter((u) => String(u.role || '').toUpperCase() === 'MO');
-
-        if (taTitle) taTitle.textContent = `TA Account Area (${taUsers.length})`;
-        if (moTitle) moTitle.textContent = `MO Account Area (${moUsers.length})`;
-
-        renderManagedUsers('taUserList', taUsers, 'TA');
-        renderManagedUsers('moUserList', moUsers, 'MO');
+        allManagedUsers = users;
+        applyManagedFilters();
       } catch (error) {
         const message = escapeHtml(error.message || 'Failed to load accounts');
         if (taList) taList.innerHTML = `<div class="approval-empty">${message}</div>`;
@@ -342,6 +397,15 @@
 
       await loadManagedUsers();
       document.getElementById('refreshBtn')?.addEventListener('click', loadManagedUsers);
+      document.getElementById('managedStatusFilter')?.addEventListener('change', applyManagedFilters);
+      document.getElementById('managedKeyword')?.addEventListener('input', applyManagedFilters);
+      document.getElementById('clearBtn')?.addEventListener('click', () => {
+        const statusEl = document.getElementById('managedStatusFilter');
+        const keywordEl = document.getElementById('managedKeyword');
+        if (statusEl) statusEl.value = 'all';
+        if (keywordEl) keywordEl.value = '';
+        applyManagedFilters();
+      });
 
       ['taUserList', 'moUserList'].forEach((id) => {
         // 分区级事件委托：每个区域独立处理自己的状态按钮点击。
