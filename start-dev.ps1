@@ -51,6 +51,39 @@ function Wait-WebReady {
     return $false
 }
 
+function Open-BrowserOnce {
+    param(
+        [string]$Url,
+        [int]$DebounceSeconds = 6
+    )
+
+    $stampFile = Join-Path $env:TEMP "ta-system-last-browser-open.txt"
+    $now = Get-Date
+
+    if (Test-Path $stampFile) {
+        try {
+            $raw = (Get-Content -Path $stampFile -TotalCount 1 -ErrorAction Stop)
+            if ($raw) {
+                $last = [DateTime]::Parse($raw)
+                if (($now - $last).TotalSeconds -lt $DebounceSeconds) {
+                    Write-Host "Skip duplicate browser open request within debounce window." -ForegroundColor Yellow
+                    return
+                }
+            }
+        } catch {
+            # Ignore stamp parsing failures and continue opening browser.
+        }
+    }
+
+    try {
+        Set-Content -Path $stampFile -Value $now.ToString("o") -Encoding UTF8 -Force
+    } catch {
+        # If stamp write fails, continue to open browser anyway.
+    }
+
+    Start-Process $Url
+}
+
 function Resolve-TomcatHome {
     if ($env:CATALINA_HOME -and (Test-Path $env:CATALINA_HOME)) {
         return $env:CATALINA_HOME
@@ -192,8 +225,16 @@ foreach ($contextName in $contexts) {
 
 Write-Step "Starting Tomcat"
 $portInUse = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
-if ($ForceRestart -and (Test-Path $shutdownBat)) {
-    & $shutdownBat | Out-Null
+if ($ForceRestart -and $portInUse -and (Test-Path $shutdownBat)) {
+    try {
+        $shutdownProc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$shutdownBat`"" -WindowStyle Hidden -PassThru
+        if (-not $shutdownProc.WaitForExit(15000)) {
+            Write-Host "shutdown.bat did not exit within 15 seconds, continue with startup checks." -ForegroundColor Yellow
+            Stop-Process -Id $shutdownProc.Id -Force -ErrorAction SilentlyContinue
+        }
+    } catch {
+        Write-Host "ForceRestart shutdown step returned an error, continue with fresh startup check." -ForegroundColor Yellow
+    }
     Start-Sleep -Seconds 2
     $portInUse = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
 }
@@ -209,7 +250,8 @@ if ($portInUse) {
         throw "Port $Port is already in use by '$ownerName' (PID: $ownerPid). Stop that process or run stop-dev.ps1 -ForceKill, then retry start-dev.bat."
     }
 } else {
-    & $startupBat | Out-Null
+    # startup.bat may keep console handles alive via child Java process; do not wait here.
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$startupBat`"" -WindowStyle Hidden | Out-Null
     Start-Sleep -Seconds 2
 }
 
@@ -227,5 +269,5 @@ if (-not $isReady) {
 Write-Host "`nDone. Open: $url" -ForegroundColor Green
 
 if (-not $NoBrowser) {
-    Start-Process $url
+    Open-BrowserOnce -Url $url -DebounceSeconds 6
 }
