@@ -265,6 +265,18 @@
       gap: 8px;
     }
 
+    .position-buttons .btn-save-favourite {
+      order: 1;
+    }
+
+    .position-buttons .btn-view-details {
+      order: 2;
+    }
+
+    .position-buttons .btn-apply-now {
+      order: 3;
+    }
+
     /* Modal */
     .detail-modal .modal-content {
       max-width: 600px;
@@ -323,6 +335,7 @@
         <li class="sidebar-menu-item">My Profile</li>
         <li class="sidebar-menu-item active">Browse Positions</li>
         <li class="sidebar-menu-item">My Applications</li>
+        <li class="sidebar-menu-item">My Favourites</li>
         <li class="sidebar-menu-item">Profile</li>
         <li class="sidebar-menu-item">Notifications</li>
       </ul>
@@ -412,8 +425,9 @@
             <div class="position-footer">
               <div></div>
               <div class="position-buttons">
-                <button class="btn btn-outline btn-sm" onclick="taSystem.openModal('detailModal')">View Details</button>
-                <button class="btn btn-primary btn-sm">Apply Now</button>
+                <button class="btn btn-primary btn-sm btn-save-favourite">Save to Favourites</button>
+                <button class="btn btn-outline btn-sm btn-view-details" onclick="taSystem.openModal('detailModal')">View Details</button>
+                <button class="btn btn-primary btn-sm btn-apply-now">Apply Now</button>
               </div>
             </div>
           </div>
@@ -454,8 +468,9 @@
             <div class="position-footer">
               <div></div>
               <div class="position-buttons">
-                <button class="btn btn-outline btn-sm" onclick="taSystem.openModal('detailModal')">View Details</button>
-                <button class="btn btn-primary btn-sm">Apply Now</button>
+                <button class="btn btn-primary btn-sm btn-save-favourite">Save to Favourites</button>
+                <button class="btn btn-outline btn-sm btn-view-details" onclick="taSystem.openModal('detailModal')">View Details</button>
+                <button class="btn btn-primary btn-sm btn-apply-now">Apply Now</button>
               </div>
             </div>
           </div>
@@ -493,8 +508,9 @@
             <div class="position-footer">
               <div></div>
               <div class="position-buttons">
-                <button class="btn btn-outline btn-sm" onclick="taSystem.openModal('detailModal')">View Details</button>
-                <button class="btn btn-primary btn-sm">Apply Now</button>
+                <button class="btn btn-primary btn-sm btn-save-favourite">Save to Favourites</button>
+                <button class="btn btn-outline btn-sm btn-view-details" onclick="taSystem.openModal('detailModal')">View Details</button>
+                <button class="btn btn-primary btn-sm btn-apply-now">Apply Now</button>
               </div>
             </div>
           </div>
@@ -574,10 +590,13 @@
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
+    const PENDING_DETAIL_KEY = 'ta_pending_detail_position_id';
     let allPositions = [];
     let currentPositions = [];
     let selectedPositionId = '';
     let appliedPositionIds = new Set();
+    let favouritePositionIds = new Set();
+    let favouriteSavedTimeById = new Map();
     let profileCompleteForApply = false;
     let taSkills = [];
     let profileMajor = '';
@@ -612,6 +631,83 @@
     // 功能：判断是否具备指定状态。
     function hasApplied(positionId) {
       return !!positionId && appliedPositionIds.has(String(positionId));
+    }
+
+    // 功能：按当前登录 TA 隔离收藏数据存储键。
+    function getFavoritesStorageKey() {
+      const userId = String(localStorage.getItem('userId') || '').trim().toLowerCase() || 'anonymous';
+      return `ta_favourites_${userId}`;
+    }
+
+    // 功能：从本地存储读取收藏岗位 ID 集与收藏时间。
+    function loadFavouriteIds() {
+      try {
+        const key = getFavoritesStorageKey();
+        const raw = localStorage.getItem(key);
+        const parsed = JSON.parse(raw || '[]');
+
+        favouriteSavedTimeById = new Map();
+        if (Array.isArray(parsed)) {
+          if (parsed.length && typeof parsed[0] === 'object' && parsed[0] !== null) {
+            parsed.forEach((item) => {
+              const id = String(item.id || '').trim();
+              if (!id) return;
+              favouriteSavedTimeById.set(id, String(item.savedAt || ''));
+            });
+            favouritePositionIds = new Set(Array.from(favouriteSavedTimeById.keys()));
+          } else {
+            favouritePositionIds = new Set(parsed.map((x) => String(x)).filter(Boolean));
+          }
+          return;
+        }
+
+        if (parsed && typeof parsed === 'object') {
+          Object.keys(parsed).forEach((id) => {
+            const keyId = String(id || '').trim();
+            if (!keyId) return;
+            favouriteSavedTimeById.set(keyId, String(parsed[id] || ''));
+          });
+          favouritePositionIds = new Set(Array.from(favouriteSavedTimeById.keys()));
+          return;
+        }
+      } catch (error) {
+      }
+      favouriteSavedTimeById = new Map();
+      favouritePositionIds = new Set();
+    }
+
+    // 功能：将收藏岗位及收藏时间写回本地存储。
+    function persistFavouriteIds() {
+      const key = getFavoritesStorageKey();
+      const payload = {};
+      favouritePositionIds.forEach((id) => {
+        payload[id] = favouriteSavedTimeById.get(id) || '';
+      });
+      localStorage.setItem(key, JSON.stringify(payload));
+    }
+
+    // 功能：判断岗位是否已收藏。
+    function hasFavourited(positionId) {
+      return !!positionId && favouritePositionIds.has(String(positionId));
+    }
+
+    // 功能：收藏岗位并刷新当前列表展示。
+    function saveFavouritePosition(positionId) {
+      const id = String(positionId || '');
+      if (!id) return;
+      if (favouritePositionIds.has(id)) {
+        if (!favouriteSavedTimeById.get(id)) {
+          favouriteSavedTimeById.set(id, new Date().toISOString());
+          persistFavouriteIds();
+          renderPositions(currentPositions);
+        }
+        return;
+      }
+      favouritePositionIds.add(id);
+      favouriteSavedTimeById.set(id, new Date().toISOString());
+      taSystem.showMessage('Position Saved!', 'success');
+      persistFavouriteIds();
+      renderPositions(currentPositions);
     }
 
     // 功能：判断条件是否成立。
@@ -930,6 +1026,7 @@
         const closed = isClosedPosition(p);
         const applied = hasApplied(p.id);
         const profileBlocked = !profileCompleteForApply;
+        const favourited = hasFavourited(p.id);
         const match = positionMatchMap.get(String(p.id || '')) || { score: 0, matched: [] };
         const applyLabel = closed
           ? 'Closed'
@@ -959,8 +1056,9 @@
           <div class="position-footer">
             <div style="font-size:12px;color:var(--gray-500);">${p.description || ''}</div>
             <div class="position-buttons">
-              <button class="btn btn-outline btn-sm" onclick="openPositionDetail('${p.id}')">View Details</button>
-              <button class="btn btn-primary btn-sm" onclick="applyPosition('${p.id}')" ${applyDisabledAttr}>${applyLabel}</button>
+              <button class="btn ${favourited ? 'btn-secondary' : 'btn-primary'} btn-sm btn-save-favourite" onclick="saveFavouritePosition('${p.id}')" ${favourited ? 'disabled title="Already saved to favourites"' : ''}>${favourited ? 'Saved to Favourites' : 'Save to Favourites'}</button>
+              <button class="btn btn-outline btn-sm btn-view-details" onclick="openPositionDetail('${p.id}')">View Details</button>
+              <button class="btn btn-primary btn-sm btn-apply-now" onclick="applyPosition('${p.id}')" ${applyDisabledAttr}>${applyLabel}</button>
             </div>
           </div>
         </div>
@@ -971,7 +1069,7 @@
     // 功能：打开岗位详情弹窗并填充内容。
     function openPositionDetail(positionId) {
       selectedPositionId = positionId;
-      const p = currentPositions.find((item) => item.id === positionId);
+      const p = currentPositions.find((item) => String(item.id || '') === String(positionId || ''));
       if (!p) {
         return;
       }
@@ -1012,6 +1110,19 @@
             : (profileBlocked ? profileApplyHint : ''));
       }
       taSystem.openModal('detailModal');
+    }
+
+    function openPendingDetailFromFavourites() {
+      const pendingId = String(localStorage.getItem(PENDING_DETAIL_KEY) || '').trim();
+      if (!pendingId) return;
+      localStorage.removeItem(PENDING_DETAIL_KEY);
+
+      const exists = currentPositions.some((item) => String(item.id || '') === pendingId);
+      if (!exists) {
+        taSystem.showMessage('Position not found or no longer available', 'warning');
+        return;
+      }
+      openPositionDetail(pendingId);
     }
 
     // 功能：提交 TA 对岗位的申请。
@@ -1102,6 +1213,9 @@
       }
 
       await loadPositions();
+      loadFavouriteIds();
+      renderPositions(currentPositions);
+      openPendingDetailFromFavourites();
 
       const filterConfirmBtn = document.getElementById('filterConfirmBtn');
       const filterResetBtn = document.getElementById('filterResetBtn');
