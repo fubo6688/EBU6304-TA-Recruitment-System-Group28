@@ -28,6 +28,10 @@ if (-not (Test-Path $shutdownBat)) {
     throw ("Tomcat shutdown script not found at {0}" -f $shutdownBat)
 }
 
+# Ensure shutdown.bat resolves Tomcat home correctly when invoked from project directory.
+$env:CATALINA_HOME = $tomcatHome
+$env:CATALINA_BASE = $tomcatHome
+
 Write-Host ("Stopping Tomcat from {0}" -f $tomcatHome)
 & $shutdownBat | Out-Null
 Start-Sleep -Seconds 3
