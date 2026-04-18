@@ -22,6 +22,68 @@ function Write-Step {
     Write-Host "`n==> $Message" -ForegroundColor Cyan
 }
 
+function Wait-WebReady {
+    param(
+        [string]$Url,
+        [int]$Port,
+        [int]$TimeoutSeconds = 8,
+        [int]$IntervalSeconds = 2
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+
+    while ((Get-Date) -lt $deadline) {
+        $portListening = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
+        if ($portListening) {
+            try {
+                $resp = Invoke-WebRequest -Uri $Url -UseBasicParsing -Method Get -TimeoutSec 5 -ErrorAction Stop
+                if ($resp.StatusCode -ge 200 -and $resp.StatusCode -lt 400) {
+                    return $true
+                }
+            } catch {
+                # Tomcat may be up but app context still warming up; keep polling.
+            }
+        }
+
+        Start-Sleep -Seconds $IntervalSeconds
+    }
+
+    return $false
+}
+
+function Open-BrowserOnce {
+    param(
+        [string]$Url,
+        [int]$DebounceSeconds = 6
+    )
+
+    $stampFile = Join-Path $env:TEMP "ta-system-last-browser-open.txt"
+    $now = Get-Date
+
+    if (Test-Path $stampFile) {
+        try {
+            $raw = (Get-Content -Path $stampFile -TotalCount 1 -ErrorAction Stop)
+            if ($raw) {
+                $last = [DateTime]::Parse($raw)
+                if (($now - $last).TotalSeconds -lt $DebounceSeconds) {
+                    Write-Host "Skip duplicate browser open request within debounce window." -ForegroundColor Yellow
+                    return
+                }
+            }
+        } catch {
+            # Ignore stamp parsing failures and continue opening browser.
+        }
+    }
+
+    try {
+        Set-Content -Path $stampFile -Value $now.ToString("o") -Encoding UTF8 -Force
+    } catch {
+        # If stamp write fails, continue to open browser anyway.
+    }
+
+    Start-Process $Url
+}
+
 function Resolve-TomcatHome {
     if ($env:CATALINA_HOME -and (Test-Path $env:CATALINA_HOME)) {
         return $env:CATALINA_HOME
@@ -71,6 +133,10 @@ if (-not (Test-Path $startupBat)) {
     throw "Tomcat startup script not found at: $startupBat"
 }
 
+# Ensure startup.bat resolves Tomcat home correctly when invoked from project directory.
+$env:CATALINA_HOME = $tomcatHome
+$env:CATALINA_BASE = $tomcatHome
+
 Write-Host "Project: $projectRoot"
 Write-Host "Tomcat : $tomcatHome"
 Write-Host "Data   : $persistentDataDir"
@@ -91,6 +157,7 @@ if (-not $javaFiles -or $javaFiles.Count -eq 0) {
 }
 
 $compileArgs = @(
+    "--release", "21",
     "-encoding", "UTF-8",
     "-cp", (Join-Path $backendWebInf "lib/*"),
     "-d", $classesDir
@@ -158,22 +225,49 @@ foreach ($contextName in $contexts) {
 
 Write-Step "Starting Tomcat"
 $portInUse = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
-if ($ForceRestart -and (Test-Path $shutdownBat)) {
-    & $shutdownBat | Out-Null
+if ($ForceRestart -and $portInUse -and (Test-Path $shutdownBat)) {
+    try {
+        $shutdownProc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$shutdownBat`"" -WindowStyle Hidden -PassThru
+        if (-not $shutdownProc.WaitForExit(15000)) {
+            Write-Host "shutdown.bat did not exit within 15 seconds, continue with startup checks." -ForegroundColor Yellow
+            Stop-Process -Id $shutdownProc.Id -Force -ErrorAction SilentlyContinue
+        }
+    } catch {
+        Write-Host "ForceRestart shutdown step returned an error, continue with fresh startup check." -ForegroundColor Yellow
+    }
     Start-Sleep -Seconds 2
     $portInUse = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
 }
 
-if (-not $portInUse) {
-    & $startupBat | Out-Null
-    Start-Sleep -Seconds 2
+if ($portInUse) {
+    $ownerPid = ($portInUse | Select-Object -First 1 -ExpandProperty OwningProcess)
+    $ownerProcess = Get-Process -Id $ownerPid -ErrorAction SilentlyContinue
+    $ownerName = if ($ownerProcess) { $ownerProcess.ProcessName } else { "PID $ownerPid" }
+
+    if ($ownerProcess -and $ownerProcess.ProcessName -match "java|tomcat") {
+        Write-Host "Tomcat/Java process already listening on port $Port (PID: $ownerPid, Name: $ownerName), skip startup."
+    } else {
+        throw "Port $Port is already in use by '$ownerName' (PID: $ownerPid). Stop that process or run stop-dev.ps1 -ForceKill, then retry start-dev.bat."
+    }
 } else {
-    Write-Host "Tomcat already listening on port $Port, skip startup."
+    # startup.bat may keep console handles alive via child Java process; do not wait here.
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$startupBat`"" -WindowStyle Hidden | Out-Null
+    Start-Sleep -Seconds 2
 }
 
 $url = "http://localhost:$Port/ta-system/login.html"
+Write-Step "Validating Tomcat and app availability"
+$isReady = Wait-WebReady -Url $url -Port $Port -TimeoutSeconds 8 -IntervalSeconds 2
+if (-not $isReady) {
+    $logHint = Join-Path $tomcatHome "logs/catalina*.log"
+    $errorMessage = "Tomcat/app validation failed after 8 seconds. URL not ready: $url. Please check logs: $logHint"
+    Write-Host $errorMessage -ForegroundColor Red
+    Start-Sleep -Seconds 5
+    exit 1
+}
+
 Write-Host "`nDone. Open: $url" -ForegroundColor Green
 
 if (-not $NoBrowser) {
-    Start-Process $url
+    Open-BrowserOnce -Url $url -DebounceSeconds 6
 }

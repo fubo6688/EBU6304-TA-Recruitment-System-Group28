@@ -28,6 +28,10 @@ if (-not (Test-Path $shutdownBat)) {
     throw ("Tomcat shutdown script not found at {0}" -f $shutdownBat)
 }
 
+# Ensure shutdown.bat resolves Tomcat home correctly when invoked from project directory.
+$env:CATALINA_HOME = $tomcatHome
+$env:CATALINA_BASE = $tomcatHome
+
 Write-Host ("Stopping Tomcat from {0}" -f $tomcatHome)
 & $shutdownBat | Out-Null
 Start-Sleep -Seconds 3
@@ -45,12 +49,46 @@ if (-not $ForceKill) {
 }
 
 $owners = $listeners | Select-Object -ExpandProperty OwningProcess -Unique
-$owners | Stop-Process -Force -ErrorAction SilentlyContinue
+foreach ($ownerPid in $owners) {
+    $proc = Get-Process -Id $ownerPid -ErrorAction SilentlyContinue
+    $procName = if ($proc) { $proc.ProcessName } else { "Unknown" }
+    Write-Host ("Force stopping PID {0} ({1})" -f $ownerPid, $procName) -ForegroundColor Yellow
+
+    # If the port owner is managed by a Windows service, stop the service first.
+    $service = Get-CimInstance Win32_Service -ErrorAction SilentlyContinue |
+        Where-Object { $_.ProcessId -eq $ownerPid } |
+        Select-Object -First 1
+
+    if ($service) {
+        Write-Host ("Detected service host: {0} ({1}), attempting Stop-Service first." -f $service.Name, $service.DisplayName) -ForegroundColor Yellow
+        try {
+            Stop-Service -Name $service.Name -Force -ErrorAction Stop
+            Start-Sleep -Seconds 1
+        } catch {
+            Write-Host ("Stop-Service failed for {0}: {1}" -f $service.Name, $_.Exception.Message) -ForegroundColor Yellow
+        }
+    }
+
+    try {
+        Stop-Process -Id $ownerPid -Force -ErrorAction Stop
+    } catch {
+        Write-Host ("Stop-Process failed for PID {0}: {1}" -f $ownerPid, $_.Exception.Message) -ForegroundColor Yellow
+        # Final fallback for stubborn processes.
+        try {
+            & taskkill /PID $ownerPid /F | Out-Null
+        } catch {
+            Write-Host ("taskkill failed for PID {0}: {1}" -f $ownerPid, $_.Exception.Message) -ForegroundColor Yellow
+        }
+    }
+}
+
 Start-Sleep -Seconds 1
 
 $stillInUse = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
 if ($stillInUse) {
-    Write-Host ("Port {0} still in use. Please stop it manually." -f $Port) -ForegroundColor Red
+    Write-Host ("Port {0} still in use after -ForceKill." -f $Port) -ForegroundColor Red
+    $stillInUse | Select-Object LocalAddress, LocalPort, OwningProcess | Format-Table -AutoSize
+    Write-Host "Tip: run PowerShell as Administrator, then retry stop-dev.ps1 -ForceKill." -ForegroundColor Red
     exit 1
 }
 

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>My Favourites - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: var(--gray-100);
+      padding: 20px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .sidebar-menu-item:hover {
+      background-color: var(--gray-200);
+      color: var(--primary-color);
+    }
+
+    .sidebar-menu-item.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px;
+    }
+
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .filter-toolbar {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr auto;
+      gap: 10px;
+      margin-bottom: 14px;
+      align-items: end;
+    }
+
+    .filter-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-label {
+      font-size: 12px;
+      color: var(--gray-500);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .filter-input {
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 13px;
+      outline: none;
+      background: var(--white);
+    }
+
+    .filter-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.12);
+    }
+
+    @media (max-width: 980px) {
+      .filter-toolbar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .multi-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .multi-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .multi-count {
+      font-size: 12px;
+      color: var(--gray-500);
+      font-weight: 600;
+    }
+
+    .multi-toggle-active {
+      background: #9ca3af !important;
+      border-color: #9ca3af !important;
+      color: #ffffff !important;
+    }
+
+    .favourites-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .favourite-card {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid var(--gray-200);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .favourite-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .favourite-select {
+      width: 16px;
+      height: 16px;
+      accent-color: #1e40af;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .favourite-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .favourite-meta {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-bottom: 10px;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      vertical-align: middle;
+    }
+
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #dcfce7; color: #166534; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+    .status-canceled { background: #e5e7eb; color: #374151; }
+
+    .favourite-time {
+      display: inline-block;
+      margin: 0 0 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #1e40af;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .favourite-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .empty-state {
+      background: var(--white);
+      border: 1px dashed var(--gray-300);
+      border-radius: 10px;
+      padding: 28px;
+      color: var(--gray-500);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">TA</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a class="topbar-link" href="profile.html">Profile</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="sidebar-title">TA Function</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item">My Profile</li>
+        <li class="sidebar-menu-item">Browse Positions</li>
+        <li class="sidebar-menu-item">My Applications</li>
+        <li class="sidebar-menu-item active">My Favourites</li>
+        <li class="sidebar-menu-item">Profile</li>
+        <li class="sidebar-menu-item">Notifications</li>
+      </ul>
+    </div>
+
+    <div class="content">
+      <div class="content-header">
+        <h2 style="margin:0;">My Favourites</h2>
+        <button class="btn btn-secondary btn-sm" onclick="window.location.href='ta-positions.html'">Back to Browse Positions</button>
+      </div>
+
+      <div class="filter-toolbar">
+        <div class="filter-field">
+          <label class="filter-label" for="favNameFilter">Position Name</label>
+          <input id="favNameFilter" class="filter-input" type="text" placeholder="Filter by position name">
+        </div>
+        <div class="filter-field">
+          <label class="filter-label" for="favTimeFrom">Saved Time From</label>
+          <input id="favTimeFrom" class="filter-input" type="text" inputmode="numeric" placeholder="yyyy-mm-dd" maxlength="10" title="Format: yyyy-mm-dd">
+        </div>
+        <div class="filter-field">
+          <label class="filter-label" for="favTimeTo">Saved Time To</label>
+          <input id="favTimeTo" class="filter-input" type="text" inputmode="numeric" placeholder="yyyy-mm-dd" maxlength="10" title="Format: yyyy-mm-dd">
+        </div>
+        <button id="clearFavFilterBtn" class="btn btn-outline btn-sm" type="button">Clear Filters</button>
+      </div>
+
+      <div id="multiSelectToolbar" class="multi-toolbar" style="display:none;">
+        <button id="toggleMultiSelectBtn" class="btn btn-primary btn-sm" type="button">Multi-select</button>
+        <div id="multiSelectActions" class="multi-actions" style="display:none;">
+          <button id="batchUnsaveBtn" class="btn btn-secondary btn-sm" type="button">Unsave Selected</button>
+          <button id="batchSaveBtn" class="btn btn-primary btn-sm" type="button">Save Selected</button>
+          <button id="cancelMultiSelectBtn" class="btn btn-outline btn-sm" type="button">Cancel</button>
+          <span id="multiSelectCount" class="multi-count">0 selected</span>
+        </div>
+      </div>
+
+      <div id="favouritesList" class="favourites-list"></div>
+    </div>
+  </div>
+
+  <script src="js/script.js?v=20260418-3"></script>
+  <script src="js/api.js?v=20260418-3"></script>
+  <script>
+    const PENDING_DETAIL_KEY = 'ta_pending_detail_position_id';
+    let allPositions = [];
+    let favouriteIds = new Set();
+    let favouriteSavedTimeById = new Map();
+    let pendingRemovedPositionById = new Map();
+    let pendingRemovedSavedTimeById = new Map();
+    let isMultiSelectMode = false;
+    let selectedPositionIds = new Set();
+    let favNameKeyword = '';
+    let favTimeFromMs = null;
+    let favTimeToMs = null;
+
+    function getFavoritesStorageKey() {
+      const userId = String(localStorage.getItem('userId') || '').trim().toLowerCase() || 'anonymous';
+      return `ta_favourites_${userId}`;
+    }
+
+    function loadFavouriteIds() {
+      const nowIso = new Date().toISOString();
+      try {
+        const raw = localStorage.getItem(getFavoritesStorageKey());
+        const parsed = JSON.parse(raw || '[]');
+        favouriteSavedTimeById = new Map();
+
+        if (Array.isArray(parsed)) {
+          if (parsed.length && typeof parsed[0] === 'object' && parsed[0] !== null) {
+            parsed.forEach((item) => {
+              const id = String(item.id || '').trim();
+              if (!id) return;
+              favouriteSavedTimeById.set(id, String(item.savedAt || nowIso));
+            });
+            favouriteIds = new Set(Array.from(favouriteSavedTimeById.keys()));
+          } else {
+            const ids = parsed.map((x) => String(x).trim()).filter(Boolean);
+            favouriteIds = new Set(ids);
+            ids.forEach((id) => favouriteSavedTimeById.set(id, nowIso));
+          }
+          persistFavouriteIds();
+          return;
+        }
+
+        if (parsed && typeof parsed === 'object') {
+          Object.keys(parsed).forEach((id) => {
+            const keyId = String(id || '').trim();
+            if (!keyId) return;
+            favouriteSavedTimeById.set(keyId, String(parsed[id] || nowIso));
+          });
+          favouriteIds = new Set(Array.from(favouriteSavedTimeById.keys()));
+          persistFavouriteIds();
+          return;
+        }
+
+        favouriteIds = new Set();
+      } catch (error) {
+        favouriteIds = new Set();
+        favouriteSavedTimeById = new Map();
+      }
+    }
+
+    function persistFavouriteIds() {
+      const payload = {};
+      favouriteIds.forEach((id) => {
+        payload[id] = favouriteSavedTimeById.get(id) || '';
+      });
+      localStorage.setItem(getFavoritesStorageKey(), JSON.stringify(payload));
+    }
+
+    function markPendingRemoved(positionId, options = {}) {
+      const { rerender = true, notify = false } = options;
+      const id = String(positionId || '');
+      if (!id || !favouriteIds.has(id)) {
+        return false;
+      }
+
+      const position = allPositions.find((p) => String(p.id || '') === id);
+      if (position) {
+        pendingRemovedPositionById.set(id, position);
+      }
+
+      const savedAt = String(favouriteSavedTimeById.get(id) || '').trim() || new Date().toISOString();
+      pendingRemovedSavedTimeById.set(id, savedAt);
+
+      favouriteIds.delete(id);
+      favouriteSavedTimeById.delete(id);
+      persistFavouriteIds();
+      selectedPositionIds.delete(id);
+
+      if (rerender) {
+        renderFavourites();
+      }
+      if (notify) {
+        taSystem.showMessage('Removed. You can undo on this page before leaving.', 'info');
+      }
+      return true;
+    }
+
+    function removeFavourite(positionId) {
+      markPendingRemoved(positionId, { rerender: true, notify: true });
+    }
+
+    function restoreFavourite(positionId, options = {}) {
+      const { rerender = true, notify = false } = options;
+      const id = String(positionId || '');
+      if (!id) {
+        return false;
+      }
+
+      const position = allPositions.find((p) => String(p.id || '') === id);
+      if (!position) {
+        if (notify) {
+          taSystem.showMessage('Position not found', 'warning');
+        }
+        return false;
+      }
+
+      favouriteIds.add(id);
+      favouriteSavedTimeById.set(id, new Date().toISOString());
+      pendingRemovedPositionById.delete(id);
+      pendingRemovedSavedTimeById.delete(id);
+      persistFavouriteIds();
+      if (rerender) {
+        renderFavourites();
+      }
+      if (notify) {
+        taSystem.showMessage('Saved to My Favourites', 'success');
+      }
+      return true;
+    }
+
+    function saveFavouriteAgain(positionId) {
+      restoreFavourite(positionId, { rerender: true, notify: true });
+    }
+
+    function viewFavouriteDetails(positionId) {
+      const id = String(positionId || '').trim();
+      if (!id) return;
+      localStorage.setItem(PENDING_DETAIL_KEY, id);
+      window.location.href = 'ta-positions.html';
+    }
+
+    function formatSavedAt(isoText) {
+      const raw = String(isoText || '').trim();
+      if (!raw) return '-';
+      const d = new Date(raw);
+      if (Number.isNaN(d.getTime())) return raw;
+      const year = d.getUTCFullYear();
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      const hours = String(d.getUTCHours()).padStart(2, '0');
+      const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+      const seconds = String(d.getUTCSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} UTC`;
+    }
+
+    function normalizePositionStatus(status) {
+      return String(status || 'open').trim().toLowerCase();
+    }
+
+    function displayPositionStatus(status) {
+      const s = normalizePositionStatus(status);
+      if (s === 'closed') return 'expired';
+      return s;
+    }
+
+    function positionStatusClass(status) {
+      const s = normalizePositionStatus(status);
+      if (s === 'open') return 'status-approved';
+      if (s === 'closed') return 'status-canceled';
+      if (s === 'rejected') return 'status-rejected';
+      return 'status-pending';
+    }
+
+    function parseSavedAtMs(isoText) {
+      const raw = String(isoText || '').trim();
+      if (!raw) return null;
+      const d = new Date(raw);
+      if (Number.isNaN(d.getTime())) return null;
+      return d.getTime();
+    }
+
+    function normalizeDateTextInput(value) {
+      return String(value || '').trim();
+    }
+
+    function isValidYyyyMmDd(value) {
+      const v = normalizeDateTextInput(value);
+      if (!v) return true;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+      const d = new Date(`${v}T00:00:00`);
+      if (Number.isNaN(d.getTime())) return false;
+      const [y, m, day] = v.split('-').map((x) => Number(x));
+      return d.getFullYear() === y && (d.getMonth() + 1) === m && d.getDate() === day;
+    }
+
+    function refreshFilterState() {
+      favNameKeyword = String(document.getElementById('favNameFilter')?.value || '').trim().toLowerCase();
+
+      const fromInput = document.getElementById('favTimeFrom');
+      const toInput = document.getElementById('favTimeTo');
+      const fromRaw = normalizeDateTextInput(fromInput?.value || '');
+      const toRaw = normalizeDateTextInput(toInput?.value || '');
+
+      if (fromInput && !isValidYyyyMmDd(fromRaw)) {
+        fromInput.setCustomValidity('Use yyyy-mm-dd');
+        fromInput.reportValidity();
+        favTimeFromMs = null;
+      } else {
+        if (fromInput) fromInput.setCustomValidity('');
+        const fromParsed = fromRaw ? new Date(`${fromRaw}T00:00:00`) : null;
+        favTimeFromMs = fromParsed && !Number.isNaN(fromParsed.getTime()) ? fromParsed.getTime() : null;
+      }
+
+      if (toInput && !isValidYyyyMmDd(toRaw)) {
+        toInput.setCustomValidity('Use yyyy-mm-dd');
+        toInput.reportValidity();
+        favTimeToMs = null;
+      } else {
+        if (toInput) toInput.setCustomValidity('');
+        const toParsed = toRaw ? new Date(`${toRaw}T23:59:59.999`) : null;
+        favTimeToMs = toParsed && !Number.isNaN(toParsed.getTime()) ? toParsed.getTime() : null;
+      }
+    }
+
+    function clearFilters() {
+      const nameInput = document.getElementById('favNameFilter');
+      const fromInput = document.getElementById('favTimeFrom');
+      const toInput = document.getElementById('favTimeTo');
+      if (nameInput) nameInput.value = '';
+      if (fromInput) fromInput.value = '';
+      if (toInput) toInput.value = '';
+
+      favNameKeyword = '';
+      favTimeFromMs = null;
+      favTimeToMs = null;
+      renderFavourites();
+    }
+
+    function setMultiSelectMode(enabled) {
+      isMultiSelectMode = !!enabled;
+      if (!isMultiSelectMode) {
+        selectedPositionIds = new Set();
+      }
+      renderFavourites();
+    }
+
+    function toggleCardSelection(positionId, checked) {
+      const id = String(positionId || '');
+      if (!id) return;
+      if (checked) {
+        selectedPositionIds.add(id);
+      } else {
+        selectedPositionIds.delete(id);
+      }
+      updateMultiToolbarVisibility();
+    }
+
+    function batchUnsaveSelected() {
+      let changed = 0;
+      Array.from(selectedPositionIds).forEach((id) => {
+        if (markPendingRemoved(id, { rerender: false, notify: false })) {
+          changed += 1;
+        }
+      });
+      selectedPositionIds = new Set();
+      renderFavourites();
+      if (changed > 0) {
+        taSystem.showMessage(`Removed ${changed} position(s).`, 'info');
+      }
+    }
+
+    function batchSaveSelected() {
+      let changed = 0;
+      Array.from(selectedPositionIds).forEach((id) => {
+        if (restoreFavourite(id, { rerender: false, notify: false })) {
+          changed += 1;
+        }
+      });
+      selectedPositionIds = new Set();
+      renderFavourites();
+      if (changed > 0) {
+        taSystem.showMessage(`Saved ${changed} position(s).`, 'success');
+      }
+    }
+
+    function updateMultiToolbarVisibility() {
+      const toolbar = document.getElementById('multiSelectToolbar');
+      const actions = document.getElementById('multiSelectActions');
+      const count = document.getElementById('multiSelectCount');
+      const toggleBtn = document.getElementById('toggleMultiSelectBtn');
+      if (!toolbar || !actions || !count) return;
+
+      const hasAnyFavourites = favouriteIds.size > 0 || pendingRemovedPositionById.size > 0;
+      if (!hasAnyFavourites) {
+        toolbar.style.display = 'none';
+        actions.style.display = 'none';
+        isMultiSelectMode = false;
+        selectedPositionIds = new Set();
+        return;
+      }
+
+      toolbar.style.display = 'flex';
+      actions.style.display = isMultiSelectMode ? 'flex' : 'none';
+      count.textContent = `${selectedPositionIds.size} selected`;
+      if (toggleBtn) {
+        toggleBtn.classList.toggle('multi-toggle-active', isMultiSelectMode);
+      }
+    }
+
+    function initFilterEvents() {
+      document.getElementById('favNameFilter')?.addEventListener('input', () => {
+        refreshFilterState();
+        renderFavourites();
+      });
+
+      document.getElementById('favTimeFrom')?.addEventListener('change', () => {
+        refreshFilterState();
+        renderFavourites();
+      });
+
+      document.getElementById('favTimeTo')?.addEventListener('change', () => {
+        refreshFilterState();
+        renderFavourites();
+      });
+
+      document.getElementById('clearFavFilterBtn')?.addEventListener('click', clearFilters);
+
+      document.getElementById('toggleMultiSelectBtn')?.addEventListener('click', () => {
+        setMultiSelectMode(true);
+      });
+
+      document.getElementById('cancelMultiSelectBtn')?.addEventListener('click', () => {
+        setMultiSelectMode(false);
+      });
+
+      document.getElementById('batchUnsaveBtn')?.addEventListener('click', batchUnsaveSelected);
+      document.getElementById('batchSaveBtn')?.addEventListener('click', batchSaveSelected);
+    }
+
+    function renderFavourites() {
+      const el = document.getElementById('favouritesList');
+      if (!el) return;
+
+      const list = allPositions.map((p) => {
+        const id = String((p && p.id) || '');
+        if (!id) return null;
+
+        if (favouriteIds.has(id)) {
+          return {
+            position: p,
+            savedAt: String(favouriteSavedTimeById.get(id) || ''),
+            pendingRemoved: false
+          };
+        }
+
+        if (pendingRemovedPositionById.has(id)) {
+          return {
+            position: p,
+            savedAt: String(pendingRemovedSavedTimeById.get(id) || ''),
+            pendingRemoved: true
+          };
+        }
+
+        return null;
+      }).filter((item) => {
+        if (!item) return false;
+        const p = item.position || {};
+
+        const name = String(p.title || '').toLowerCase();
+        if (favNameKeyword && !name.includes(favNameKeyword)) return false;
+
+        const savedAtMs = parseSavedAtMs(item.savedAt);
+        if (favTimeFromMs !== null && (savedAtMs === null || savedAtMs < favTimeFromMs)) return false;
+        if (favTimeToMs !== null && (savedAtMs === null || savedAtMs > favTimeToMs)) return false;
+
+        return true;
+      });
+
+      updateMultiToolbarVisibility();
+      if (!list.length) {
+        if (isMultiSelectMode) {
+          isMultiSelectMode = false;
+          selectedPositionIds = new Set();
+          updateMultiToolbarVisibility();
+        }
+        el.innerHTML = '<div class="empty-state">No favourites matched current filters.</div>';
+        return;
+      }
+
+      el.innerHTML = list.map((item) => {
+        const p = item.position || {};
+        const id = String(p.id || '');
+        const checkedAttr = selectedPositionIds.has(id) ? 'checked' : '';
+        const selectionBox = isMultiSelectMode
+          ? `<input class="favourite-select" type="checkbox" ${checkedAttr} onchange="toggleCardSelection('${id}', this.checked)">`
+          : '';
+        const actionButton = item.pendingRemoved
+          ? `<button class="btn btn-primary btn-sm" onclick="saveFavouriteAgain('${id}')">Save to Favourites</button>`
+          : `<button class="btn btn-secondary btn-sm" onclick="removeFavourite('${id}')">Unsave</button>`;
+
+        return `
+        <div class="favourite-card">
+          <div class="favourite-header">${selectionBox}<div class="favourite-title">${String(p.title || '')}</div></div>
+          <div class="favourite-meta">${String(p.department || '')} · Deadline: ${String(p.deadline || '-')} · Status: <span class="status-pill ${positionStatusClass(p.status)}">${displayPositionStatus(p.status)}</span></div>
+          <div class="favourite-time">Added at: ${formatSavedAt(item.savedAt)}</div>
+          <div class="favourite-actions">
+            <button class="btn btn-outline btn-sm" onclick="viewFavouriteDetails('${id}')">View Details</button>
+            <button class="btn btn-outline btn-sm" onclick="window.location.href='ta-positions.html'">View in Browse</button>
+            ${actionButton}
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+
+    async function loadData() {
+      try {
+        const allowed = await taSystem.enforceSessionGuard(['TA']);
+        if (!allowed) return;
+
+        loadFavouriteIds();
+        const positions = await API.getPositions();
+        allPositions = Array.isArray(positions) ? positions : [];
+        renderFavourites();
+      } catch (error) {
+        taSystem.showMessage(error.message || 'Failed to load favourites', 'danger');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initFilterEvents();
+      loadData();
+    });
+  </script>
+</body>
+</html>
