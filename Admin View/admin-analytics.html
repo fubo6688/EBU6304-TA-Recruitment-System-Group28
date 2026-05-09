@@ -323,6 +323,21 @@
       <div class="data-table-section">
         <div class="section-title">📊 detailed data</div>
 
+        <div style="display:flex;gap:8px;align-items:center;margin:12px 0;">
+          <label style="font-weight:600;">Export:</label>
+          <select id="exportScope" class="form-control" style="width:180px;">
+            <option value="applications">Applications</option>
+            <option value="hires">Hires (approved)</option>
+            <option value="positions">Positions</option>
+            <option value="workload">TA Workload</option>
+          </select>
+          <label style="margin-left:8px;">Start</label>
+          <input type="date" id="exportStart" class="form-control" style="width:150px;">
+          <label>End</label>
+          <input type="date" id="exportEnd" class="form-control" style="width:150px;">
+          <button id="exportBtn" class="btn btn-secondary btn-sm">Export CSV</button>
+        </div>
+
         <!-- tab page -->
         <div class="tabs-container">
           <div class="tabs">
@@ -580,6 +595,21 @@
         renderCharts(summary);
       } catch (error) {
         taSystem.showMessage(error.message || '统计数据加载失败', 'warning');
+      }
+
+      // Export button handler
+      const exportBtn = document.getElementById('exportBtn');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+          const scope = document.getElementById('exportScope')?.value || 'applications';
+          const start = document.getElementById('exportStart')?.value || '';
+          const end = document.getElementById('exportEnd')?.value || '';
+          const base = API.getBaseUrl();
+          const qs = `?scope=${encodeURIComponent(scope)}${start ? `&startDate=${encodeURIComponent(start)}` : ''}${end ? `&endDate=${encodeURIComponent(end)}` : ''}`;
+          // trigger download with credentials via navigation
+          window.location.href = `${base}/admin/export${qs}`;
+          taSystem.showMessage('导出已开始，请等待浏览器下载。', 'info');
+        });
       }
     });
   </script>

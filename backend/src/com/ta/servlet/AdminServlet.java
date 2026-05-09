@@ -12,6 +12,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.stream.Collectors;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +105,133 @@ public class AdminServlet extends HttpServlet {
         if ("/ta-workload".equalsIgnoreCase(path)) {
             // 提供 TA 负载统计独立接口，便于前端按需刷新。
             out.print(new JSONObject().put("success", true).put("taWorkload", new JSONArray(dataManager.getTaWorkloadSummary())).toString());
+            return;
+        }
+
+        // 导出招聘数据（CSV）
+        if ("/export".equalsIgnoreCase(path)) {
+            String scope = value(req.getParameter("scope")); // applications / hires / positions / workload
+            String startDate = value(req.getParameter("startDate")); // yyyy-MM-dd
+            String endDate = value(req.getParameter("endDate"));
+
+            // 默认导出 applications
+            if (scope.isEmpty()) scope = "applications";
+
+            // Prepare CSV response
+            resp.setContentType("text/csv;charset=UTF-8");
+            String filename = "recruitment-" + scope + "-" + System.currentTimeMillis() + ".csv";
+            resp.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+            PrintWriter csv = resp.getWriter();
+
+            try {
+                LocalDate start = null;
+                LocalDate end = null;
+                try {
+                    if (!startDate.isEmpty()) start = LocalDate.parse(startDate);
+                } catch (DateTimeParseException ignore) {
+                }
+                try {
+                    if (!endDate.isEmpty()) end = LocalDate.parse(endDate);
+                } catch (DateTimeParseException ignore) {
+                }
+
+                // simple CSV escape
+                java.util.function.Function<String, String> esc = (v) -> {
+                    if (v == null) return "";
+                    String s = v.replace("\"", "\"\"");
+                    return "\"" + s + "\"";
+                };
+
+                if ("applications".equalsIgnoreCase(scope) || "hires".equalsIgnoreCase(scope)) {
+                    csv.println("ApplicationId,PositionId,PositionTitle,UserId,UserName,MOId,Priority,Status,AppliedDate,Feedback");
+                    List<Map<String, String>> apps = dataManager.getAllApplications();
+                    for (Map<String, String> a : apps) {
+                        String appliedDate = value(a.get("appliedDate"));
+                        if (start != null || end != null) {
+                            try {
+                                LocalDate d = appliedDate.isEmpty() ? null : LocalDate.parse(appliedDate);
+                                if (d == null) continue;
+                                if (start != null && d.isBefore(start)) continue;
+                                if (end != null && d.isAfter(end)) continue;
+                            } catch (DateTimeParseException ex) {
+                                // skip unparsable
+                                continue;
+                            }
+                        }
+
+                        if ("hires".equalsIgnoreCase(scope) && !"approved".equalsIgnoreCase(value(a.get("status")))) {
+                            continue;
+                        }
+
+                        csv.println(String.join(",",
+                                esc.apply(value(a.get("id"))),
+                                esc.apply(value(a.get("positionId"))),
+                                esc.apply(value(a.get("positionTitle"))),
+                                esc.apply(value(a.get("userId"))),
+                                esc.apply(value(a.get("userName"))),
+                                esc.apply(value(a.get("moId"))),
+                                esc.apply(value(a.get("priority"))),
+                                esc.apply(value(a.get("status"))),
+                                esc.apply(appliedDate),
+                                esc.apply(value(a.get("feedback")))
+                        ));
+                    }
+                } else if ("positions".equalsIgnoreCase(scope)) {
+                    csv.println("PositionId,Title,Department,MOId,Openings,AppliedCount,AcceptedCount,Status,CreatedAt,Deadline");
+                    List<Map<String, String>> positions = dataManager.getAllPositions();
+                    for (Map<String, String> p : positions) {
+                        String created = value(p.get("createdAt"));
+                        if (start != null || end != null) {
+                            try {
+                                LocalDate d = created.isEmpty() ? null : LocalDate.parse(created);
+                                if (d == null) continue;
+                                if (start != null && d.isBefore(start)) continue;
+                                if (end != null && d.isAfter(end)) continue;
+                            } catch (DateTimeParseException ex) {
+                                continue;
+                            }
+                        }
+                        csv.println(String.join(",",
+                                esc.apply(value(p.get("id"))),
+                                esc.apply(value(p.get("title"))),
+                                esc.apply(value(p.get("department"))),
+                                esc.apply(value(p.get("moId"))),
+                                esc.apply(value(p.get("openings"))),
+                                esc.apply(value(p.get("appliedCount"))),
+                                esc.apply(value(p.get("acceptedCount"))),
+                                esc.apply(value(p.get("status"))),
+                                esc.apply(created),
+                                esc.apply(value(p.get("deadline")))
+                        ));
+                    }
+                } else if ("workload".equalsIgnoreCase(scope)) {
+                    csv.println("UserId,UserName,QMId,Status,TotalApplications,Pending,Approved,Rejected,Canceled,CurrentLoad");
+                    List<Map<String, Object>> w = dataManager.getTaWorkloadSummary();
+                    for (Map<String, Object> r : w) {
+                        csv.println(String.join(",",
+                                esc.apply(String.valueOf(r.getOrDefault("userId", ""))),
+                                esc.apply(String.valueOf(r.getOrDefault("userName", ""))),
+                                esc.apply(String.valueOf(r.getOrDefault("qmId", ""))),
+                                esc.apply(String.valueOf(r.getOrDefault("status", ""))),
+                                esc.apply(String.valueOf(r.getOrDefault("totalApplications", "0"))),
+                                esc.apply(String.valueOf(r.getOrDefault("pending", "0"))),
+                                esc.apply(String.valueOf(r.getOrDefault("approved", "0"))),
+                                esc.apply(String.valueOf(r.getOrDefault("rejected", "0"))),
+                                esc.apply(String.valueOf(r.getOrDefault("canceled", "0"))),
+                                esc.apply(String.valueOf(r.getOrDefault("currentLoad", "0")))
+                        ));
+                    }
+                } else {
+                    csv.println("Unsupported scope");
+                }
+
+                // 写入操作日志
+                dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "exportRecruitmentData", scope + " " + startDate + "->" + endDate, "success");
+            } catch (Exception ex) {
+                dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "exportRecruitmentData", scope + " " + startDate + "->" + endDate + " : " + ex.getMessage(), "failed");
+                throw new ServletException(ex);
+            }
             return;
         }
 
