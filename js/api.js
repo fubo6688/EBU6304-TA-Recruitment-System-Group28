@@ -79,6 +79,15 @@ class API {
     });
   }
 
+  // 忘记密码找回接口（action=forgot-password）。
+  static forgotPassword(payload) {
+    return API.request("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody({ ...payload, action: "forgot-password" })
+    });
+  }
+
   // 会话检查接口。
   static session() {
     return API.request("/login");
