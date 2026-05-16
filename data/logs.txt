@@ -526,3 +526,22 @@ log1775924590042|2026-04-12 00:23:10|ta001|luming|TA|LOGIN|login|success
 log1775924599339|2026-04-12 00:23:19|ta001|luming|TA|LOGOUT|logout|success
 log1775924603508|2026-04-12 00:23:23|admin001|管理员|Admin|LOGIN|login|success
 >>>>>>> 6b5ea79806cccca04be93f15125a613d96986a39
+log1775966167274|2026-04-12 11:56:07|ta_emma|Emma Wilson|TA|LOGIN|login|success
+log1775966186468|2026-04-12 11:56:26|ta_emma|Emma Wilson|TA|LOGOUT|logout|success
+log1775966256956|2026-04-12 11:57:36|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775966712270|2026-04-12 12:05:12|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775966745985|2026-04-12 12:05:45|mo_jones|Prof. Jones (Agile Module)|MO|LOGIN|login|success
+log1775966751869|2026-04-12 12:05:51|mo_jones|Prof. Jones (Agile Module)|MO|LOGOUT|logout|success
+log1775966779881|2026-04-12 12:06:19|mo001||MO|LOGIN|login|failed
+log1775966787442|2026-04-12 12:06:27|mo001||MO|LOGIN|login|failed
+log1775966790279|2026-04-12 12:06:30|mo001||MO|LOGIN|login|failed
+log1775968753598|2026-04-12 12:39:13|mo001|王老师|MO|LOGIN|login|success
+log1775970784293|2026-04-12 13:13:04|ta002||TA|LOGIN|login|failed
+log1775970797962|2026-04-12 13:13:17|ta002|李四|TA|LOGIN|login|success
+log1775977374050|2026-04-12 15:02:54|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775977377966|2026-04-12 15:02:57|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775977406605|2026-04-12 15:03:26|admin001||Admin|LOGIN|login|failed
+log1775977421641|2026-04-12 15:03:41|admin001|管理员|Admin|LOGIN|login|success
+log1775977456019|2026-04-12 15:04:16|admin001|管理员|Admin|LOGOUT|logout|success
+log1775977516514|2026-04-12 15:05:16|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775978743285|2026-04-12 15:25:43|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
