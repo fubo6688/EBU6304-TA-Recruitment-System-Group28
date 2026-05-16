@@ -1,0 +1,2 @@
+ntf1776002000001|application|Application Submitted|Your application was submitted.|2026-03-23 13:11:55|1|
+ntf1776002000002|application|Application Result|Your application has been accepted|2026-03-23 13:12:43|0|

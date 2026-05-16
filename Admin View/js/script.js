@@ -172,9 +172,10 @@ class TARecruitmentSystem {
   showMessage(message, type = 'info') {
     const alert = document.createElement('div');
     alert.className = `alert alert-${type}`;
-    alert.innerHTML = `<span>${message}</span>`;
+    const span = document.createElement('span');
+    span.textContent = message;
+    alert.appendChild(span);
     alert.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 2000; animation: slideIn 0.3s ease;';
-    
     document.body.appendChild(alert);
     
     setTimeout(() => {
@@ -195,7 +196,15 @@ class TARecruitmentSystem {
         reader.onload = (event) => {
           const preview = document.getElementById(previewId);
           if (preview) {
-            preview.innerHTML = `<img src="${event.target.result}" style="max-width: 100%; border-radius: 6px;"><p>${file.name}</p>`;
+            preview.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.style.maxWidth = '100%';
+            img.style.borderRadius = '6px';
+            const p = document.createElement('p');
+            p.textContent = file.name;
+            preview.appendChild(img);
+            preview.appendChild(p);
           }
         };
         reader.readAsDataURL(file);

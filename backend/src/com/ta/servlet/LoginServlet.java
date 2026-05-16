@@ -110,10 +110,14 @@ public class LoginServlet extends HttpServlet {
         resp.setContentType("application/json;charset=UTF-8");
         PrintWriter out = resp.getWriter();
 
-        // register 与 login 共享入口，根据 action 分流。
+        // register / forgot-password 与 login 共享入口，根据 action 分流。
         String action = value(req.getParameter("action"));
         if ("register".equalsIgnoreCase(action)) {
             handleRegister(req, out);
+            return;
+        }
+        if ("forgot-password".equalsIgnoreCase(action)) {
+            handleForgotPassword(req, out);
             return;
         }
 
@@ -139,15 +143,16 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        // 账号存在但非 active：给出明确提示（pending 与 inactive 区分）。
+        // 历史兼容：旧的 pending 账号在首次正确登录时自动激活。
         User existing = dataManager.getUserById(userId);
-        if (existing != null && !"active".equalsIgnoreCase(existing.getStatus()) && existing.getPassword().equals(password)) {
+        if (existing != null && existing.getPassword().equals(password)) {
             if ("pending".equalsIgnoreCase(existing.getStatus())) {
-                out.print(new JSONObject().put("success", false).put("message", "Account pending admin approval").toString());
+                existing.setStatus("active");
+                dataManager.saveUser(existing);
+            } else if (!"active".equalsIgnoreCase(existing.getStatus())) {
+                out.print(new JSONObject().put("success", false).put("message", "Account is not active").toString());
                 return;
             }
-            out.print(new JSONObject().put("success", false).put("message", "Account is not active").toString());
-            return;
         }
 
         // 统一认证失败处理：记录失败次数、可能触发锁定、写审计日志。
@@ -219,6 +224,11 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
+        if (!isAllowedRegisterEmail(email)) {
+            out.print(new JSONObject().put("success", false).put("message", "Email must end with @bupt.cn or @qmul.ac.uk").toString());
+            return;
+        }
+
         if (!isPasswordComplex(password)) {
             out.print(new JSONObject().put("success", false)
                     .put("message", "Password must be at least 8 chars with uppercase, lowercase, digit, and letters/digits only")
@@ -231,6 +241,11 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
+        if (existsEmail(email)) {
+            out.print(new JSONObject().put("success", false).put("message", "Email already exists").toString());
+            return;
+        }
+
         String effectiveQmId = qmId.isEmpty() ? userId : qmId;
         if (existsSameRoleAndQmId(normalizedRole, effectiveQmId)) {
             out.print(new JSONObject()
@@ -240,15 +255,84 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        // 新注册默认进入 pending，等待管理员审批。
+        // 新注册直接激活，不再要求管理员审批。
         User user = new User(userId, userName, email, password, normalizedRole, effectiveQmId);
-        user.setStatus("pending");
+        user.setStatus("active");
         dataManager.saveUser(user);
-        dataManager.writeLog(userId, userName, normalizedRole, "REGISTER", "pending approval", "success");
+        dataManager.writeLog(userId, userName, normalizedRole, "REGISTER", "active", "success");
 
         out.print(new JSONObject()
                 .put("success", true)
-                .put("message", "Registration submitted. Please wait for admin approval")
+            .put("message", "Registration successful. You can log in now")
+                .toString());
+    }
+
+    /**
+     * 处理忘记密码找回流程。
+     */
+    private void handleForgotPassword(HttpServletRequest req, PrintWriter out) {
+        String userId = value(req.getParameter("userId"));
+        String role = value(req.getParameter("role"));
+        String email = value(req.getParameter("email"));
+        String qmId = value(req.getParameter("qmId"));
+        String newPassword = value(req.getParameter("newPassword"));
+        String confirmPassword = value(req.getParameter("confirmPassword"));
+
+        if (userId.isEmpty() || email.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+            out.print(new JSONObject().put("success", false).put("message", "Required fields are missing").toString());
+            return;
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            out.print(new JSONObject().put("success", false).put("message", "The two passwords do not match").toString());
+            return;
+        }
+
+        if (!isPasswordComplex(newPassword)) {
+            out.print(new JSONObject().put("success", false)
+                    .put("message", "Password must be at least 8 chars with uppercase, lowercase, digit, and letters/digits only")
+                    .toString());
+            return;
+        }
+
+        User user = dataManager.getUserById(userId);
+        if (user == null) {
+            out.print(new JSONObject().put("success", false).put("message", "Account not found").toString());
+            return;
+        }
+
+        if (!"active".equalsIgnoreCase(user.getStatus())) {
+            out.print(new JSONObject().put("success", false).put("message", "Account is inactive. Please contact Admin to reactivate it.").toString());
+            return;
+        }
+
+        if (!value(email).equalsIgnoreCase(value(user.getEmail()))) {
+            out.print(new JSONObject().put("success", false).put("message", "Provided information does not match our records").toString());
+            return;
+        }
+
+        if (!value(qmId).isEmpty() && !value(qmId).equalsIgnoreCase(value(user.getQmId()))) {
+            out.print(new JSONObject().put("success", false).put("message", "Provided information does not match our records").toString());
+            return;
+        }
+
+        if (!value(role).isEmpty() && !value(role).equalsIgnoreCase(value(user.getRole()))) {
+            out.print(new JSONObject().put("success", false).put("message", "Provided information does not match our records").toString());
+            return;
+        }
+
+        if (newPassword.equals(user.getPassword())) {
+            out.print(new JSONObject().put("success", false).put("message", "New password must be different from current password").toString());
+            return;
+        }
+
+        user.setPassword(newPassword);
+        dataManager.saveUser(user);
+        dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "RESET_PASSWORD", "forgot-password", "success");
+
+        out.print(new JSONObject()
+                .put("success", true)
+                .put("message", "Password reset successful. Please log in again.")
                 .toString());
     }
 
@@ -260,6 +344,14 @@ public class LoginServlet extends HttpServlet {
             return false;
         }
         return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$");
+    }
+
+    /**
+     * 注册邮箱域名白名单校验。
+     */
+    private boolean isAllowedRegisterEmail(String email) {
+        String value = value(email).toLowerCase(Locale.ROOT);
+        return value.endsWith("@bupt.cn") || value.endsWith("@qmul.ac.uk");
     }
 
     /**
@@ -276,6 +368,23 @@ public class LoginServlet extends HttpServlet {
             String itemRole = value(item.getRole()).toUpperCase(Locale.ROOT);
             String itemQmId = value(item.getQmId()).toLowerCase(Locale.ROOT);
             if (normalizedRole.equals(itemRole) && normalizedQmId.equals(itemQmId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 检查邮箱是否已被其他账号使用，忽略大小写。
+     */
+    private boolean existsEmail(String email) {
+        String normalizedEmail = value(email).toLowerCase(Locale.ROOT);
+        if (normalizedEmail.isEmpty()) {
+            return false;
+        }
+
+        for (User item : dataManager.getAllUsers()) {
+            if (normalizedEmail.equals(value(item.getEmail()).toLowerCase(Locale.ROOT))) {
                 return true;
             }
         }

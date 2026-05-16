@@ -1,0 +1,2 @@
+ntf1774259537632|system|Admin Center|Welcome to the admin notification center.|2026-03-23 17:52:17|1
+ntf1774259537633|system|Tips|Use Notification Center to send messages to users by role or globally.|2026-03-23 17:52:17|1

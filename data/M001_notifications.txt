@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ntf1774242715722|application|New Application|A new application needs review.|2026-03-23 13:11:55|0
 ntf1774244690916|application|New Application|A new application needs review.|2026-03-23 13:44:50|0
 ntf1774245097333|application|New Application|A new application needs review.|2026-03-23 13:51:37|0
@@ -16,3 +17,6 @@ ntf1775803050651|application|New Application|A new application needs review.|202
 ntf1775835392671|application|New Application|A new application needs review.|2026-04-10 23:36:32|0
 ntf1775835395725|application|New Application|A new application needs review.|2026-04-10 23:36:35|0
 ntf1775835396943|application|New Application|A new application needs review.|2026-04-10 23:36:36|0
+=======
+ntf1776001700001|application|New Application|A new application needs review.|2026-03-23 13:11:55|0|
+>>>>>>> 450754283c8cdbf213a5f073d02c8fd2f6d1ccac

@@ -116,6 +116,13 @@
       flex-wrap: wrap;
     }
 
+    .ai-filter-bar .keyword-input {
+      min-width: 220px;
+      height: 34px;
+      font-size: 12px;
+      margin-left: auto;
+    }
+
     .ai-filter-bar-title {
       font-size: 13px;
       font-weight: 600;
@@ -329,19 +336,21 @@
           <div class="filter-group">
             <span style="font-size: 12px; color: var(--gray-500);">Match Score:</span>
             <div class="filter-options">
-              <button class="filter-btn active">high</button>
-              <button class="filter-btn">middle</button>
-              <button class="filter-btn">Low</button>
+              <button class="filter-btn active" data-group="score" data-value="all">All</button>
+              <button class="filter-btn" data-group="score" data-value="high">High</button>
+              <button class="filter-btn" data-group="score" data-value="middle">Middle</button>
+              <button class="filter-btn" data-group="score" data-value="low">Low</button>
             </div>
           </div>
           <div class="filter-group">
             <span style="font-size: 12px; color: var(--gray-500);">Application priority:</span>
             <div class="filter-options">
-              <button class="filter-btn active">First Choice</button>
-              <button class="filter-btn">All</button>
+              <button class="filter-btn active" data-group="priority" data-value="all">All</button>
+              <button class="filter-btn" data-group="priority" data-value="first">First Choice</button>
             </div>
           </div>
-          <button class="btn btn-sm btn-primary" style="margin-left: auto;">filter</button>
+          <input id="applicantKeyword" type="text" class="form-control keyword-input" placeholder="Search applicant / skill / status">
+          <button class="btn btn-sm btn-secondary" id="clearReviewFiltersBtn">Clear</button>
         </div>
 
         <!-- Applicant List -->
@@ -475,12 +484,30 @@
   <script src="js/api.js"></script>
   <script>
     let currentPositionId = '';
+    let allPositions = [];
     let applicantProfileMap = {};
     let currentApplications = [];
+    let currentScoreFilter = 'all';
+    let currentPriorityFilter = 'all';
 
     // 功能：标准化状态值，避免大小写与空值影响判断。
     function normalizeStatus(status) {
       return String(status || '').toLowerCase();
+    }
+
+    // 功能：标准化文本输入，便于比较与搜索。
+    function normalizeText(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    // 功能：转义 HTML 特殊字符，降低 XSS 风险。
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     // 功能：处理 statusText 相关逻辑。
@@ -519,7 +546,7 @@
       if (!list) return;
 
       list.innerHTML = positions.map((p, index) => `
-        <li class="position-item ${index === 0 ? 'active' : ''}" onclick="selectPosition('${p.id}', this)">
+        <li class="position-item ${p.id === currentPositionId || (!currentPositionId && index === 0) ? 'active' : ''}" onclick="selectPosition('${p.id}', this)">
           <div>📌 ${p.title || ''}</div>
           <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">${p.appliedCount || 0} applications / ${p.acceptedCount || 0} approved</div>
         </li>
@@ -528,6 +555,111 @@
       if (positions.length && !currentPositionId) {
         currentPositionId = positions[0].id;
       }
+    }
+
+    // 功能：拆分文本为技能 token 列表。
+    function splitTokens(raw) {
+      return String(raw || '')
+        .split(/[|,，;；/、\n\r]/)
+        .map((s) => normalizeText(s))
+        .filter((s) => s.length >= 2);
+    }
+
+    // 功能：获取当前选中岗位对象。
+    function getCurrentPosition() {
+      return allPositions.find((p) => p.id === currentPositionId) || null;
+    }
+
+    // 功能：标准化申请优先级。
+    function normalizePriority(priority) {
+      const p = normalizeText(priority || 'first');
+      if (p.includes('first')) return 'first';
+      if (p.includes('second')) return 'second';
+      if (p.includes('third')) return 'third';
+      return p || 'first';
+    }
+
+    // 功能：计算申请与岗位要求的匹配信息。
+    function computeMatchInfo(app) {
+      const position = getCurrentPosition();
+      const requirementTokens = splitTokens(position && position.requirements);
+      const skillTokens = splitTokens(applicantProfileMap[app.userId]?.profile?.skills || '');
+
+      const matched = [];
+      skillTokens.forEach((skill) => {
+        if (requirementTokens.some((req) => req.includes(skill) || skill.includes(req))) {
+          if (!matched.includes(skill)) {
+            matched.push(skill);
+          }
+        }
+      });
+
+      let score = 0;
+      if (requirementTokens.length) {
+        score = Math.round((matched.length / requirementTokens.length) * 100);
+      } else if (skillTokens.length) {
+        score = Math.min(70, 40 + matched.length * 10);
+      }
+
+      return {
+        score: Math.max(0, Math.min(100, score)),
+        matched
+      };
+    }
+
+    // 功能：判断匹配分数是否命中筛选分段。
+    function isScoreMatched(score, scoreFilter) {
+      if (scoreFilter === 'high') return score >= 80;
+      if (scoreFilter === 'middle') return score >= 50 && score < 80;
+      if (scoreFilter === 'low') return score < 50;
+      return true;
+    }
+
+    // 功能：应用当前筛选条件并刷新申请列表。
+    function applyApplicantFilters() {
+      const keyword = normalizeText(document.getElementById('applicantKeyword')?.value || '');
+
+      const decorated = currentApplications.map((app) => {
+        const match = computeMatchInfo(app);
+        return {
+          app,
+          match,
+          priority: normalizePriority(app.priority)
+        };
+      });
+
+      const filtered = decorated.filter((item) => {
+        if (!isScoreMatched(item.match.score, currentScoreFilter)) {
+          return false;
+        }
+
+        if (currentPriorityFilter !== 'all' && item.priority !== currentPriorityFilter) {
+          return false;
+        }
+
+        if (!keyword) {
+          return true;
+        }
+
+        const profile = applicantProfileMap[item.app.userId]?.profile || {};
+        const searchable = [
+          item.app.userId,
+          item.app.userName,
+          item.app.positionTitle,
+          item.app.feedback,
+          profile.major,
+          profile.skills,
+          statusText(item.app.status),
+          item.priority,
+          item.match.matched.join(' '),
+          String(item.match.score)
+        ].map((x) => normalizeText(x)).join(' ');
+
+        return searchable.includes(keyword);
+      }).sort((a, b) => b.match.score - a.match.score)
+        .map((item) => ({ ...item.app, _match: item.match, _priority: item.priority }));
+
+      renderApplicants(filtered);
     }
 
     // 功能：渲染界面内容。
@@ -540,38 +672,53 @@
         return;
       }
 
-      grid.innerHTML = apps.map((app) => `
-        ${(() => {
-          const s = normalizeStatus(app.status);
-          const lockApprove = s === 'approved' || s === 'canceled';
-          const lockReject = s === 'rejected' || s === 'canceled';
-          const lockBoth = s === 'canceled';
-          return `
+      grid.innerHTML = apps.map((app) => {
+        const s = normalizeStatus(app.status);
+        const lockApprove = s === 'approved' || s === 'canceled';
+        const lockReject = s === 'rejected' || s === 'canceled';
+        const profile = applicantProfileMap[app.userId]?.profile || {};
+        const match = app._match || computeMatchInfo(app);
+        const priority = app._priority || normalizePriority(app.priority);
+        const matchedSkills = match.matched.length
+          ? match.matched.map((skill) => `<span class="skills-badge highlighted">${escapeHtml(skill)}</span>`).join('')
+          : '<span style="font-size:12px;color:var(--gray-500);">No direct skill overlap</span>';
+
+        let priorityBadge = `<span class="applicant-priority">${escapeHtml(priority)}</span>`;
+        if (priority === 'first') {
+          priorityBadge = '<span class="applicant-priority">First Choice</span>';
+        } else if (priority === 'second') {
+          priorityBadge = '<span class="applicant-priority" style="background-color: #dbeafe; color: #1e40af;">Second Choice</span>';
+        } else if (priority === 'third') {
+          priorityBadge = '<span class="applicant-priority" style="background-color: #fee2e2; color: var(--danger-color);">Third Choice</span>';
+        }
+
+        return `
         <div class="applicant-card">
           <div class="applicant-header">
             <div class="applicant-info">
-              <div class="applicant-name">${app.userName || app.userId}</div>
-              <div class="applicant-major">QM ID: ${app.userId || ''} · ${(applicantProfileMap[app.userId]?.profile?.major || 'Major not provided')}</div>
+              <div class="applicant-name">${escapeHtml(app.userName || app.userId)}</div>
+              <div class="applicant-major">QM ID: ${escapeHtml(app.userId || '')} · ${escapeHtml(profile.major || 'Major not provided')}</div>
             </div>
-            <span class="applicant-priority">${app.priority || 'first'}</span>
+            ${priorityBadge}
           </div>
           <div class="applicant-body">
-            <div class="match-row"><span class="match-label">Position:</span><span class="match-value">${app.positionTitle || ''}</span></div>
-            <div class="match-row"><span class="match-label">Status:</span><span class="match-value">${statusText(app.status)}</span></div>
-            <div class="match-row"><span class="match-label">Feedback:</span><span class="match-value">${app.feedback || 'No feedback yet'}</span></div>
-            <div class="match-row"><span class="match-label">Skills:</span><span class="match-value">${(applicantProfileMap[app.userId]?.profile?.skills || '').toString().trim() || 'Not provided'}</span></div>
-            <div class="match-row"><span class="match-label">Availability:</span><span class="match-value">${formatAvailability(applicantProfileMap[app.userId]?.profile?.availableTime)}</span></div>
+            <div class="match-row"><span class="match-label">Position:</span><span class="match-value">${escapeHtml(app.positionTitle || '')}</span></div>
+            <div class="match-row"><span class="match-label">Status:</span><span class="match-value">${escapeHtml(statusText(app.status))}</span></div>
+            <div class="match-row"><span class="match-label">Match Score:</span><span class="match-score">${match.score}%</span></div>
+            <div class="match-row"><span class="match-label">Matched:</span><div>${matchedSkills}</div></div>
+            <div class="match-row"><span class="match-label">Feedback:</span><span class="match-value">${escapeHtml(app.feedback || 'No feedback yet')}</span></div>
+            <div class="match-row"><span class="match-label">Skills:</span><span class="match-value">${escapeHtml((profile.skills || '').toString().trim() || 'Not provided')}</span></div>
+            <div class="match-row"><span class="match-label">Availability:</span><span class="match-value">${escapeHtml(formatAvailability(profile.availableTime))}</span></div>
           </div>
           <div class="applicant-footer">
-            <button class="btn btn-sm btn-outline" onclick="openResume('${app.userId}')">View Resume</button>
-            <button class="btn btn-sm btn-outline" onclick="showApplicantProfile('${app.userId}')">View Profile</button>
-            <button class="btn btn-sm btn-primary" onclick="reviewApplication('${app.id}', 'accept')" ${lockApprove ? 'disabled' : ''}>Accept</button>
-            <button class="btn btn-sm btn-danger" onclick="reviewApplication('${app.id}', 'reject')" ${lockReject ? 'disabled' : ''}>Reject</button>
+            <button class="btn btn-sm btn-outline" onclick="openResume('${app.userId || ''}')">View Resume</button>
+            <button class="btn btn-sm btn-outline" onclick="showApplicantProfile('${app.userId || ''}')">View Profile</button>
+            <button class="btn btn-sm btn-primary" onclick="reviewApplication('${app.id || ''}', 'accept')" ${lockApprove ? 'disabled' : ''}>Accept</button>
+            <button class="btn btn-sm btn-danger" onclick="reviewApplication('${app.id || ''}', 'reject')" ${lockReject ? 'disabled' : ''}>Reject</button>
           </div>
         </div>
       `;
-        })()}
-      `).join('');
+      }).join('');
     }
 
     // 功能：处理 preloadApplicantProfiles 相关逻辑。
@@ -598,7 +745,7 @@
         const apps = Array.isArray(list) ? list : [];
         currentApplications = apps;
         await preloadApplicantProfiles(apps);
-        renderApplicants(apps);
+        applyApplicantFilters();
       } catch (error) {
         taSystem.showMessage(error.message || 'Failed to load applications', 'danger');
       }
@@ -657,6 +804,9 @@
 
     // 功能：处理 selectPosition 相关逻辑。
     function selectPosition(positionId, element) {
+      if (!positionId) {
+        return;
+      }
       currentPositionId = positionId;
       document.querySelectorAll('.position-item').forEach(item => item.classList.remove('active'));
       if (element) {
@@ -669,6 +819,7 @@
     async function reloadPositionsAndKeepSelection() {
       const positions = await API.getPositions();
       const list = Array.isArray(positions) ? positions : [];
+      allPositions = list;
 
       const initialFromQuery = new URLSearchParams(window.location.search).get('positionId');
       if (!currentPositionId && initialFromQuery) {
@@ -694,6 +845,13 @@
       }
     }
 
+    // 功能：同步筛选按钮激活态。
+    function setActiveFilterButton(group, value) {
+      document.querySelectorAll(`.filter-btn[data-group="${group}"]`).forEach((btn) => {
+        btn.classList.toggle('active', normalizeText(btn.getAttribute('data-value')) === normalizeText(value));
+      });
+    }
+
     // 功能：处理申请审核结果并提交。
     async function reviewApplication(applicationId, decision) {
       if (!applicationId) return;
@@ -712,20 +870,38 @@
       }
     }
 
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      // 功能：处理当前回调逻辑。
-      btn.addEventListener('click', function() {
-        const group = this.parentElement;
-        group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-
     document.addEventListener('DOMContentLoaded', async () => {
       const allowed = await taSystem.enforceSessionGuard(['MO']);
       if (!allowed) {
         return;
       }
+
+      document.querySelector('.ai-filter-bar')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-btn[data-group][data-value]');
+        if (!btn) return;
+        const group = normalizeText(btn.getAttribute('data-group'));
+        const value = normalizeText(btn.getAttribute('data-value'));
+        if (group === 'score') {
+          currentScoreFilter = value;
+          setActiveFilterButton('score', value);
+        } else if (group === 'priority') {
+          currentPriorityFilter = value;
+          setActiveFilterButton('priority', value);
+        }
+        applyApplicantFilters();
+      });
+
+      document.getElementById('applicantKeyword')?.addEventListener('input', applyApplicantFilters);
+      document.getElementById('clearReviewFiltersBtn')?.addEventListener('click', () => {
+        currentScoreFilter = 'all';
+        currentPriorityFilter = 'all';
+        const input = document.getElementById('applicantKeyword');
+        if (input) input.value = '';
+        setActiveFilterButton('score', 'all');
+        setActiveFilterButton('priority', 'all');
+        applyApplicantFilters();
+      });
+
       ensureProfileModal();
       try {
         await reloadPositionsAndKeepSelection();

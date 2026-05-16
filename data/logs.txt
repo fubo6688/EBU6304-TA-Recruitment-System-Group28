@@ -525,6 +525,7 @@ log1775924584744|2026-04-12 00:23:04|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|
 log1775924590042|2026-04-12 00:23:10|ta001|luming|TA|LOGIN|login|success
 log1775924599339|2026-04-12 00:23:19|ta001|luming|TA|LOGOUT|logout|success
 log1775924603508|2026-04-12 00:23:23|admin001|管理员|Admin|LOGIN|login|success
+<<<<<<< HEAD
 >>>>>>> 6b5ea79806cccca04be93f15125a613d96986a39
 log1775966167274|2026-04-12 11:56:07|ta_emma|Emma Wilson|TA|LOGIN|login|success
 log1775966186468|2026-04-12 11:56:26|ta_emma|Emma Wilson|TA|LOGOUT|logout|success
@@ -545,3 +546,46 @@ log1775977421641|2026-04-12 15:03:41|admin001|管理员|Admin|LOGIN|login|succes
 log1775977456019|2026-04-12 15:04:16|admin001|管理员|Admin|LOGOUT|logout|success
 log1775977516514|2026-04-12 15:05:16|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
 log1775978743285|2026-04-12 15:25:43|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+=======
+log1775978553702|2026-04-12 15:22:33|ta001|luming|TA|LOGIN|login|success
+log1775978579608|2026-04-12 15:22:59|ta001|luming|TA|LOGOUT|logout|success
+log1775978582728|2026-04-12 15:23:02|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775978622725|2026-04-12 15:23:42|mo_smith|Dr. Smith (Java Module)|MO|CREATE_POSITION|D|success
+log1775978686689|2026-04-12 15:24:46|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775983141235|2026-04-12 16:39:01|ta001|luming|TA|LOGIN|login|success
+log1775983145017|2026-04-12 16:39:05|ta001|luming|TA|LOGOUT|logout|success
+log1775983148493|2026-04-12 16:39:08|ta001||TA|LOGIN|login|failed
+log1775983175677|2026-04-12 16:39:35|ta001|luming|TA|LOGIN|login|success
+log1775983206510|2026-04-12 16:40:06|ta001|luming|TA|UPDATE_PROFILE|profile|success
+log1775983241928|2026-04-12 16:40:41|ta001|luming|TA|SUBMIT_APPLICATION|pos1775823635943|success
+log1775983291388|2026-04-12 16:41:31|ta001|luming|TA|LOGOUT|logout|success
+log1775983296934|2026-04-12 16:41:36|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1775983307054|2026-04-12 16:41:47|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> closed|success
+log1775983313479|2026-04-12 16:41:53|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION_STATUS|pos1775647626466 -> open|success
+log1775983338597|2026-04-12 16:42:18|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION|pos1775647626466|success
+log1775983344128|2026-04-12 16:42:24|mo_smith|Dr. Smith (Java Module)|MO|UPDATE_POSITION|pos1775647626466|success
+log1775983371383|2026-04-12 16:42:51|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775647667256 -> reject|success
+log1775983376688|2026-04-12 16:42:56|mo_smith|Dr. Smith (Java Module)|MO|REVIEW_APPLICATION|app1775924115139 -> accept|success
+log1775983442008|2026-04-12 16:44:02|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1775983447803|2026-04-12 16:44:07|admin001|管理员|Admin|LOGIN|login|success
+log1775983626885|2026-04-12 16:47:06|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|2023213247 -> inactive|success
+log1775983634028|2026-04-12 16:47:14|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|2023213247 -> active|success
+log1775983647592|2026-04-12 16:47:27|admin001|管理员|Admin|LOGOUT|logout|success
+>>>>>>> 450754283c8cdbf213a5f073d02c8fd2f6d1ccac
+log1778895520717|2026-05-16 09:38:40|mo_smith|Dr. Smith (Java Module)|MO|LOGIN|login|success
+log1778895558272|2026-05-16 09:39:18|mo_smith|Dr. Smith (Java Module)|MO|LOGOUT|logout|success
+log1778895594302|2026-05-16 09:39:54|ta_david|David Wang|TA|LOGIN|login|success
+log1778896062810|2026-05-16 09:47:42|ta_david|David Wang|TA|LOGOUT|logout|success
+log1778896088877|2026-05-16 09:48:08|admin001|管理员|Admin|LOGIN|login|success
+log1778896175133|2026-05-16 09:49:35|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|2023213247 -> inactive|success
+log1778896177198|2026-05-16 09:49:37|admin001|管理员|Admin|UPDATE_ACCOUNT_STATUS|2023213247 -> active|success
+log1778896708493|2026-05-16 09:58:28|admin001|管理员|Admin|LOGOUT|logout|success
+log1778896795105|2026-05-16 09:59:55|231220965|BO|TA|REGISTER|active|success
+log1778896823499|2026-05-16 10:00:23|231220965|BO|TA|LOGIN|login|success
+log1778897374391|2026-05-16 10:09:34|12|B|TA|REGISTER|active|success
+log1778899454103|2026-05-16 10:44:14|123456|BF|TA|REGISTER|active|success
+log1778899557379|2026-05-16 10:45:57|123456|BF|TA|LOGIN|login|success
+log1778899576209|2026-05-16 10:46:16|123456|BF|TA|LOGOUT|logout|success
+log1778899617992|2026-05-16 10:46:57|123456|BF|TA|RESET_PASSWORD|forgot-password|success
+log1778899632748|2026-05-16 10:47:12|123456|BF|TA|LOGIN|login|success
+log1778899637996|2026-05-16 10:47:17|123456|BF|TA|LOGOUT|logout|success

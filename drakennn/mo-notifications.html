@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MO Notifications - TARecruitment system</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .main-layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: var(--gray-100);
+      padding: 20px 0;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .sidebar-menu-item:hover {
+      background-color: var(--gray-200);
+      color: var(--primary-color);
+    }
+
+    .sidebar-menu-item.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .placeholder {
+      background: #fff;
+      border: 1px dashed var(--gray-300);
+      border-radius: 10px;
+      padding: 28px;
+      color: var(--gray-500);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">TA</div>
+      <span>TARecruitment system</span>
+    </div>
+    <div class="topbar-nav">
+      <a class="topbar-link" href="profile.html">Profile</a>
+      <div class="topbar-avatar">👤</div>
+      <a id="logoutBtn" class="topbar-logout" href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="sidebar-title">MO Function</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item">Position Management</li>
+        <li class="sidebar-menu-item">Application Review</li>
+        <li class="sidebar-menu-item active">Notifications</li>
+        <li class="sidebar-menu-item">Profile</li>
+      </ul>
+    </div>
+
+    <div class="content">
+      <h2 style="margin-top:0;">Notifications</h2>
+      <div class="placeholder">
+        MO notification center placeholder is ready. This sprint does not implement notification business logic yet.
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await taSystem.enforceSessionGuard(['MO']);
+    });
+  </script>
+</body>
+</html>

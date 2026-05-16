@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - TARecruitment system</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     .main-layout {
       display: flex;
@@ -151,6 +152,99 @@
     .position-filters .course-input {
       min-width: 200px;
     }
+
+    .charts-section {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .chart-card {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+
+    .chart-title {
+      margin: 0;
+      padding: 12px 14px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 260px;
+      padding: 10px;
+    }
+
+    .data-tools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .data-tools .form-control {
+      min-width: 130px;
+      height: 34px;
+      font-size: 12px;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--gray-200);
+      margin-bottom: 10px;
+    }
+
+    .tab-button {
+      border: none;
+      background: transparent;
+      padding: 10px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--gray-500);
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab-button.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status-open {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-closed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    @media (max-width: 1200px) {
+      .charts-section {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -171,14 +265,36 @@
       <div class="sidebar-title">Admin Function</div>
       <ul class="sidebar-menu">
         <li class="sidebar-menu-item active">Admin Dashboard</li>
-        <li class="sidebar-menu-item">Registration Approvals</li>
         <li class="sidebar-menu-item">Account Status</li>
+        <li class="sidebar-menu-item">User Management</li>
+        <li class="sidebar-menu-item">System Logs</li>
         <li class="sidebar-menu-item">Profile</li>
       </ul>
     </div>
 
     <div class="content">
       <div class="cards" id="summaryCards"></div>
+
+      <div class="charts-section">
+        <div class="chart-card">
+          <h3 class="chart-title">Position Trend</h3>
+          <div class="chart-container">
+            <canvas id="trendChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Positions By MO</h3>
+          <div class="chart-container">
+            <canvas id="moChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Application Status</h3>
+          <div class="chart-container">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
 
       <div class="panel">
         <div class="panel-header">
@@ -189,7 +305,7 @@
               <option value="open">Open</option>
               <option value="closed">Closed</option>
             </select>
-            <input type="text" id="courseFilter" class="form-control course-input" placeholder="Filter by course name" aria-label="Filter by course name">
+            <input type="text" id="courseFilter" class="form-control course-input" placeholder="Search by title / course / MO / ID" aria-label="Search by title / course / MO / ID">
             <button class="btn btn-sm btn-secondary" id="clearFiltersBtn">Clear</button>
             <button class="btn btn-sm btn-secondary" id="refreshBtn">Refresh</button>
           </div>
@@ -238,17 +354,116 @@
           </table>
         </div>
       </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h3 class="panel-title">Detailed Data & Export</h3>
+          <div class="data-tools">
+            <label for="exportScope">Export:</label>
+            <select id="exportScope" class="form-control" aria-label="Export scope">
+              <option value="applications">Applications</option>
+              <option value="hires">Hires (approved)</option>
+              <option value="positions">Positions</option>
+              <option value="workload">TA Workload</option>
+            </select>
+            <label for="exportStart">Start</label>
+            <input type="date" id="exportStart" class="form-control" aria-label="Export start date">
+            <label for="exportEnd">End</label>
+            <input type="date" id="exportEnd" class="form-control" aria-label="Export end date">
+            <button id="exportBtn" class="btn btn-sm btn-secondary">Export CSV</button>
+          </div>
+        </div>
+        <div style="padding: 0 12px 12px;">
+          <div class="tabs">
+            <button class="tab-button active" data-tab="detailedPositions">Position Details</button>
+            <button class="tab-button" data-tab="hiredTa">Hired TA List</button>
+          </div>
+
+          <div class="tab-content active" data-tab="detailedPositions">
+            <div class="table-wrap">
+              <table class="table" id="detailedPositionsTable">
+                <thead>
+                  <tr>
+                    <th>Position ID</th>
+                    <th>Title</th>
+                    <th>MO</th>
+                    <th>Applications</th>
+                    <th>Offers</th>
+                    <th>Openings</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="7" style="text-align:center;color:var(--gray-500);">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-content" data-tab="hiredTa">
+            <div class="table-wrap">
+              <table class="table" id="hiredTable">
+                <thead>
+                  <tr>
+                    <th>TA Name</th>
+                    <th>QM ID</th>
+                    <th>Position</th>
+                    <th>MO</th>
+                    <th>Admission Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="5" style="text-align:center;color:var(--gray-500);">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script src="js/script.js"></script>
   <script src="js/api.js"></script>
   <script>
-    let allPositions = [];
+    const adminMenuMap = {
+      'Admin Dashboard': 'admin-dashboard.html',
+      'Account Status': 'admin-account-status.html',
+      'User Management': 'Admin View/admin-users.html',
+      'System Logs': 'Admin View/admin-logs.html',
+      'Profile': 'profile.html'
+    };
+
+    const dashboardState = {
+      positions: [],
+      taWorkload: [],
+      applications: []
+    };
+
+    const chartState = {
+      trend: null,
+      mo: null,
+      status: null
+    };
 
     // 功能：标准化文本输入，便于比较与搜索。
     function normalizeText(value) {
       return (value || '').toString().trim().toLowerCase();
+    }
+
+    function toDateKey(value) {
+      const s = String(value || '').trim();
+      return s.length >= 10 ? s.slice(0, 10) : '';
+    }
+
+    function groupCountBy(items, keyGetter) {
+      const map = new Map();
+      (items || []).forEach((item) => {
+        const key = keyGetter(item);
+        if (!key) return;
+        map.set(key, (map.get(key) || 0) + 1);
+      });
+      return map;
     }
 
     // 功能：渲染界面内容。
@@ -256,13 +471,22 @@
       const cards = document.getElementById('summaryCards');
       if (!cards) return;
       const safe = summary || {};
+      const approvedFromApps = dashboardState.applications.filter((a) => normalizeText(a.status) === 'approved').length;
+      const unfilled = dashboardState.positions.filter((p) => {
+        const openings = Number(p.openings || 0);
+        const accepted = Number(p.acceptedCount || 0);
+        return openings > accepted;
+      }).length;
+
       cards.innerHTML = [
         ['Total Positions', safe.totalPositions || 0],
         ['Open Positions', safe.openPositions || 0],
         ['Closed Positions', safe.closedPositions || 0],
         ['Total Applications', safe.totalApplications || 0],
         ['Pending Applications', safe.pendingApplications || 0],
-        ['Approved Applications', safe.approvedApplications || 0]
+        ['Approved Applications', safe.approvedApplications || approvedFromApps],
+        ['Rejected Applications', safe.rejectedApplications || 0],
+        ['Unfilled Positions', unfilled]
       ].map((item) => `
         <div class="card-summary">
           <div class="label">${item[0]}</div>
@@ -291,20 +515,40 @@
           <td>${p.acceptedCount || 0}</td>
         </tr>
       `).join('');
+
+      const detailedTbody = document.querySelector('#detailedPositionsTable tbody');
+      if (detailedTbody) {
+        detailedTbody.innerHTML = positions.length ? positions.map((p) => {
+          const closed = normalizeText(p.status) === 'closed';
+          return `
+            <tr>
+              <td>${p.id || '-'}</td>
+              <td>${p.title || '-'}</td>
+              <td>${p.moId || '-'}</td>
+              <td>${p.appliedCount || 0}</td>
+              <td>${p.acceptedCount || 0}</td>
+              <td>${p.openings || 0}</td>
+              <td><span class="status-badge ${closed ? 'status-closed' : 'status-open'}">${closed ? 'Closed' : 'Open'}</span></td>
+            </tr>
+          `;
+        }).join('') : '<tr><td colspan="7" class="empty">No positions available</td></tr>';
+      }
     }
 
     // 功能：应用当前设置并刷新结果。
     function applyPositionFilters() {
       const status = normalizeText(document.getElementById('statusFilter')?.value || 'all');
-      const course = normalizeText(document.getElementById('courseFilter')?.value || '');
+      const keyword = normalizeText(document.getElementById('courseFilter')?.value || '');
 
-      const filtered = allPositions.filter((p) => {
+      const filtered = dashboardState.positions.filter((p) => {
         const pStatus = normalizeText(p.status || 'open');
-        const pCourse = normalizeText(p.department || '');
+        const searchable = [p.id, p.title, p.department, p.moId]
+          .map((x) => normalizeText(x))
+          .join(' ');
         if (status !== 'all' && pStatus !== status) {
           return false;
         }
-        if (course && !pCourse.includes(course)) {
+        if (keyword && !searchable.includes(keyword)) {
           return false;
         }
         return true;
@@ -343,18 +587,170 @@
       `).join('');
     }
 
+    function renderHiredTa() {
+      const tbody = document.querySelector('#hiredTable tbody');
+      if (!tbody) return;
+
+      const positionMap = new Map(dashboardState.positions.map((p) => [p.id, p]));
+      const approved = dashboardState.applications.filter((a) => normalizeText(a.status) === 'approved');
+      if (!approved.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">No approved applications</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = approved.map((a) => {
+        const p = positionMap.get(a.positionId || '') || {};
+        const admissionTime = a.updatedAt || a.reviewedAt || a.appliedDate || '-';
+        return `
+          <tr>
+            <td>${a.userName || a.userId || '-'}</td>
+            <td>${a.userId || '-'}</td>
+            <td>${p.title || a.positionId || '-'}</td>
+            <td>${p.moId || '-'}</td>
+            <td>${admissionTime}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderCharts() {
+      const positions = dashboardState.positions;
+      const apps = dashboardState.applications;
+
+      if (chartState.trend) chartState.trend.destroy();
+      if (chartState.mo) chartState.mo.destroy();
+      if (chartState.status) chartState.status.destroy();
+
+      const trendMap = groupCountBy(positions, (p) => toDateKey(p.createdAt));
+      const trendLabels = Array.from(trendMap.keys()).sort();
+      let running = 0;
+      const trendData = trendLabels.map((k) => {
+        running += trendMap.get(k) || 0;
+        return running;
+      });
+
+      const moMap = groupCountBy(positions, (p) => normalizeText(p.moId) || 'unknown');
+      const moLabels = Array.from(moMap.keys());
+      const moData = moLabels.map((k) => moMap.get(k) || 0);
+
+      const statusMap = groupCountBy(apps, (a) => normalizeText(a.status) || 'pending');
+      const statusLabels = Array.from(statusMap.keys());
+      const statusData = statusLabels.map((k) => statusMap.get(k) || 0);
+
+      const trendCtx = document.getElementById('trendChart')?.getContext('2d');
+      if (trendCtx) {
+        chartState.trend = new Chart(trendCtx, {
+          type: 'line',
+          data: {
+            labels: trendLabels.length ? trendLabels : ['No Data'],
+            datasets: [{
+              label: 'Cumulative Positions',
+              data: trendLabels.length ? trendData : [0],
+              borderColor: '#1e3a8a',
+              backgroundColor: 'rgba(30,58,138,0.12)',
+              fill: true,
+              tension: 0.35
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      }
+
+      const moCtx = document.getElementById('moChart')?.getContext('2d');
+      if (moCtx) {
+        chartState.mo = new Chart(moCtx, {
+          type: 'bar',
+          data: {
+            labels: moLabels.length ? moLabels : ['No Data'],
+            datasets: [{
+              label: 'Positions',
+              data: moLabels.length ? moData : [0],
+              backgroundColor: '#1d4ed8',
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      }
+
+      const statusCtx = document.getElementById('statusChart')?.getContext('2d');
+      if (statusCtx) {
+        chartState.status = new Chart(statusCtx, {
+          type: 'doughnut',
+          data: {
+            labels: statusLabels.length ? statusLabels : ['No Data'],
+            datasets: [{
+              data: statusLabels.length ? statusData : [1],
+              backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#6b7280']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+      }
+    }
+
+    function bindTabs() {
+      document.querySelectorAll('.tab-button').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const tab = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab-button').forEach((b) => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach((c) => c.classList.remove('active'));
+          btn.classList.add('active');
+          document.querySelector(`.tab-content[data-tab="${tab}"]`)?.classList.add('active');
+        });
+      });
+    }
+
+    function bindAdminMenu() {
+      document.querySelectorAll('.sidebar-menu-item').forEach((item) => {
+        item.addEventListener('click', () => {
+          const text = item.textContent.trim();
+          const page = adminMenuMap[text];
+          if (page) {
+            window.location.href = page;
+          }
+        });
+      });
+    }
+
     // 功能：加载管理员仪表盘数据并渲染。
     async function loadDashboard() {
       try {
-        const result = await API.getAdminDashboard();
+        const [result, appResult] = await Promise.all([
+          API.getAdminDashboard(),
+          API.getReviewApplications().catch(() => ({ success: false, applications: [] }))
+        ]);
+
         if (!result || !result.success) {
           taSystem.showMessage((result && result.message) || 'Failed to load dashboard', 'danger');
           return;
         }
+
+        dashboardState.positions = Array.isArray(result.positions) ? result.positions : [];
+        dashboardState.taWorkload = Array.isArray(result.taWorkload) ? result.taWorkload : [];
+        dashboardState.applications = appResult && appResult.success && Array.isArray(appResult.applications)
+          ? appResult.applications
+          : [];
+
         renderSummary(result.summary || {});
-        allPositions = Array.isArray(result.positions) ? result.positions : [];
         applyPositionFilters();
-        renderWorkload(Array.isArray(result.taWorkload) ? result.taWorkload : []);
+        renderWorkload(dashboardState.taWorkload);
+        renderHiredTa();
+        renderCharts();
       } catch (error) {
         taSystem.showMessage(error.message || 'Failed to load dashboard', 'danger');
       }
@@ -365,11 +761,26 @@
       if (!allowed) {
         return;
       }
+
+      bindTabs();
+      bindAdminMenu();
       await loadDashboard();
       document.getElementById('refreshBtn')?.addEventListener('click', loadDashboard);
       document.getElementById('statusFilter')?.addEventListener('change', applyPositionFilters);
       document.getElementById('courseFilter')?.addEventListener('input', applyPositionFilters);
       document.getElementById('clearFiltersBtn')?.addEventListener('click', clearPositionFilters);
+
+      const exportBtn = document.getElementById('exportBtn');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+          const scope = document.getElementById('exportScope')?.value || 'applications';
+          const startDate = document.getElementById('exportStart')?.value || '';
+          const endDate = document.getElementById('exportEnd')?.value || '';
+          const url = API.adminExportUrl(scope, startDate, endDate);
+          window.location.href = url;
+          taSystem.showMessage('导出已开始，请等待浏览器下载。', 'info');
+        });
+      }
     });
   </script>
 </body>

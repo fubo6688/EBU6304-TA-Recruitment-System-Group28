@@ -88,7 +88,9 @@ class TARecruitmentSystem {
       'My Profile': 'ta-profile.html',
       'Browse Positions': 'ta-positions.html',
       'My Applications': 'ta-applications.html',
-      'Profile': 'profile.html'
+      'My Favourites': 'my-favourites.html?v=20260418-3',
+      'Profile': 'profile.html',
+      'Notifications': 'ta-notifications.html'
     };
 
     // MO 角色菜单
@@ -102,7 +104,6 @@ class TARecruitmentSystem {
     // Admin 角色菜单
     const adminMenuMap = {
       'Admin Dashboard': 'admin-dashboard.html',
-      'Registration Approvals': 'admin-approvals.html',
       'Account Status': 'admin-account-status.html',
       'Profile': 'profile.html'
     };
@@ -110,6 +111,10 @@ class TARecruitmentSystem {
     // 根据当前角色选择菜单映射表。
     const userRole = localStorage.getItem('userRole') || 'TA';
     const menuMap = userRole === 'TA' ? taMenuMap : (userRole === 'MO' ? moMenuMap : adminMenuMap);
+
+    if (userRole === 'TA') {
+      this.ensureTaSidebarMenu(taMenuMap);
+    }
 
     if (userRole === 'Admin') {
       this.ensureAdminSidebarMenu(adminMenuMap);
@@ -131,8 +136,6 @@ class TARecruitmentSystem {
           
           // 跳转到目标页面
           window.location.href = page;
-        } else if (userRole === 'TA' && menuText === 'Notifications') {
-          this.showMessage('This page is not available yet.', 'info');
         }
       }
     });
@@ -161,10 +164,31 @@ class TARecruitmentSystem {
     }).join('');
   }
 
+  ensureTaSidebarMenu(taMenuMap) {
+    const titleEl = document.querySelector('.sidebar-title');
+    const menuEl = document.querySelector('.sidebar-menu');
+    if (!titleEl || !menuEl) {
+      return;
+    }
+
+    const titleText = (titleEl.textContent || '').toLowerCase();
+    if (!titleText.includes('ta function')) {
+      return;
+    }
+
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    // 在 TA 页面统一重建侧栏，确保菜单项固定顺序且始终可见。
+    menuEl.innerHTML = Object.entries(taMenuMap).map(([label, page]) => {
+      const activeClass = page === currentPage ? ' active' : '';
+      return `<li class="sidebar-menu-item${activeClass}">${label}</li>`;
+    }).join('');
+  }
+
   // 根据当前 URL 设置激活菜单
   setActiveMenu(menuMap) {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    const currentMenuItem = Object.entries(menuMap).find(([, page]) => page === currentPage)?.[0];
+    const currentMenuItem = Object.entries(menuMap)
+      .find(([, page]) => String(page || '').split('?')[0] === currentPage)?.[0];
     
     if (currentMenuItem) {
       document.querySelectorAll('.sidebar-menu-item').forEach(item => {
@@ -225,9 +249,10 @@ class TARecruitmentSystem {
   showMessage(message, type = 'info') {
     const alert = document.createElement('div');
     alert.className = `alert alert-${type}`;
-    alert.innerHTML = `<span>${message}</span>`;
+    const span = document.createElement('span');
+    span.textContent = message;
+    alert.appendChild(span);
     alert.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 2000; animation: slideIn 0.3s ease;';
-    
     document.body.appendChild(alert);
     
     setTimeout(() => {
@@ -248,7 +273,15 @@ class TARecruitmentSystem {
         reader.onload = (event) => {
           const preview = document.getElementById(previewId);
           if (preview) {
-            preview.innerHTML = `<img src="${event.target.result}" style="max-width: 100%; border-radius: 6px;"><p>${file.name}</p>`;
+            preview.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.style.maxWidth = '100%';
+            img.style.borderRadius = '6px';
+            const p = document.createElement('p');
+            p.textContent = file.name;
+            preview.appendChild(img);
+            preview.appendChild(p);
           }
         };
         reader.readAsDataURL(file);

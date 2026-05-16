@@ -75,6 +75,7 @@ public class AdminServlet extends HttpServlet {
                 String fileName = "ta_export_" + dataType + "_" + System.currentTimeMillis() + ".csv";
                 resp.setContentType("text/csv;charset=UTF-8");
                 resp.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+                out.print('\ufeff');
                 out.print(csv);
                 return;
             }

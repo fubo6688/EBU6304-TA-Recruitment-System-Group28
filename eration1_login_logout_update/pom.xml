@@ -53,11 +53,7 @@
                     </container>
                     <configuration>
                         <properties>
-<<<<<<< HEAD
-                            <cargo.servlet.port>9091</cargo.servlet.port>
-=======
                             <cargo.servlet.port>${cargo.servlet.port}</cargo.servlet.port>
->>>>>>> main
                         </properties>
                     </configuration>
                 </configuration>

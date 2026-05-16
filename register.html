@@ -196,7 +196,7 @@
 
     <div class="register-card">
       <h1 class="register-title">Register</h1>
-      <p class="register-subtitle">TA and MO registration requires admin approval before login.</p>
+      <p class="register-subtitle">Registration is available for TA and MO. Please use your school email (@bupt.cn or @qmul.ac.uk).</p>
 
       <form id="registerForm">
         <div class="form-group">
@@ -220,7 +220,7 @@
 
         <div class="form-group">
           <label class="form-label required">Email</label>
-          <input type="email" id="registerEmail" class="form-control" placeholder="Enter your email" required>
+          <input type="email" id="registerEmail" class="form-control" placeholder="name@bupt.cn or name@qmul.ac.uk" required>
         </div>
 
         <div class="form-group">
@@ -264,6 +264,12 @@
     // 功能：判断条件是否成立。
     function isStrongPassword(password) {
       return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
+    }
+
+    // 功能：判断条件是否成立。
+    function isAllowedSchoolEmail(email) {
+      const value = String(email || '').trim().toLowerCase();
+      return value.endsWith('@bupt.cn') || value.endsWith('@qmul.ac.uk');
     }
 
     // 功能：处理 bindPasswordToggle 相关逻辑。
@@ -315,13 +321,18 @@
         return;
       }
 
+      if (!isAllowedSchoolEmail(email)) {
+        alert('Email must end with @bupt.cn or @qmul.ac.uk.');
+        return;
+      }
+
       try {
         const data = await API.register({ role, userId, userName, email, qmId, password });
         if (!data.success) {
           alert(data.message || 'Registration failed');
           return;
         }
-        alert(data.message || 'Registration submitted. Please wait for admin approval.');
+        alert(data.message || 'Registration successful. You can log in now.');
         window.location.href = 'login.html';
       } catch (error) {
         alert(error.message || 'Registration request failed.');

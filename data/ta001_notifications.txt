@@ -1,3 +1,7 @@
-ntf1775924115139|application|Application Submitted|Your application was submitted.|2026-04-12 00:15:15|0
-ntf1775924544963|application|Application Submitted|Your application was submitted.|2026-04-12 00:22:24|0
-ntf1775924574710|application|Application Result|Your application has been accepted|2026-04-12 00:22:54|0
+ntf1776001100001|application|Application Submitted|Your application was submitted.|2026-04-12 00:15:15|1|
+ntf1776001100002|application|Application Result|Your application has been accepted|2026-04-12 00:16:20|0|
+ntf1776001100003|application|Application Submitted|Your application was submitted.|2026-04-12 00:22:24|1|
+ntf1776001100004|application|Application Result|Your application has been accepted|2026-04-12 00:24:10|0|
+ntf1776001100005|application|Application Submitted|Your application was submitted.|2026-04-12 16:40:41|0|
+ntf1776001100006|position|Application Deadline Reminder|A position you applied for ("Java Programming TA") closes in 2 day(s) (2026-04-14).|2026-04-12 18:20:01|0|deadlineSoon:pos1775647626466:2026-04-14
+ntf1776001100007|position|Application Deadline Reminder|A position you applied for ("Network Security TA") closes in 1 day(s) (2026-04-13).|2026-04-12 18:20:01|0|deadlineSoon:pos1775823635943:2026-04-13
