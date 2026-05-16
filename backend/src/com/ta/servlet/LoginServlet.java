@@ -110,10 +110,14 @@ public class LoginServlet extends HttpServlet {
         resp.setContentType("application/json;charset=UTF-8");
         PrintWriter out = resp.getWriter();
 
-        // register 与 login 共享入口，根据 action 分流。
+        // register / forgot-password 与 login 共享入口，根据 action 分流。
         String action = value(req.getParameter("action"));
         if ("register".equalsIgnoreCase(action)) {
             handleRegister(req, out);
+            return;
+        }
+        if ("forgot-password".equalsIgnoreCase(action)) {
+            handleForgotPassword(req, out);
             return;
         }
 
@@ -237,6 +241,11 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
+        if (existsEmail(email)) {
+            out.print(new JSONObject().put("success", false).put("message", "Email already exists").toString());
+            return;
+        }
+
         String effectiveQmId = qmId.isEmpty() ? userId : qmId;
         if (existsSameRoleAndQmId(normalizedRole, effectiveQmId)) {
             out.print(new JSONObject()
@@ -255,6 +264,75 @@ public class LoginServlet extends HttpServlet {
         out.print(new JSONObject()
                 .put("success", true)
             .put("message", "Registration successful. You can log in now")
+                .toString());
+    }
+
+    /**
+     * 处理忘记密码找回流程。
+     */
+    private void handleForgotPassword(HttpServletRequest req, PrintWriter out) {
+        String userId = value(req.getParameter("userId"));
+        String role = value(req.getParameter("role"));
+        String email = value(req.getParameter("email"));
+        String qmId = value(req.getParameter("qmId"));
+        String newPassword = value(req.getParameter("newPassword"));
+        String confirmPassword = value(req.getParameter("confirmPassword"));
+
+        if (userId.isEmpty() || email.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+            out.print(new JSONObject().put("success", false).put("message", "Required fields are missing").toString());
+            return;
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            out.print(new JSONObject().put("success", false).put("message", "The two passwords do not match").toString());
+            return;
+        }
+
+        if (!isPasswordComplex(newPassword)) {
+            out.print(new JSONObject().put("success", false)
+                    .put("message", "Password must be at least 8 chars with uppercase, lowercase, digit, and letters/digits only")
+                    .toString());
+            return;
+        }
+
+        User user = dataManager.getUserById(userId);
+        if (user == null) {
+            out.print(new JSONObject().put("success", false).put("message", "Account not found").toString());
+            return;
+        }
+
+        if (!"active".equalsIgnoreCase(user.getStatus())) {
+            out.print(new JSONObject().put("success", false).put("message", "Account is inactive. Please contact Admin to reactivate it.").toString());
+            return;
+        }
+
+        if (!value(email).equalsIgnoreCase(value(user.getEmail()))) {
+            out.print(new JSONObject().put("success", false).put("message", "Provided information does not match our records").toString());
+            return;
+        }
+
+        if (!value(qmId).isEmpty() && !value(qmId).equalsIgnoreCase(value(user.getQmId()))) {
+            out.print(new JSONObject().put("success", false).put("message", "Provided information does not match our records").toString());
+            return;
+        }
+
+        if (!value(role).isEmpty() && !value(role).equalsIgnoreCase(value(user.getRole()))) {
+            out.print(new JSONObject().put("success", false).put("message", "Provided information does not match our records").toString());
+            return;
+        }
+
+        if (newPassword.equals(user.getPassword())) {
+            out.print(new JSONObject().put("success", false).put("message", "New password must be different from current password").toString());
+            return;
+        }
+
+        user.setPassword(newPassword);
+        dataManager.saveUser(user);
+        dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "RESET_PASSWORD", "forgot-password", "success");
+
+        out.print(new JSONObject()
+                .put("success", true)
+                .put("message", "Password reset successful. Please log in again.")
                 .toString());
     }
 
@@ -290,6 +368,23 @@ public class LoginServlet extends HttpServlet {
             String itemRole = value(item.getRole()).toUpperCase(Locale.ROOT);
             String itemQmId = value(item.getQmId()).toLowerCase(Locale.ROOT);
             if (normalizedRole.equals(itemRole) && normalizedQmId.equals(itemQmId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 检查邮箱是否已被其他账号使用，忽略大小写。
+     */
+    private boolean existsEmail(String email) {
+        String normalizedEmail = value(email).toLowerCase(Locale.ROOT);
+        if (normalizedEmail.isEmpty()) {
+            return false;
+        }
+
+        for (User item : dataManager.getAllUsers()) {
+            if (normalizedEmail.equals(value(item.getEmail()).toLowerCase(Locale.ROOT))) {
                 return true;
             }
         }

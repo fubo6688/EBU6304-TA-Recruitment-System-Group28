@@ -86,7 +86,7 @@
 
     .sections-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
       align-items: start;
     }
@@ -106,6 +106,10 @@
 
     .section-panel-ta {
       background: linear-gradient(180deg, #f8fafc 0%, #ffffff 70%);
+    }
+
+    .section-panel-admin {
+      background: linear-gradient(180deg, #fff7ed 0%, #ffffff 70%);
     }
 
     .section-panel-mo {
@@ -218,7 +222,7 @@
 
     <div class="content">
       <div class="toolbar">
-        <h2 style="margin:0;">TA/MO Account Status Management</h2>
+        <h2 style="margin:0;">User Account Status Management</h2>
         <div class="toolbar-right">
           <select id="managedStatusFilter" class="form-control" aria-label="Filter by account status">
             <option value="all">All Status</option>
@@ -232,6 +236,11 @@
       </div>
 
       <div class="sections-grid">
+        <section class="section-panel section-panel-admin">
+          <h3 class="section-panel-title" id="adminTitle">Admin Account Area</h3>
+          <div id="adminUserList" class="approval-list"></div>
+        </section>
+
         <section class="section-panel section-panel-ta">
           <h3 class="section-panel-title" id="taTitle">TA Account Area</h3>
           <div id="taUserList" class="approval-list"></div>
@@ -317,6 +326,7 @@
 
     // 功能：应用搜索与状态筛选后渲染 TA/MO 分区。
     function applyManagedFilters() {
+      const adminTitle = document.getElementById('adminTitle');
       const taTitle = document.getElementById('taTitle');
       const moTitle = document.getElementById('moTitle');
       const statusFilter = normalizeStatus(document.getElementById('managedStatusFilter')?.value || 'all');
@@ -338,24 +348,30 @@
         return searchable.includes(keyword);
       });
 
+      const adminUsers = filtered.filter((u) => String(u.role || '').toUpperCase() === 'ADMIN');
       const taUsers = filtered.filter((u) => String(u.role || '').toUpperCase() === 'TA');
       const moUsers = filtered.filter((u) => String(u.role || '').toUpperCase() === 'MO');
+      const adminTotal = allManagedUsers.filter((u) => String(u.role || '').toUpperCase() === 'ADMIN').length;
       const taTotal = allManagedUsers.filter((u) => String(u.role || '').toUpperCase() === 'TA').length;
       const moTotal = allManagedUsers.filter((u) => String(u.role || '').toUpperCase() === 'MO').length;
       const hasFilter = !!keyword || statusFilter !== 'all';
 
+      if (adminTitle) adminTitle.textContent = hasFilter ? `Admin Account Area (${adminUsers.length}/${adminTotal})` : `Admin Account Area (${adminUsers.length})`;
       if (taTitle) taTitle.textContent = hasFilter ? `TA Account Area (${taUsers.length}/${taTotal})` : `TA Account Area (${taUsers.length})`;
       if (moTitle) moTitle.textContent = hasFilter ? `MO Account Area (${moUsers.length}/${moTotal})` : `MO Account Area (${moUsers.length})`;
 
+      renderManagedUsers('adminUserList', adminUsers, 'Admin');
       renderManagedUsers('taUserList', taUsers, 'TA');
       renderManagedUsers('moUserList', moUsers, 'MO');
     }
 
     // 功能：加载相关数据并更新页面。
     async function loadManagedUsers() {
-      // 分区容器与标题元素：用于 TA/MO 分区加载与数量展示。
+      // 分区容器与标题元素：用于 Admin/TA/MO 分区加载与数量展示。
+      const adminList = document.getElementById('adminUserList');
       const taList = document.getElementById('taUserList');
       const moList = document.getElementById('moUserList');
+      if (adminList) adminList.innerHTML = '<div class="approval-empty">Loading Admin accounts...</div>';
       if (taList) taList.innerHTML = '<div class="approval-empty">Loading TA accounts...</div>';
       if (moList) moList.innerHTML = '<div class="approval-empty">Loading MO accounts...</div>';
 
@@ -366,6 +382,7 @@
         applyManagedFilters();
       } catch (error) {
         const message = escapeHtml(error.message || 'Failed to load accounts');
+        if (adminList) adminList.innerHTML = `<div class="approval-empty">${message}</div>`;
         if (taList) taList.innerHTML = `<div class="approval-empty">${message}</div>`;
         if (moList) moList.innerHTML = `<div class="approval-empty">${message}</div>`;
       }
@@ -407,7 +424,7 @@
         applyManagedFilters();
       });
 
-      ['taUserList', 'moUserList'].forEach((id) => {
+      ['adminUserList', 'taUserList', 'moUserList'].forEach((id) => {
         // 分区级事件委托：每个区域独立处理自己的状态按钮点击。
         document.getElementById(id)?.addEventListener('click', async (e) => {
           const btn = e.target.closest('button[data-action="set-status"][data-user-id][data-status]');

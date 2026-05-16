@@ -317,6 +317,24 @@ Validated from `data/users.txt`.
 
 | Username | Password | Role |
 |---|---|---|
+<<<<<<< HEAD
+| ta002 | Qmta2026A | TA |
+| mo001 | Qmta2026A | MO |
+| admin001 | Qmta2026A | Admin |Qmta2026A
+| 20210001 | Qmta2026A | TA |
+| M001 | Qmta2026A | MO |
+| ADM001 | Qmta2026A | Admin |
+| admin_user | Qmta2026A | Admin |
+| admin_02 | Qmta2026A | Admin |
+| mo_smith | Qmta2026A | MO |
+| mo_jones | Qmta2026A | MO |
+| mo_wang | Qmta2026A | MO |
+| ta_alice | Qmta2026A | TA |
+| ta_bob | Qmta2026A | TA |
+| ta_charlie | Qmta2026A | TA |
+| ta_david | Qmta2026A | TA |
+| ta_emma | Qmta2026A | TA |
+=======
 | ta002 | Ta002SecureA1 | TA |
 | ta001 | Aa123321 | TA |
 | 2023213247 | Ta2023213247A1B | TA |
@@ -332,10 +350,39 @@ Validated from `data/users.txt`.
 | ta_charlie | TaCharlieSafeA1 | TA |
 | ta_david | TaDavidSafeA1 | TA |
 | ta_emma | TaEmmaSafeA1 | TA |
+>>>>>>> 6b5ea79806cccca04be93f15125a613d96986a39
 
 Notes:
 1. Passwords are diversified per account for security testing and all satisfy the password policy.
 2. If an account still cannot log in, restart service with `./restart-dev.bat` so runtime data is reloaded.
+
+## Test Files
+
+This repository keeps only the final servlet test files under `backend/test/`.
+Please do not add extra test files unless they are required by a new feature.
+
+Current retained tests:
+1. `backend/test/com/ta/servlet/LoginServletProjectTest.java`
+2. `backend/test/com/ta/servlet/UserServletProjectTest.java`
+3. `backend/test/com/ta/servlet/PositionServletProjectTest.java`
+4. `backend/test/com/ta/servlet/ApplicationServletProjectTest.java`
+5. `backend/test/com/ta/servlet/AdminServletProjectTest.java`
+
+Run them from the repository root after compiling the backend:
+
+```powershell
+$tests = @(
+   'com.ta.servlet.LoginServletProjectTest',
+   'com.ta.servlet.UserServletProjectTest',
+   'com.ta.servlet.PositionServletProjectTest',
+   'com.ta.servlet.ApplicationServletProjectTest',
+   'com.ta.servlet.AdminServletProjectTest'
+)
+
+foreach ($test in $tests) {
+   java -cp 'backend\test-bin;backend\WEB-INF\classes;backend\WEB-INF\lib\*' $test
+}
+```
 
 ## Backend API Base
 

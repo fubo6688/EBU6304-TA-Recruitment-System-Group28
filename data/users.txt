@@ -1,4 +1,4 @@
-mo001|王老师|wangteacher@qmul.ac.uk|Mo001SecureA1|MO|M001|active
+﻿mo001|王老师|wangteacher@qmul.ac.uk|Mo001SecureA1|MO|M001|active
 admin001|管理员|admin@bupt.cn|Admin001SafeA1|Admin|ADM001|active
 admin_user|System Manager|admin_user@bupt.cn|AdminUserSafeA1|Admin|admin_user|active
 admin_02|Office Coordinator|admin_02@bupt.cn|Admin02SafeA1|Admin|admin_02|active
@@ -13,3 +13,4 @@ ta_alice|Alice Zhang|ta_alice@bupt.cn|TaAliceSafeA1|TA|ta_alice|inactive
 ta002|李四|lisi@bupt.cn|Ta002SecureA1|TA|20210002|active
 ta001|luming|luming@bupt.cn|Aa123321|TA|20210001|active
 2023213247|Junyi Yan|jp2023213247@qmul.ac.uk|Ta2023213247A1B|TA|2023213247|active
+2023213242|付博|1499053486@qq.com|FuBo6688|TA|231220965|active
