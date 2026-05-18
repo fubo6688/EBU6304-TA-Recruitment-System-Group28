@@ -86,13 +86,16 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
-            // 返回可由 Admin 直接启停的账号：所有角色中状态为 active/inactive 的账号。
+            // 返回可由 Admin 直接启停的账号：仅 TA/MO 且状态为 active/inactive。
             List<User> managed = new ArrayList<>();
             for (User item : dataManager.getAllUsers()) {
+                String role = value(item.getRole());
                 String status = value(item.getStatus());
-                // 关键状态过滤变量：排除 pending/其他非启停状态，避免和注册审批流程混淆。
+                // 关键角色过滤变量：只纳入 TA/MO。
+                boolean isTaOrMo = "TA".equalsIgnoreCase(role) || "MO".equalsIgnoreCase(role);
+                // 关键状态过滤变量：排除 pending，避免和注册审批流程混淆。
                 boolean manageableStatus = "active".equalsIgnoreCase(status) || "inactive".equalsIgnoreCase(status);
-                if (manageableStatus) {
+                if (isTaOrMo && manageableStatus) {
                     managed.add(item);
                 }
             }
@@ -386,6 +389,12 @@ public class UserServlet extends HttpServlet {
             User target = dataManager.getUserById(targetUserId);
             if (target == null) {
                 out.print(new JSONObject().put("success", false).put("message", "Target user not found").toString());
+                return;
+            }
+
+            String role = value(target.getRole());
+            if (!("TA".equalsIgnoreCase(role) || "MO".equalsIgnoreCase(role))) {
+                out.print(new JSONObject().put("success", false).put("message", "Only TA/MO accounts can be managed here").toString());
                 return;
             }
 

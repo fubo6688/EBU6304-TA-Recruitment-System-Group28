@@ -31,7 +31,6 @@ body {
   --gray-600: #4b5563;
   --dark-bg: #1f2937;
   --white: #ffffff;
-  --text-primary: #000000;
 }
 
 /* ========== Typography ========== */
@@ -298,62 +297,6 @@ small { font-size: 12px; }
   border-radius: 6px;
   font-size: 14px;
   transition: border-color 0.2s;
-}
-
-/* Ensure input text is readable regardless of inherited color */
-.form-control {
-  color: var(--text-primary) !important;
-}
-
-.form-control::placeholder {
-  color: var(--gray-500) !important;
-}
-
-/* Strong overrides for card-style auth pages where parent sets white text */
-.login-card .form-control,
-.login-card input.form-control,
-.login-card select.form-control,
-.login-card textarea.form-control {
-  background: #ffffff !important;
-  color: var(--text-primary) !important;
-  border-color: var(--gray-300) !important;
-  -webkit-text-fill-color: var(--text-primary) !important;
-}
-
-/* Ensure select options are readable */
-.login-card select.form-control option {
-  color: #000000;
-  background: #ffffff;
-}
-
-/* Strongest possible overrides to defeat browser/parent theme interference */
-.login-card input.form-control,
-.login-card textarea.form-control,
-.login-card select.form-control {
-  color: #000000 !important;
-  caret-color: #000000 !important;
-  background: #ffffff !important;
-  opacity: 1 !important;
-  filter: none !important;
-  mix-blend-mode: normal !important;
-}
-
-.login-card input.form-control::placeholder,
-.login-card textarea.form-control::placeholder {
-  color: var(--gray-500) !important;
-  opacity: 1 !important;
-}
-
-/* Webkit autofill handling */
-.login-card input:-webkit-autofill,
-.login-card input:-webkit-autofill:hover,
-.login-card input:-webkit-autofill:focus,
-.login-card textarea:-webkit-autofill,
-.login-card textarea:-webkit-autofill:hover,
-.login-card textarea:-webkit-autofill:focus {
-  -webkit-text-fill-color: #000000 !important;
-  box-shadow: 0 0 0px 1000px #ffffff inset !important;
-  transition: background-color 5000s ease-in-out 0s !important;
 }
 
 .form-control:focus {
