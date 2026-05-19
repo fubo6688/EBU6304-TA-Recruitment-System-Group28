@@ -24,7 +24,7 @@ public class UserServletProjectTest {
                     "ta_pending|Pending TA|pending@example.com|Qmta2026A|TA|ta_pending|pending",
                     "mo_pending|Pending MO|pending-mo@example.com|Qmta2026A|MO|mo_pending|pending"
             );
-            dataManager.saveProfile("ta002", "3", "Computer Science", "3.8", "lisi@example.com", "Java,SQL", "resume.pdf", "ta002.pdf", "Mon-Fri", "");
+            dataManager.saveProfile("ta002", "", "Computer Science", "lisi@example.com", "", "", "Java,SQL", "resume.pdf", "ta002.pdf", "Mon-Fri", "", "", "");
 
             UserServlet servlet = new UserServlet();
 
@@ -33,16 +33,14 @@ public class UserServletProjectTest {
             assertEquals("Computer Science", profile.getString("major"), "profile should include saved major");
             assertEquals("Java,SQL", profile.getString("skills"), "profile should include saved skills");
 
-            LoginServletProjectTest.TestResponse updateResponse = invokePost(servlet, "/profile", "ta002", Map.of(
+                LoginServletProjectTest.TestResponse updateResponse = invokePost(servlet, "/profile", "ta002", Map.of(
                     "userName", "Li Si",
                     "email", "li.si@example.com",
-                    "grade", "4",
                     "major", "Software Engineering",
-                    "gpa", "3.9",
                     "skills", "Java,Testing",
                     "availableTime", "Weekends",
                     "resumeFileName", "resume-updated.pdf"
-            ));
+                ));
             JSONObject updateJson = new JSONObject(updateResponse.body());
             assertTrue(updateJson.getBoolean("success"), "profile update should succeed");
 

@@ -1,8 +1,9 @@
-<<<<<<< HEAD
 ntf1775651577331|position|New Position Published|A position has been published: A|2026-04-08 20:32:57|0
 ntf1775652124056|position|New Position Published|A position has been published: A|2026-04-08 20:42:04|0
 ntf1775835680754|application|Application Submitted|Your application was submitted.|2026-04-10 23:41:20|0
 ntf1775835763247|application|Application Result|Your application has been accepted|2026-04-10 23:42:43|0
-=======
-ntf1776001400001|application|Application Submitted|Your application was submitted.|2026-04-12 12:00:00|0|
->>>>>>> 450754283c8cdbf213a5f073d02c8fd2f6d1ccac
+ntf1776001400001|application|Application Submitted|Your application was submitted.|2026-04-12 12:00:00|0
+ntf1779090993292|position|New Position Published|A position has been published: Operating Systems TA|2026-05-18 15:56:33|0|
+ntf1779091259748|position|New Position Published|A position has been published: Data Structures TA|2026-05-18 16:00:59|0|
+ntf1779169270107|position|New Position Published|A position has been published: Computer Architecture TA|2026-05-19 13:41:10|0|
+ntf1779169411787|application|Application Submitted|Your application was submitted.|2026-05-19 13:43:31|0|

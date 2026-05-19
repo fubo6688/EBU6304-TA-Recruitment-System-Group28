@@ -144,7 +144,7 @@ public class ApplicationServlet extends HttpServlet {
             if (!isProfileCompleteForApply(profile)) {
                 out.print(new JSONObject()
                         .put("success", false)
-                        .put("message", "Please complete your profile (grade, major, email, skills, available time, resume) before applying")
+                        .put("message", "Please complete your profile (major, email, skills, available time, resume) before applying")
                         .toString());
                 return;
             }
@@ -473,20 +473,17 @@ public class ApplicationServlet extends HttpServlet {
             return false;
         }
 
-        String grade = value(profile.get("grade"));
         String major = value(profile.get("major"));
         String email = value(profile.get("email"));
         String skills = value(profile.get("skills"));
         String availableTime = value(profile.get("availableTime"));
         String resumeFileName = value(profile.get("resumeFileName"));
         String resumeStoredName = value(profile.get("resumeStoredName"));
-
-        return !grade.isEmpty()
-                && !major.isEmpty()
-                && !email.isEmpty()
-                && !skills.isEmpty()
-                && !availableTime.isEmpty()
-                && (!resumeFileName.isEmpty() || !resumeStoredName.isEmpty());
+        return !major.isEmpty()
+            && !email.isEmpty()
+            && !skills.isEmpty()
+            && !availableTime.isEmpty()
+            && (!resumeFileName.isEmpty() || !resumeStoredName.isEmpty());
     }
 
     /**
