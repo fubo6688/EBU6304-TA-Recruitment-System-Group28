@@ -600,6 +600,8 @@
     let profileCompleteForApply = false;
     let taSkills = [];
     let profileMajor = '';
+    let profileTaExperience = false;
+    let profileInternshipExperience = false;
     let positionMatchMap = new Map();
     const profileApplyHint = 'Please complete your profile (basic information, skills & availability, resume) before applying';
 
@@ -631,6 +633,34 @@
     // 功能：判断是否具备指定状态。
     function hasApplied(positionId) {
       return !!positionId && appliedPositionIds.has(String(positionId));
+    }
+
+    // Mark position as applied in UI (modal + list) without refetching from server.
+    function markPositionApplied(positionId) {
+      const id = String(positionId || '');
+      if (!id) return;
+      appliedPositionIds.add(id);
+      // Update inline apply buttons
+      document.querySelectorAll('.btn-apply-now').forEach((btn) => {
+        try {
+          const onclick = btn.getAttribute('onclick') || '';
+          if (onclick.includes(`applyPosition('${id}')`) || onclick.includes(`applyPosition("${id}")`)) {
+            btn.textContent = 'Applied';
+            btn.disabled = true;
+          }
+        } catch (e) {}
+      });
+      // Update modal button if open
+      const applyInModal = document.querySelector('#detailModal .modal-footer .btn-primary');
+      if (applyInModal) {
+        try {
+          const pid = String(selectedPositionId || '');
+          if (pid === id) {
+            applyInModal.textContent = 'Applied';
+            applyInModal.disabled = true;
+          }
+        } catch (e) {}
+      }
     }
 
     // 功能：按当前登录 TA 隔离收藏数据存储键。
@@ -716,7 +746,6 @@
         return false;
       }
       const valueOf = (v) => String(v || '').trim();
-      const grade = valueOf(profile.grade);
       const major = valueOf(profile.major);
       const email = valueOf(profile.email);
       const skills = valueOf(profile.skills);
@@ -724,7 +753,7 @@
       const resumeFileName = valueOf(profile.resumeFileName);
       const resumeStoredName = valueOf(profile.resumeStoredName);
       return !!(
-        grade && major && email && skills && availableTime && (resumeFileName || resumeStoredName)
+        major && email && skills && availableTime && (resumeFileName || resumeStoredName)
       );
     }
 
@@ -763,6 +792,51 @@
         .filter((s) => isMeaningfulFilterOption(s));
     }
 
+    function collectTextValues(value, output) {
+      if (!value) return;
+      if (typeof value === 'string') {
+        output.push(value);
+        return;
+      }
+      if (Array.isArray(value)) {
+        value.forEach((item) => collectTextValues(item, output));
+        return;
+      }
+      if (typeof value === 'object') {
+        Object.values(value).forEach((item) => collectTextValues(item, output));
+      }
+    }
+
+    function collectByKeyPattern(data, pattern, output) {
+      if (!data) return;
+      if (Array.isArray(data)) {
+        data.forEach((item) => collectByKeyPattern(item, pattern, output));
+        return;
+      }
+      if (typeof data !== 'object') return;
+      Object.keys(data).forEach((key) => {
+        const value = data[key];
+        if (pattern.test(String(key))) {
+          collectTextValues(value, output);
+        }
+        collectByKeyPattern(value, pattern, output);
+      });
+    }
+
+    function extractSkillsFromParsed(parsed) {
+      if (!parsed || typeof parsed !== 'object') return [];
+      const values = [];
+      collectByKeyPattern(parsed, /skill/i, values);
+      const tokens = values.flatMap((v) => extractTokens(v));
+      const seen = new Set();
+      return tokens.filter((token) => {
+        const key = normalizeText(token);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
     // 功能：基于 TA 技能和岗位要求计算匹配分数。
     function computePositionMatch(position) {
       const requirementTokens = extractTokens([
@@ -785,10 +859,19 @@
         }
       });
 
-      let score = Math.round((matched.length / Math.max(1, taSkills.length)) * 100);
+      // Compute deterministic score: skills weighted 85%, TA experience weighted 15%.
+      const skillMatchRatio = matched.length / Math.max(1, taSkills.length);
+      const taFlag = profileTaExperience ? 1 : 0;
+      let score = Math.round(0.85 * (skillMatchRatio * 100) + 0.15 * (taFlag * 100));
+      // Small bonus for internship experience
+      if (profileInternshipExperience) {
+        score = Math.min(100, score + 3);
+      }
+
+      // Small bonus for department-major alignment (capped at 100).
       const dept = normalizeText(position && position.department);
       if (profileMajor && dept && (dept.includes(profileMajor) || profileMajor.includes(dept))) {
-        score = Math.min(100, score + 10);
+        score = Math.min(100, score + 5);
       }
 
       return { score, matched };
@@ -1145,10 +1228,13 @@
       try {
         const result = await API.submitApplication(positionId, 'first');
         if (result.success) {
-          appliedPositionIds.add(String(positionId));
-          taSystem.showMessage('Application has been submitted', 'success');
-          await loadPositions();
-        } else {
+            appliedPositionIds.add(String(positionId));
+            taSystem.showMessage('Application has been submitted', 'success');
+            // Optimistically update UI without refetching everything to avoid short freeze.
+            renderPositions(currentPositions);
+            // Update modal apply button if open.
+            markPositionApplied(positionId);
+          } else {
           taSystem.showMessage(result.message || 'Submission failed', 'danger');
         }
       } catch (error) {
@@ -1166,10 +1252,20 @@
         ]);
 
         profileCompleteForApply = isProfileComplete(profileResult);
-        taSkills = String((profileResult && profileResult.skills) || '')
+        const profileSkills = String((profileResult && profileResult.skills) || '')
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean);
+        const mergedSkills = profileSkills;
+        profileTaExperience = !!(profileResult && String(profileResult.taExperience || '').toLowerCase().startsWith('y'));
+        profileInternshipExperience = !!(profileResult && String(profileResult.internshipExperience || '').toLowerCase().startsWith('y'));
+        const skillSet = new Set();
+        taSkills = mergedSkills.filter((skill) => {
+          const key = normalizeText(skill);
+          if (!key || skillSet.has(key)) return false;
+          skillSet.add(key);
+          return true;
+        });
         profileMajor = normalizeText((profileResult && profileResult.major) || '');
 
         const myApps = Array.isArray(myAppsResult && myAppsResult.applications) ? myAppsResult.applications : [];

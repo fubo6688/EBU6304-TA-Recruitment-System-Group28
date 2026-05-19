@@ -11,15 +11,18 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import org.json.JSONObject;
 import org.json.JSONArray;
+import org.json.JSONTokener;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.DirectoryStream;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Locale;
 import java.util.HashSet;
 import java.util.ArrayList;
@@ -215,7 +218,16 @@ public class UserServlet extends HttpServlet {
 
             String downloadName = originalName.isEmpty() ? storedName : originalName;
             resp.setContentType("application/pdf");
-            resp.setHeader("Content-Disposition", "inline; filename=\"" + sanitizeFileName(downloadName) + "\"");
+            String asciiName = sanitizeFileName(downloadName);
+            String encodedName;
+            try {
+                encodedName = java.net.URLEncoder.encode(downloadName, "UTF-8").replace("+", "%20");
+            } catch (Exception e) {
+                encodedName = asciiName;
+            }
+            // Provide both ASCII filename and RFC5987 encoded UTF-8 filename*
+            resp.setHeader("Content-Disposition",
+                    "inline; filename=\"" + asciiName + "\"; filename*=UTF-8''" + encodedName);
             resp.setContentLengthLong(Files.size(file));
 
             try (InputStream in = Files.newInputStream(file); OutputStream os = resp.getOutputStream()) {
@@ -228,6 +240,37 @@ public class UserServlet extends HttpServlet {
             }
             return;
         }
+
+        if ("/resume-parse".equalsIgnoreCase(path)) {
+            String targetUserId = value(req.getParameter("userId"));
+            if (targetUserId.isEmpty()) {
+                targetUserId = user.getUserId();
+            }
+
+            if (!canViewProfile(user, targetUserId)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "No permission").toString());
+                return;
+            }
+
+            ResolvedProfile resolved = resolveProfileByAnyId(targetUserId);
+            if (resolved.profile == null) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Profile not found").toString());
+                return;
+            }
+
+            // Resume parsing via external parser has been removed.
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            resp.setContentType("application/json;charset=UTF-8");
+            resp.getWriter().print(new JSONObject()
+                    .put("success", false)
+                    .put("message", "Resume parser integration is disabled")
+                    .toString());
+            return;
+        }
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
             // GET /api/user/profile
             // Returns the logged-in user's profile aggregate (account fields + profile fields)
@@ -235,10 +278,11 @@ public class UserServlet extends HttpServlet {
             JSONObject result = toUserJson(user);
             Map<String, String> profile = dataManager.getProfile(user.getUserId());
             if (profile != null) {
-                result.put("grade", profile.get("grade"));
                 result.put("major", profile.get("major"));
+                result.put("year", profile.get("year"));
                 result.put("gpa", profile.get("gpa"));
                 result.put("taExperience", profile.get("taExperience"));
+                result.put("internshipExperience", profile.get("internshipExperience"));
                 result.put("skills", profile.get("skills"));
                 result.put("resumeFileName", profile.get("resumeFileName"));
                 result.put("availableTime", profile.get("availableTime"));
@@ -289,10 +333,11 @@ public class UserServlet extends HttpServlet {
                     : toUserJson(targetUser);
             Map<String, String> profile = resolved.profile;
             if (profile != null) {
-                result.put("grade", profile.get("grade"));
                 result.put("major", profile.get("major"));
+                result.put("year", profile.get("year"));
                 result.put("gpa", profile.get("gpa"));
                 result.put("taExperience", profile.get("taExperience"));
+                result.put("internshipExperience", profile.get("internshipExperience"));
                 result.put("skills", profile.get("skills"));
                 result.put("resumeFileName", profile.get("resumeFileName"));
                 result.put("availableTime", profile.get("availableTime"));
@@ -420,10 +465,12 @@ public class UserServlet extends HttpServlet {
             // by falling back to old stored values when a field is omitted.
             String userName = value(req.getParameter("userName"));
             String email = value(req.getParameter("email"));
-            String grade = value(req.getParameter("grade"));
             String major = value(req.getParameter("major"));
-            String gpa = value(req.getParameter("gpa"));
             String taExperience = value(req.getParameter("taExperience"));
+            String year = value(req.getParameter("year"));
+            String gpa = value(req.getParameter("gpa"));
+            String grade = ""; // legacy placeholder
+            String internshipExperience = value(req.getParameter("internshipExperience"));
             String skills = value(req.getParameter("skills"));
             String availableTime = value(req.getParameter("availableTime"));
             String resumeFileName = value(req.getParameter("resumeFileName"));
@@ -433,17 +480,17 @@ public class UserServlet extends HttpServlet {
             String avatarStoredName = oldProfile == null ? "" : value(oldProfile.get("avatarStoredName"));
 
             if (oldProfile != null) {
-                if (grade.isEmpty()) {
-                    grade = value(oldProfile.get("grade"));
-                }
                 if (major.isEmpty()) {
                     major = value(oldProfile.get("major"));
                 }
-                if (gpa.isEmpty()) {
-                    gpa = value(oldProfile.get("gpa"));
+                if (year.isEmpty()) {
+                    year = value(oldProfile.get("year"));
                 }
                 if (taExperience.isEmpty()) {
                     taExperience = value(oldProfile.get("taExperience"));
+                }
+                if (internshipExperience.isEmpty()) {
+                    internshipExperience = value(oldProfile.get("internshipExperience"));
                 }
                 if (email.isEmpty()) {
                     email = value(oldProfile.get("email"));
@@ -456,6 +503,9 @@ public class UserServlet extends HttpServlet {
                 }
                 if (availableTime.isEmpty()) {
                     availableTime = value(oldProfile.get("availableTime"));
+                }
+                if (gpa.isEmpty()) {
+                    gpa = value(oldProfile.get("gpa"));
                 }
             }
 
@@ -527,18 +577,33 @@ public class UserServlet extends HttpServlet {
                 user.setEmail(email);
             }
             dataManager.saveUser(user);
-            dataManager.saveProfile(
+                // Server-side validation: taExperience is required
+                if (taExperience == null || taExperience.trim().isEmpty()) {
+                    out.print(new JSONObject().put("success", false).put("message", "TA experience is required").toString());
+                    return;
+                }
+                if ("postgraduate".equalsIgnoreCase(year) && gpa != null && !gpa.trim().isEmpty()) {
+                    out.print(new JSONObject().put("success", false).put("message", "GPA should not be provided for Postgraduate students").toString());
+                    return;
+                }
+                if (!"postgraduate".equalsIgnoreCase(year) && (gpa == null || gpa.trim().isEmpty())) {
+                    out.print(new JSONObject().put("success", false).put("message", "GPA is required for non-Postgraduate students").toString());
+                    return;
+                }
+                dataManager.saveProfile(
                     user.getUserId(),
                     grade,
                     major,
-                    gpa,
                     email.isEmpty() ? user.getEmail() : email,
+                    year,
+                    gpa,
                     skills,
                     resumeFileName,
                     resumeStoredName,
                     availableTime,
                     avatarStoredName,
-                    taExperience);
+                    taExperience,
+                    internshipExperience == null ? "" : internshipExperience);
             dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "UPDATE_PROFILE", "profile", "success");
 
             HttpSession session = req.getSession(false);
@@ -547,15 +612,16 @@ public class UserServlet extends HttpServlet {
                 session.setAttribute("currentUser", user);
             }
 
-            out.print(new JSONObject()
+                JSONObject response = new JSONObject()
                     .put("success", true)
                     .put("message", "Profile updated")
                     .put("resumeFileName", resumeFileName)
                     .put("availableTime", availableTime)
                     .put("taExperience", taExperience)
                     .put("avatarUrl", buildAvatarUrl(req, user.getUserId(), avatarStoredName))
-                    .put("user", toUserJson(user))
-                    .toString());
+                    .put("user", toUserJson(user));
+                // Resume parsing integration removed; no parseOutcome to report.
+                out.print(response.toString());
             return;
         }
 
@@ -884,6 +950,8 @@ public class UserServlet extends HttpServlet {
         }
         return null;
     }
+
+    // External resume parsing integration removed. No helper methods remain here.
 
     private static class ResolvedProfile {
         private final String resolvedUserId;

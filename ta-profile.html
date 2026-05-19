@@ -361,17 +361,7 @@
         <div class="form-section active" data-section="1">
           <h2 class="form-title">Basic Information</h2>
           <div class="form-two-col">
-            <div class="form-group">
-              <label class="form-label required">Year</label>
-              <select class="form-control" id="grade" required>
-                <option value="">-- Select Year --</option>
-                <option value="Year 1">Year 1</option>
-                <option value="Year 2">Year 2</option>
-                <option value="Year 3">Year 3</option>
-                <option value="Year 4">Year 4</option>
-                <option value="Postgraduate">Postgraduate</option>
-              </select>
-            </div>
+
             <div class="form-group">
               <label class="form-label required">Major</label>
               <select class="form-control" id="major" required>
@@ -384,21 +374,42 @@
                 <option value="Information Systems">Information Systems</option>
               </select>
             </div>
-            <div class="form-group">
-              <label class="form-label">GPA (optional)</label>
-              <input type="number" class="form-control" id="gpa" placeholder="Enter GPA" step="0.01" min="0" max="4">
-            </div>
+
             <div class="form-group">
               <label class="form-label required">Contact Email</label>
               <input type="email" class="form-control" id="email" placeholder="Enter email" required>
             </div>
             <div class="form-group">
-              <label class="form-label">TA Experience (optional)</label>
-              <select class="form-control" id="taExperience">
-                <option value="">-- Select --</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
+              <label class="form-label required">Year</label>
+              <select class="form-control" id="yearSelect">
+                <option value="">-- Select Year --</option>
+                <option value="year1">Year 1</option>
+                <option value="year2">Year 2</option>
+                <option value="year3">Year 3</option>
+                <option value="year4">Year 4</option>
+                <option value="postgraduate">Postgraduate</option>
               </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Have you worked as a TA before?</label>
+              <div style="display:flex;gap:12px;align-items:center;">
+                <label><input type="radio" name="taExperience" value="Yes" id="taExpYes"> Yes</label>
+                <label><input type="radio" name="taExperience" value="No" id="taExpNo"> No</label>
+                <label style="color:var(--gray-500);font-size:12px;margin-left:8px;">(required)</label>
+              </div>
+            </div>
+            <div class="form-group" id="gpaGroup" style="display:block;">
+              <label class="form-label required">GPA</label>
+              <input type="text" id="gpaInput" class="form-control" placeholder="e.g. 3.80">
+              <div style="font-size:12px;color:var(--gray-500);margin-top:6px;">GPA is required for non-Postgraduate students and hidden for Postgraduate students.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Have you had internship experience?</label>
+              <div style="display:flex;gap:12px;align-items:center;">
+                <label><input type="radio" name="internshipExperience" value="Yes" id="internYes"> Yes</label>
+                <label><input type="radio" name="internshipExperience" value="No" id="internNo"> No</label>
+                <label style="color:var(--gray-500);font-size:12px;margin-left:8px;">(optional)</label>
+              </div>
             </div>
           </div>
           <div class="form-controls">
@@ -508,20 +519,16 @@
 
           <div class="confirm-card">
             <div class="confirm-row">
-              <span class="confirm-label">Year</span>
-              <span class="confirm-value" id="confirmGrade">-</span>
-            </div>
-            <div class="confirm-row">
               <span class="confirm-label">Major</span>
               <span class="confirm-value" id="confirmMajor">-</span>
             </div>
             <div class="confirm-row">
-              <span class="confirm-label">GPA (optional)</span>
-              <span class="confirm-value" id="confirmGPA">-</span>
-            </div>
-            <div class="confirm-row">
               <span class="confirm-label">TA Experience</span>
               <span class="confirm-value" id="confirmTaExperience">-</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">Internship</span>
+              <span class="confirm-value" id="confirmInternship">-</span>
             </div>
             <div class="confirm-row">
               <span class="confirm-label">Mail</span>
@@ -582,10 +589,11 @@
     let currentStep = 1;
     // In-memory wizard state; submitted as multipart form in submitProfile().
     let profileData = {
-      grade: '',
       major: '',
-      gpa: '',
+      year: '',
       taExperience: '',
+      internshipExperience: '',
+      gpa: '',
       email: '',
       skills: [],
       availableTime: [],
@@ -622,22 +630,34 @@
       // Step 1 must have identity/academic fields, Step 2 must have at least
       // one skill + one time slot, Step 3 must have an uploaded or existing resume.
       // This mirrors the feature acceptance criteria before data is submitted.
-      if (currentStep === 1) {
-        const grade = document.getElementById('grade').value;
+        if (currentStep === 1) {
         const major = document.getElementById('major').value;
-        const gpa = document.getElementById('gpa').value;
-        const taExperience = document.getElementById('taExperience').value;
         const email = document.getElementById('email').value;
+        const year = document.getElementById('yearSelect').value;
+        const taExperience = (document.getElementById('taExpYes') && document.getElementById('taExpYes').checked) ? 'Yes' : ((document.getElementById('taExpNo') && document.getElementById('taExpNo').checked) ? 'No' : '');
+        const internshipExperience = (document.getElementById('internYes') && document.getElementById('internYes').checked) ? 'Yes' : ((document.getElementById('internNo') && document.getElementById('internNo').checked) ? 'No' : '');
+        const gpa = (document.getElementById('gpaInput') && document.getElementById('gpaInput').value) ? document.getElementById('gpaInput').value.trim() : '';
 
-        if (!grade || !major || !email) {
-          taSystem.showMessage('Please complete all required fields', 'danger');
+        if (!major || !email || !taExperience) {
+          taSystem.showMessage('Please complete all required fields (major, email, TA experience)', 'danger');
           return false;
         }
 
-        profileData.grade = grade;
+        // GPA rules: postgraduate must not provide GPA; other years must provide it.
+        if (year === 'postgraduate' && gpa) {
+          taSystem.showMessage('GPA should not be provided for Postgraduate students', 'danger');
+          return false;
+        }
+        if (year && year !== 'postgraduate' && !gpa) {
+          taSystem.showMessage('Please provide GPA for non-Postgraduate students', 'danger');
+          return false;
+        }
+
         profileData.major = major;
-        profileData.gpa = gpa;
+        profileData.year = year;
         profileData.taExperience = taExperience;
+        profileData.internshipExperience = internshipExperience;
+        profileData.gpa = gpa;
         profileData.email = email;
       } else if (currentStep === 2) {
         if (profileData.skills.length === 0) {
@@ -784,10 +804,17 @@
     // 功能：处理 populateConfirmData 相关逻辑。
     function populateConfirmData() {
       // Render step-4 summary from current wizard state before final submit.
-      document.getElementById('confirmGrade').textContent = profileData.grade;
       document.getElementById('confirmMajor').textContent = profileData.major;
-      document.getElementById('confirmGPA').textContent = profileData.gpa || '-';
       document.getElementById('confirmTaExperience').textContent = profileData.taExperience || '-';
+      document.getElementById('confirmMajor').textContent = profileData.major + (profileData.year ? (' (' + profileData.year + ')') : '');
+      // show gpa only when set
+      if (profileData.gpa) {
+        const row = document.createElement('div');
+        row.className = 'confirm-row';
+        row.innerHTML = `<span class="confirm-label">GPA</span><span class="confirm-value">${profileData.gpa}</span>`;
+        document.querySelector('.confirm-card').appendChild(row);
+      }
+      document.getElementById('confirmInternship').textContent = profileData.internshipExperience || '-';
       document.getElementById('confirmEmail').textContent = profileData.email;
       document.getElementById('confirmSkills').textContent = profileData.skills.length ? profileData.skills.join(', ') : '-';
       document.getElementById('confirmAvailableTime').textContent = profileData.availableTime.length ? profileData.availableTime.join('; ') : '-';
@@ -807,10 +834,11 @@
         const form = new FormData();
         form.append('userName', localStorage.getItem('userName') || '');
         form.append('email', profileData.email || '');
-        form.append('grade', profileData.grade || '');
         form.append('major', profileData.major || '');
-        form.append('gpa', profileData.gpa || '');
         form.append('taExperience', profileData.taExperience || '');
+        form.append('year', profileData.year || '');
+        form.append('gpa', profileData.gpa || '');
+        form.append('internshipExperience', profileData.internshipExperience || '');
         form.append('skills', (profileData.skills || []).join(','));
         form.append('availableTime', (profileData.availableTime || []).join(';'));
         form.append('resumeFileName', profileData.resume ? profileData.resume.name : (profileData.existingResumeName || ''));
@@ -900,7 +928,6 @@
     // 功能：判断条件是否成立。
     function isStep1Complete() {
       return Boolean(
-        String(profileData.grade || '').trim() &&
         String(profileData.major || '').trim() &&
         String(profileData.email || '').trim()
       );
@@ -956,23 +983,36 @@
         const profile = await API.getProfile();
         if (!profile || !profile.userId) return;
 
-        profileData.grade = profile.grade || '';
         profileData.major = profile.major || '';
-        profileData.gpa = profile.gpa || '';
         profileData.taExperience = profile.taExperience || '';
+        profileData.internshipExperience = profile.internshipExperience || '';
         profileData.email = profile.email || '';
+        profileData.year = profile.year || '';
+        profileData.gpa = profile.gpa || '';
         profileData.skills = (profile.skills || '').split(',').map((s) => s.trim()).filter(Boolean);
         profileData.existingResumeName = profile.resumeFileName || '';
-
-        ensureSelectOption('grade', profileData.grade);
         ensureSelectOption('major', profileData.major);
-        ensureSelectOption('taExperience', profileData.taExperience);
-
-        document.getElementById('grade').value = profileData.grade;
+        // set radio buttons for taExperience
+        if (profileData.taExperience === 'Yes') {
+          const yes = document.getElementById('taExpYes'); if (yes) yes.checked = true;
+        } else if (profileData.taExperience === 'No') {
+          const no = document.getElementById('taExpNo'); if (no) no.checked = true;
+        }
+        // restore internship radio
+        if (profile.internshipExperience === 'Yes') {
+          const iy = document.getElementById('internYes'); if (iy) iy.checked = true;
+        } else if (profile.internshipExperience === 'No') {
+          const inno = document.getElementById('internNo'); if (inno) inno.checked = true;
+        }
         document.getElementById('major').value = profileData.major;
-        document.getElementById('gpa').value = profileData.gpa;
-        document.getElementById('taExperience').value = profileData.taExperience;
         document.getElementById('email').value = profileData.email;
+        document.getElementById('email').value = profileData.email;
+        if (profileData.year) {
+          const y = document.getElementById('yearSelect'); if (y) y.value = profileData.year;
+        }
+        if (profileData.gpa) {
+          const g = document.getElementById('gpaInput'); if (g) g.value = profileData.gpa;
+        }
 
         document.querySelectorAll('.skill-tag').forEach((el) => {
           const selected = profileData.skills.includes(el.textContent.trim());
@@ -1013,6 +1053,27 @@
       }
       initTimeCells();
       await loadExistingProfile();
+      // Toggle GPA input when year changes (disallow GPA for postgraduate)
+      const yearEl = document.getElementById('yearSelect');
+      const gpaInput = document.getElementById('gpaInput');
+      const gpaGroup = document.getElementById('gpaGroup');
+      if (yearEl && gpaInput && gpaGroup) {
+        yearEl.addEventListener('change', () => {
+          if (yearEl.value === 'postgraduate') {
+            gpaInput.value = '';
+            gpaInput.disabled = true;
+            gpaGroup.style.display = 'none';
+          } else {
+            gpaInput.disabled = false;
+            gpaGroup.style.display = 'block';
+          }
+        });
+        if (yearEl.value === 'postgraduate') {
+          gpaInput.value = '';
+          gpaInput.disabled = true;
+          gpaGroup.style.display = 'none';
+        }
+      }
     });
 
   </script>

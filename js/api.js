@@ -44,7 +44,10 @@ class API {
 
     if (!response.ok) {
       const msg = data && data.message ? data.message : `HTTP ${response.status}`;
-      throw new Error(msg);
+      const error = new Error(msg);
+      error.status = response.status;
+      error.responseData = data;
+      throw error;
     }
 
     return data;
@@ -150,6 +153,12 @@ class API {
   // 生成简历预览地址。
   static getResumePreviewUrl(userId) {
     return `${API.getBaseUrl()}/user/resume?userId=${encodeURIComponent(userId)}`;
+  }
+
+  // 获取简历解析结果。
+  static getResumeParsed(userId = "") {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : "";
+    return API.request(`/user/resume-parse${qs}`);
   }
 
   // 打开简历：优先新窗口展示 PDF，失败时抛出后端提示。
