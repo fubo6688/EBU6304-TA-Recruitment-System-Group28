@@ -1,4 +1,12 @@
-ntf1776001200001|position|New Position Published|A position has been published: Agile Development TA|2026-04-12 10:00:00|0|
-ntf1776001200002|application|Application Submitted|Your application was submitted.|2026-04-12 10:15:00|0|
-ntf1776001200003|application|Application Submitted|Your application was submitted.|2026-04-12 10:20:00|0|
-ntf1776001200004|application|Application Result|Your application has been rejected|2026-04-12 10:35:00|0|
+ntf1776001200001|position|New Position Published|A position has been published: Agile Development TA|2026-04-12 10:00:00|0
+ntf1776001200002|application|Application Submitted|Your application was submitted.|2026-04-12 10:15:00|0
+ntf1776001200003|application|Application Submitted|Your application was submitted.|2026-04-12 10:20:00|0
+ntf1776001200004|application|Application Result|Your application has been rejected|2026-04-12 10:35:00|0
+ntf1779079014344|application|Application Submitted|Your application was submitted.|2026-05-18 12:36:54|0
+ntf1779089490950|application|Application Submitted|Your application was submitted.|2026-05-18 15:31:30|0|
+ntf1779090430046|application|Application Submitted|Your application was submitted.|2026-05-18 15:47:10|0|
+ntf1779090993298|position|New Position Published|A position has been published: Operating Systems TA|2026-05-18 15:56:33|0|
+ntf1779091007046|application|Application Submitted|Your application was submitted.|2026-05-18 15:56:47|0|
+ntf1779091259755|position|New Position Published|A position has been published: Data Structures TA|2026-05-18 16:00:59|0|
+ntf1779091291437|application|Application Result|Your application has been rejected|2026-05-18 16:01:31|0|
+ntf1779091309228|application|Application Submitted|Your application was submitted.|2026-05-18 16:01:49|0|

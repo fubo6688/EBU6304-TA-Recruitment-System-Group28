@@ -1,5 +1,2 @@
-<<<<<<< HEAD
 ntf1775835680754|application|New Application|A new application needs review.|2026-04-10 23:41:20|0
-=======
-ntf1776002200001|application|New Application|A new application needs review.|2026-04-12 10:15:00|0|
->>>>>>> 450754283c8cdbf213a5f073d02c8fd2f6d1ccac
+ntf1776002200001|application|New Application|A new application needs review.|2026-04-12 10:15:00|0

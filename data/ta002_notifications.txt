@@ -1,2 +1,6 @@
-ntf1776002000001|application|Application Submitted|Your application was submitted.|2026-03-23 13:11:55|1|
-ntf1776002000002|application|Application Result|Your application has been accepted|2026-03-23 13:12:43|0|
+ntf1776002000001|application|Application Submitted|Your application was submitted.|2026-03-23 13:11:55|1
+ntf1776002000002|application|Application Result|Your application has been accepted|2026-03-23 13:12:43|0
+ntf1775651577327|position|New Position Published|A position has been published: A|2026-04-08 20:32:57|0
+ntf1775652124052|position|New Position Published|A position has been published: A|2026-04-08 20:42:04|0
+ntf1779090993294|position|New Position Published|A position has been published: Operating Systems TA|2026-05-18 15:56:33|0|
+ntf1779091259749|position|New Position Published|A position has been published: Data Structures TA|2026-05-18 16:00:59|0|

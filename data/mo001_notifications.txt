@@ -1,0 +1,3 @@
+ntf1779090430047|application|New Application|A new application needs review.|2026-05-18 15:47:10|0|
+ntf1779091007047|application|New Application|A new application needs review.|2026-05-18 15:56:47|0|
+ntf1779091309230|application|New Application|A new application needs review.|2026-05-18 16:01:49|0|

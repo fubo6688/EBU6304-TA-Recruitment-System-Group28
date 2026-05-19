@@ -763,6 +763,51 @@
         .filter((s) => isMeaningfulFilterOption(s));
     }
 
+    function collectTextValues(value, output) {
+      if (!value) return;
+      if (typeof value === 'string') {
+        output.push(value);
+        return;
+      }
+      if (Array.isArray(value)) {
+        value.forEach((item) => collectTextValues(item, output));
+        return;
+      }
+      if (typeof value === 'object') {
+        Object.values(value).forEach((item) => collectTextValues(item, output));
+      }
+    }
+
+    function collectByKeyPattern(data, pattern, output) {
+      if (!data) return;
+      if (Array.isArray(data)) {
+        data.forEach((item) => collectByKeyPattern(item, pattern, output));
+        return;
+      }
+      if (typeof data !== 'object') return;
+      Object.keys(data).forEach((key) => {
+        const value = data[key];
+        if (pattern.test(String(key))) {
+          collectTextValues(value, output);
+        }
+        collectByKeyPattern(value, pattern, output);
+      });
+    }
+
+    function extractSkillsFromParsed(parsed) {
+      if (!parsed || typeof parsed !== 'object') return [];
+      const values = [];
+      collectByKeyPattern(parsed, /skill/i, values);
+      const tokens = values.flatMap((v) => extractTokens(v));
+      const seen = new Set();
+      return tokens.filter((token) => {
+        const key = normalizeText(token);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
     // 功能：基于 TA 技能和岗位要求计算匹配分数。
     function computePositionMatch(position) {
       const requirementTokens = extractTokens([
@@ -1159,17 +1204,29 @@
     // 功能：加载岗位数据并更新页面。
     async function loadPositions() {
       try {
-        const [list, myAppsResult, profileResult] = await Promise.all([
+        const [list, myAppsResult, profileResult, resumeParsedResult] = await Promise.all([
           API.getPositions(),
           API.getMyApplications().catch(() => ({ applications: [] })),
-          API.getProfile().catch(() => null)
+          API.getProfile().catch(() => null),
+          API.getResumeParsed().catch(() => null)
         ]);
 
         profileCompleteForApply = isProfileComplete(profileResult);
-        taSkills = String((profileResult && profileResult.skills) || '')
+        const profileSkills = String((profileResult && profileResult.skills) || '')
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean);
+        const parsedSkills = (resumeParsedResult && resumeParsedResult.success)
+          ? extractSkillsFromParsed(resumeParsedResult.parsed)
+          : [];
+        const mergedSkills = [...profileSkills, ...parsedSkills];
+        const skillSet = new Set();
+        taSkills = mergedSkills.filter((skill) => {
+          const key = normalizeText(skill);
+          if (!key || skillSet.has(key)) return false;
+          skillSet.add(key);
+          return true;
+        });
         profileMajor = normalizeText((profileResult && profileResult.major) || '');
 
         const myApps = Array.isArray(myAppsResult && myAppsResult.applications) ? myAppsResult.applications : [];

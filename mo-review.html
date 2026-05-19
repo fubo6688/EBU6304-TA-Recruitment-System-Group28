@@ -309,22 +309,7 @@
       <div class="left-panel">
         <div class="left-panel-title">Position List</div>
         <ul class="position-list-left">
-          <li class="position-item active" onclick="selectPosition(this)">
-            <div>📌 Data Structures</div>
-            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">8 applications / 2 approved</div>
-          </li>
-          <li class="position-item" onclick="selectPosition(this)">
-            <div>📌 Algorithm Design</div>
-            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">5 applications / 1 approved</div>
-          </li>
-          <li class="position-item" onclick="selectPosition(this)">
-            <div>📌 Operating Systems</div>
-            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">3 applications / 1 approved</div>
-          </li>
-          <li class="position-item" onclick="selectPosition(this)">
-            <div>📌 database system</div>
-            <div style="font-size: 11px; color: var(--gray-400); margin-top: 2px;">6 applications / 0 approved</div>
-          </li>
+          <li class="position-item" style="color: var(--gray-500); padding: 12px 16px;">Loading positions...</li>
         </ul>
       </div>
 
@@ -355,125 +340,8 @@
 
         <!-- Applicant List -->
         <div class="applicants-grid">
-          <!-- Applicant card 1 -->
-          <div class="applicant-card">
-            <div class="applicant-header">
-              <div class="applicant-info">
-                <div class="applicant-name">Zhang San</div>
-                <div class="applicant-major">QM ID: 20210001 · Computer Science and Technology</div>
-              </div>
-              <span class="applicant-priority">🥇 First Choice</span>
-            </div>
-
-            <div class="applicant-body">
-              <div class="match-row">
-                <span class="match-label">📊 Match Score:</span>
-                <span class="match-score">95%</span>
-              </div>
-              <div class="match-row">
-                <span class="match-label">🎯 Matched Skills:</span>
-                <div>
-                  <span class="skills-badge highlighted">Python</span>
-                  <span class="skills-badge">Data Structures</span>
-                  <span class="skills-badge">Object-Oriented</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="applicant-footer">
-              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
-              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-            </div>
-          </div>
-
-          <!-- Applicant card 2 -->
-          <div class="applicant-card" style="border-left-color: #f59e0b;">
-            <div class="applicant-header">
-              <div class="applicant-info">
-                <div class="applicant-name">Li Si</div>
-                <div class="applicant-major">QM ID: 20210002 · Computer Science and Technology</div>
-              </div>
-              <span class="applicant-priority" style="background-color: #dbeafe; color: #1e40af;">🥈 Second Choice</span>
-            </div>
-
-            <div class="applicant-body">
-              <div class="match-row">
-                <span class="match-label">📊 Match Score:</span>
-                <span class="match-score" style="color: #f59e0b;">78%</span>
-              </div>
-              <div class="match-row">
-                <span class="match-label">🎯 Matched Skills:</span>
-                <div>
-                  <span class="skills-badge">Python</span>
-                  <span class="skills-badge highlighted">Object-Oriented</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="applicant-footer">
-              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
-              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-            </div>
-          </div>
-
-          <!-- Applicant card 3 -->
-          <div class="applicant-card" style="border-left-color: #ef4444;">
-            <div class="applicant-header">
-              <div class="applicant-info">
-                <div class="applicant-name">Wang Wu</div>
-                <div class="applicant-major">QM ID: 20210003 · Software Engineering</div>
-              </div>
-              <span class="applicant-priority" style="background-color: #fee2e2; color: var(--danger-color);">🥉 Third Choice</span>
-            </div>
-
-            <div class="applicant-body">
-              <div class="match-row">
-                <span class="match-label">📊 Match Score:</span>
-                <span class="match-score" style="color: #ef4444;">45%</span>
-              </div>
-              <div class="match-row">
-                <span class="match-label">🎯 Matched Skills:</span>
-                <div>
-                  <span class="skills-badge">Java</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="applicant-footer">
-              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
-              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-            </div>
-          </div>
-
-          <!-- Applicant card 4 -->
-          <div class="applicant-card" style="border-left-color: var(--success-color);">
-            <div class="applicant-header">
-              <div class="applicant-info">
-                <div class="applicant-name">Zhao Liu</div>
-                <div class="applicant-major">QM ID: 20210004 · Computer Science and Technology</div>
-              </div>
-              <span class="applicant-priority">🥇 First Choice</span>
-            </div>
-
-            <div class="applicant-body">
-              <div class="match-row">
-                <span class="match-label">📊 Match Score:</span>
-                <span class="match-score">88%</span>
-              </div>
-              <div class="match-row">
-                <span class="match-label">🎯 Matched Skills:</span>
-                <div>
-                  <span class="skills-badge highlighted">Python</span>
-                  <span class="skills-badge">Data Structures</span>
-                  <span class="skills-badge">C++</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="applicant-footer">
-              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('Resume is open', 'info')">View Resume</button>
-              <button class="btn btn-sm btn-outline" onclick="taSystem.showMessage('File is open', 'info')">View Profile</button>
-            </div>
+          <div class="empty-state">
+            <div class="empty-state-text">Loading applications...</div>
           </div>
         </div>
       </div>
@@ -508,6 +376,80 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+    function collectTextValues(value, output) {
+      if (!value) return;
+      if (typeof value === 'string') {
+        output.push(value);
+        return;
+      }
+      if (Array.isArray(value)) {
+        value.forEach((item) => collectTextValues(item, output));
+        return;
+      }
+      if (typeof value === 'object') {
+        Object.values(value).forEach((item) => collectTextValues(item, output));
+      }
+    }
+
+    function collectByKeyPattern(data, pattern, output) {
+      if (!data) return;
+      if (Array.isArray(data)) {
+        data.forEach((item) => collectByKeyPattern(item, pattern, output));
+        return;
+      }
+      if (typeof data !== 'object') return;
+      Object.keys(data).forEach((key) => {
+        const value = data[key];
+        if (pattern.test(String(key))) {
+          collectTextValues(value, output);
+        }
+        collectByKeyPattern(value, pattern, output);
+      });
+    }
+
+    function extractSkillsFromParsed(parsed) {
+      if (!parsed || typeof parsed !== 'object') return [];
+      const values = [];
+      collectByKeyPattern(parsed, /skill/i, values);
+      const tokens = values.flatMap((v) => splitTokens(v));
+      const seen = new Set();
+      return tokens.filter((token) => {
+        const key = normalizeText(token);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function findFirstMeaningfulText(values) {
+      return (values || []).map((v) => String(v || '').trim()).find((v) => v.length >= 8) || '';
+    }
+
+    function buildResumeSummary(parsed) {
+      const data = parsed && parsed.parsed ? parsed.parsed : parsed;
+      if (!data || typeof data !== 'object') return null;
+
+      const summaryCandidates = [];
+      collectByKeyPattern(data, /summary|objective|profile/i, summaryCandidates);
+      const summaryText = findFirstMeaningfulText(summaryCandidates);
+
+      const educationCandidates = [];
+      collectByKeyPattern(data, /education|school|degree|institution/i, educationCandidates);
+      const education = educationCandidates.flatMap((v) => splitTokens(v)).slice(0, 6);
+
+      const experienceCandidates = [];
+      collectByKeyPattern(data, /experience|employment|company|position|role|title/i, experienceCandidates);
+      const experience = experienceCandidates.flatMap((v) => splitTokens(v)).slice(0, 6);
+
+      const skills = extractSkillsFromParsed(data).slice(0, 12);
+
+      return {
+        summaryText,
+        education,
+        experience,
+        skills
+      };
     }
 
     // 功能：处理 statusText 相关逻辑。
@@ -720,7 +662,6 @@
       `;
       }).join('');
     }
-
     // 功能：处理 preloadApplicantProfiles 相关逻辑。
     async function preloadApplicantProfiles(apps) {
       const ids = [...new Set((apps || []).map((a) => a.userId).filter(Boolean))];
@@ -796,10 +737,63 @@
           <div style="grid-column:1 / span 2;"><strong>Skills:</strong> ${p.skills || ''}</div>
           <div style="grid-column:1 / span 2;"><strong>Available Time:</strong> ${p.availableTime || ''}</div>
           <div style="grid-column:1 / span 2;"><strong>Resume:</strong> ${p.resumeFileName ? `<a href="#" onclick="openResume('${userId}'); return false;">${p.resumeFileName}</a>` : '<span style="color: var(--gray-500);">No resume uploaded</span>'}</div>
+          <div style="grid-column:1 / span 2; border-top: 1px solid var(--gray-200); padding-top: 12px;">
+            <strong>Resume Summary (AI)</strong>
+            <div id="resumeSummaryBox" style="margin-top: 8px; font-size: 13px; color: var(--gray-600);">Loading...</div>
+          </div>
         </div>
       `;
 
       taSystem.openModal('applicantProfileModal');
+      loadResumeSummary(userId);
+    }
+
+    async function loadResumeSummary(userId) {
+      const box = document.getElementById('resumeSummaryBox');
+      if (!box) return;
+      try {
+        const result = await API.getResumeParsed(userId);
+        if (!result || !result.success) {
+          if (result && result.pending) {
+            box.textContent = 'Parsing in progress. Please refresh later.';
+            return;
+          }
+          box.textContent = 'No parsed resume data yet.';
+          return;
+        }
+
+        const summary = buildResumeSummary(result.parsed);
+        if (!summary) {
+          box.textContent = 'Resume summary is unavailable.';
+          return;
+        }
+
+        const skillsText = summary.skills.length ? summary.skills.map((s) => escapeHtml(s)).join(' · ') : 'Not detected';
+        const eduText = summary.education.length ? summary.education.map((s) => escapeHtml(s)).join(' · ') : 'Not detected';
+        const expText = summary.experience.length ? summary.experience.map((s) => escapeHtml(s)).join(' · ') : 'Not detected';
+        const summaryText = summary.summaryText ? escapeHtml(summary.summaryText) : 'Not detected';
+
+        box.innerHTML = `
+          <div><strong>Summary:</strong> ${summaryText}</div>
+          <div style="margin-top:6px;"><strong>Skills:</strong> ${skillsText}</div>
+          <div style="margin-top:6px;"><strong>Education:</strong> ${eduText}</div>
+          <div style="margin-top:6px;"><strong>Experience:</strong> ${expText}</div>
+        `;
+      } catch (error) {
+        if (error && (error.status === 404 || /Resume parser is not configured/i.test(error.message || ''))) {
+          box.textContent = 'Resume parser is not configured.';
+          return;
+        }
+        if (error && (error.status === 404 || /Resume not parsed/i.test(error.message || ''))) {
+          box.textContent = 'No parsed resume data yet.';
+          return;
+        }
+        if (error && error.status === 401) {
+          box.textContent = 'Session expired. Please sign in again.';
+          return;
+        }
+        box.textContent = 'Failed to load resume summary.';
+      }
     }
 
     // 功能：处理 selectPosition 相关逻辑。

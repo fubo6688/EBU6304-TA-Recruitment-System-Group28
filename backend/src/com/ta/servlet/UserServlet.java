@@ -2,6 +2,7 @@ package com.ta.servlet;
 
 import com.ta.model.User;
 import com.ta.util.DataManager;
+import com.ta.util.ResumeParserClient;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
@@ -11,15 +12,18 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import org.json.JSONObject;
 import org.json.JSONArray;
+import org.json.JSONTokener;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.DirectoryStream;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Locale;
 import java.util.HashSet;
 import java.util.ArrayList;
@@ -36,6 +40,7 @@ import java.util.Set;
 @MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 15 * 1024 * 1024)
 public class UserServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
+    private final ResumeParserClient resumeParserClient = new ResumeParserClient();
     // 可查看 TA 资料的角色白名单（本人始终可看）
     private static final Set<String> PROFILE_VIEW_ROLES = new HashSet<>();
 
@@ -215,7 +220,16 @@ public class UserServlet extends HttpServlet {
 
             String downloadName = originalName.isEmpty() ? storedName : originalName;
             resp.setContentType("application/pdf");
-            resp.setHeader("Content-Disposition", "inline; filename=\"" + sanitizeFileName(downloadName) + "\"");
+            String asciiName = sanitizeFileName(downloadName);
+            String encodedName;
+            try {
+                encodedName = java.net.URLEncoder.encode(downloadName, "UTF-8").replace("+", "%20");
+            } catch (Exception e) {
+                encodedName = asciiName;
+            }
+            // Provide both ASCII filename and RFC5987 encoded UTF-8 filename*
+            resp.setHeader("Content-Disposition",
+                    "inline; filename=\"" + asciiName + "\"; filename*=UTF-8''" + encodedName);
             resp.setContentLengthLong(Files.size(file));
 
             try (InputStream in = Files.newInputStream(file); OutputStream os = resp.getOutputStream()) {
@@ -226,6 +240,102 @@ public class UserServlet extends HttpServlet {
                 }
                 os.flush();
             }
+            return;
+        }
+
+        if ("/resume-parse".equalsIgnoreCase(path)) {
+            String targetUserId = value(req.getParameter("userId"));
+            if (targetUserId.isEmpty()) {
+                targetUserId = user.getUserId();
+            }
+
+            if (!canViewProfile(user, targetUserId)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "No permission").toString());
+                return;
+            }
+
+            ResolvedProfile resolved = resolveProfileByAnyId(targetUserId);
+            if (resolved.profile == null) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Profile not found").toString());
+                return;
+            }
+
+            Path parsedFile = getResumeParsedFile(resolved.resolvedUserId);
+            if (!Files.exists(parsedFile)) {
+                ResumeParseJob job = loadResumeParseJob(resolved.resolvedUserId);
+                if (job != null && resumeParserClient.isConfigured()) {
+                    ResumeParserClient.StatusResult statusResult = resumeParserClient.fetchStatus(job.statusUrl);
+                        if (statusResult.ok) {
+                        saveParsedResult(resolved.resolvedUserId, statusResult.body);
+                        clearResumeParseJob(resolved.resolvedUserId);
+                    } else {
+                            // If status endpoint returns 404 (job disappeared), attempt to re-submit the resume
+                            if (statusResult.statusCode == 404) {
+                                try {
+                                    // try to locate resume file and re-submit parse
+                                    Map<String, String> profile = resolved.profile;
+                                    String storedName = value(profile.get("resumeStoredName"));
+                                    String originalName = value(profile.get("resumeFileName"));
+                                    Path resumeFile = resolveResumeFile(resolved.resolvedUserId, storedName, originalName);
+                                    if (Files.exists(resumeFile)) {
+                                        dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "PARSE_RESUME", "resubmit", "info");
+                                        ResumeParseOutcome outcome = parseResumeIfEnabled(user, resumeFile, originalName, "application/pdf");
+                                        if (outcome != null && outcome.success) {
+                                            resp.getWriter().print(new JSONObject().put("success", true).put("parsed", true).toString());
+                                            return;
+                                        }
+                                    }
+                                } catch (Exception ignore) {
+                                }
+
+                            }
+
+                            resp.setStatus(HttpServletResponse.SC_ACCEPTED);
+                            resp.setContentType("application/json;charset=UTF-8");
+                            resp.getWriter().print(new JSONObject()
+                                    .put("success", false)
+                                    .put("pending", true)
+                                    .put("message", "Resume parsing in progress")
+                                    .put("jobId", job.jobId)
+                                    .toString());
+                            return;
+                    }
+                } else if (!resumeParserClient.isConfigured()) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    resp.setContentType("application/json;charset=UTF-8");
+                    resp.getWriter().print(new JSONObject()
+                            .put("success", false)
+                            .put("message", "Resume parser is not configured")
+                            .toString());
+                    return;
+                } else {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    resp.setContentType("application/json;charset=UTF-8");
+                    resp.getWriter().print(new JSONObject().put("success", false).put("message", "Resume not parsed").toString());
+                    return;
+                }
+            }
+
+            String content = new String(Files.readAllBytes(parsedFile), StandardCharsets.UTF_8);
+            Object parsedValue;
+            try {
+                parsedValue = new JSONTokener(content).nextValue();
+            } catch (Exception ex) {
+                parsedValue = content;
+            }
+
+            JSONObject payload = new JSONObject()
+                    .put("success", true)
+                    .put("parsed", parsedValue);
+            try {
+                payload.put("updatedAt", Files.getLastModifiedTime(parsedFile).toMillis());
+            } catch (IOException ignore) {
+            }
+            resp.getWriter().print(payload.toString());
             return;
         }
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
@@ -431,6 +541,7 @@ public class UserServlet extends HttpServlet {
             Map<String, String> oldProfile = dataManager.getProfile(user.getUserId());
             String resumeStoredName = oldProfile == null ? "" : value(oldProfile.get("resumeStoredName"));
             String avatarStoredName = oldProfile == null ? "" : value(oldProfile.get("avatarStoredName"));
+            ResumeParseOutcome parseOutcome = null;
 
             if (oldProfile != null) {
                 if (grade.isEmpty()) {
@@ -513,6 +624,7 @@ public class UserServlet extends HttpServlet {
 
                         resumeFileName = safeOriginal;
                         resumeStoredName = stored;
+                        parseOutcome = parseResumeIfEnabled(user, target, safeOriginal, part.getContentType());
                     }
                 } catch (Exception e) {
                     out.print(new JSONObject().put("success", false).put("message", "Resume upload failed").toString());
@@ -547,15 +659,19 @@ public class UserServlet extends HttpServlet {
                 session.setAttribute("currentUser", user);
             }
 
-            out.print(new JSONObject()
+                JSONObject response = new JSONObject()
                     .put("success", true)
                     .put("message", "Profile updated")
                     .put("resumeFileName", resumeFileName)
                     .put("availableTime", availableTime)
                     .put("taExperience", taExperience)
                     .put("avatarUrl", buildAvatarUrl(req, user.getUserId(), avatarStoredName))
-                    .put("user", toUserJson(user))
-                    .toString());
+                    .put("user", toUserJson(user));
+                if (parseOutcome != null && parseOutcome.attempted) {
+                response.put("resumeParsed", parseOutcome.success);
+                response.put("resumeParseMessage", parseOutcome.message);
+                }
+                out.print(response.toString());
             return;
         }
 
@@ -883,6 +999,122 @@ public class UserServlet extends HttpServlet {
             }
         }
         return null;
+    }
+
+    private ResumeParseOutcome parseResumeIfEnabled(User user, Path resumeFile, String originalName, String contentType) {
+        if (!resumeParserClient.isConfigured()) {
+            return new ResumeParseOutcome(true, false, "Resume parser is not configured");
+        }
+
+        ResumeParserClient.ParseResult result = resumeParserClient.parse(resumeFile, originalName, contentType);
+        if (result.pending) {
+            saveResumeParseJob(user.getUserId(), result.statusUrl, result.jobId);
+            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(),
+                    "PARSE_RESUME", "queued", "success");
+            return new ResumeParseOutcome(true, false, "Resume parsing queued");
+        }
+
+        if (!result.ok) {
+            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(),
+                    "PARSE_RESUME", "http " + result.statusCode, "failed");
+            return new ResumeParseOutcome(true, false, "Resume parsing failed");
+        }
+
+        try {
+            saveParsedResult(user.getUserId(), result.body);
+            clearResumeParseJob(user.getUserId());
+            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(),
+                    "PARSE_RESUME", "stored", "success");
+            return new ResumeParseOutcome(true, true, "Resume parsed");
+        } catch (IOException e) {
+            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(),
+                    "PARSE_RESUME", "store failed", "failed");
+            return new ResumeParseOutcome(true, false, "Resume parsed but storage failed");
+        }
+    }
+
+    private Path getResumeParsedFile(String userId) {
+        Path parsedDir = dataManager.getDataDirPath().resolve("resume_parsed");
+        return parsedDir.resolve(sanitizeFileName(userId) + ".json");
+    }
+
+    private Path getResumeParseJobFile(String userId) {
+        Path jobDir = dataManager.getDataDirPath().resolve("resume_parsed_jobs");
+        return jobDir.resolve(sanitizeFileName(userId) + ".json");
+    }
+
+    private void saveParsedResult(String userId, String body) throws IOException {
+        Path parsedDir = dataManager.getDataDirPath().resolve("resume_parsed");
+        Files.createDirectories(parsedDir);
+        Path parsedFile = getResumeParsedFile(userId);
+        Files.write(parsedFile, body.getBytes(StandardCharsets.UTF_8),
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    private void saveResumeParseJob(String userId, String statusUrl, String jobId) {
+        try {
+            Path jobDir = dataManager.getDataDirPath().resolve("resume_parsed_jobs");
+            Files.createDirectories(jobDir);
+            JSONObject payload = new JSONObject()
+                    .put("statusUrl", value(statusUrl))
+                    .put("jobId", value(jobId))
+                    .put("createdAt", System.currentTimeMillis());
+            Files.write(getResumeParseJobFile(userId), payload.toString().getBytes(StandardCharsets.UTF_8),
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+            try {
+                dataManager.writeLog(userId, "system", "system", "SAVE_PARSE_JOB", "failed: " + e.getMessage(), "failed");
+            } catch (Exception ignore) {
+            }
+        }
+    }
+
+    private ResumeParseJob loadResumeParseJob(String userId) {
+        Path jobFile = getResumeParseJobFile(userId);
+        if (!Files.exists(jobFile)) {
+            return null;
+        }
+        try {
+            String content = new String(Files.readAllBytes(jobFile), StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(content);
+            String statusUrl = value(json.optString("statusUrl"));
+            if (statusUrl.isEmpty()) {
+                return null;
+            }
+            String jobId = value(json.optString("jobId"));
+            return new ResumeParseJob(statusUrl, jobId);
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
+
+    private void clearResumeParseJob(String userId) {
+        try {
+            Files.deleteIfExists(getResumeParseJobFile(userId));
+        } catch (IOException ignore) {
+        }
+    }
+
+    private static class ResumeParseJob {
+        private final String statusUrl;
+        private final String jobId;
+
+        private ResumeParseJob(String statusUrl, String jobId) {
+            this.statusUrl = statusUrl;
+            this.jobId = jobId;
+        }
+    }
+
+    private static class ResumeParseOutcome {
+        private final boolean attempted;
+        private final boolean success;
+        private final String message;
+
+        private ResumeParseOutcome(boolean attempted, boolean success, String message) {
+            this.attempted = attempted;
+            this.success = success;
+            this.message = message == null ? "" : message;
+        }
     }
 
     private static class ResolvedProfile {

@@ -1,2 +1,4 @@
 ntf1776001300001|application|Application Submitted|Your application was submitted.|2026-04-12 11:00:00|0|
 ntf1776001300002|application|Application Result|Your application has been accepted|2026-04-12 11:20:00|0|
+ntf1779090993291|position|New Position Published|A position has been published: Operating Systems TA|2026-05-18 15:56:33|0|
+ntf1779091259747|position|New Position Published|A position has been published: Data Structures TA|2026-05-18 16:00:59|0|
