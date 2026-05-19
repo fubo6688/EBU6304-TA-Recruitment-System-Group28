@@ -1086,16 +1086,14 @@ public class DataManager {
     public synchronized void saveProfile(String userId,
                                          String grade,
                                          String major,
-                                         String email,
-                                         String year,
                                          String gpa,
+                                         String email,
                                          String skills,
                                          String resumeFileName,
                                          String resumeStoredName,
                                          String availableTime,
                                          String avatarStoredName,
-                                         String taExperience,
-                                         String internshipExperience) {
+                                         String taExperience) {
         // Profile persistence strategy: upsert by userId in profiles.txt.
         // This allows repeated edits from TA profile page without duplicate rows.
         List<String> lines = readLinesSafe(resolve(PROFILES_FILE));
@@ -1108,7 +1106,6 @@ public class DataManager {
                         userId,
                         safe(grade),
                         safe(major),
-                        safe(year),
                         safe(gpa),
                         safe(email),
                         safe(skills),
@@ -1117,7 +1114,6 @@ public class DataManager {
                         safe(availableTime),
                         safe(avatarStoredName),
                         safe(taExperience),
-                        safe((internshipExperience == null || internshipExperience.trim().isEmpty()) ? "No" : internshipExperience),
                         nowDateTime()));
                 replaced = true;
             } else {
@@ -1129,7 +1125,6 @@ public class DataManager {
                     userId,
                     safe(grade),
                     safe(major),
-                    safe(year),
                     safe(gpa),
                     safe(email),
                     safe(skills),
@@ -1138,7 +1133,6 @@ public class DataManager {
                     safe(availableTime),
                     safe(avatarStoredName),
                     safe(taExperience),
-                    safe((internshipExperience == null || internshipExperience.trim().isEmpty()) ? "No" : internshipExperience),
                     nowDateTime()));
         }
         writeLinesSafe(resolve(PROFILES_FILE), updated);
@@ -1153,119 +1147,42 @@ public class DataManager {
         // (resumeStoredName/availableTime/avatarStoredName/taExperience/updatedAt).
         for (String line : readLinesSafe(resolve(PROFILES_FILE))) {
             String[] p = line.split("\\|", -1);
-            if (p.length >= 3 && userId.equals(p[0])) {
+            if (p.length >= 8 && userId.equals(p[0])) {
                 Map<String, String> result = new LinkedHashMap<>();
                 result.put("userId", p[0]);
-                // Detect formats in order: v3 (grade present), v2 (no grade, email at p[2]), legacy
-                if (p.length >= 6 && p[5] != null && p[5].contains("@")) {
-                    // New format v3: userId|grade|major|year|gpa|email|skills|resumeFileName|resumeStoredName|availableTime|avatarStoredName|taExperience|internshipExperience|updatedAt
-                    result.put("grade", p.length > 1 ? p[1] : "");
-                    result.put("major", p.length > 2 ? p[2] : "");
-                    result.put("year", p.length > 3 ? p[3] : "");
-                    result.put("gpa", p.length > 4 ? p[4] : "");
-                    result.put("email", p.length > 5 ? p[5] : "");
-                    result.put("skills", p.length > 6 ? p[6] : "");
-                    result.put("resumeFileName", p.length > 7 ? p[7] : "");
-                    if (p.length >= 14) {
-                        result.put("resumeStoredName", p[8]);
-                        result.put("availableTime", p[9]);
-                        result.put("avatarStoredName", p[10]);
-                        result.put("taExperience", p[11]);
-                        String intern = p[12];
-                        result.put("internshipExperience", (intern == null || intern.trim().isEmpty()) ? "No" : intern);
-                        result.put("updatedAt", p[13]);
-                    } else if (p.length == 11) {
-                        // minimal v3-ish ordering
-                        result.put("resumeStoredName", p[8]);
-                        result.put("availableTime", p[9]);
-                        result.put("avatarStoredName", p[10]);
-                        result.put("taExperience", "");
-                        result.put("internshipExperience", "No");
-                        result.put("updatedAt", "");
-                    } else {
-                        result.put("resumeStoredName", p.length > 8 ? p[8] : p.length > 7 ? p[7] : "");
-                        result.put("availableTime", p.length > 9 ? p[9] : p.length > 8 ? p[8] : "");
-                        result.put("avatarStoredName", p.length > 10 ? p[10] : p.length > 9 ? p[9] : "");
-                        result.put("taExperience", p.length > 11 ? p[11] : p.length > 10 ? p[10] : "");
-                        result.put("internshipExperience", p.length > 12 ? p[12] : "No");
-                        result.put("updatedAt", p.length > 13 ? p[13] : "");
-                    }
-                    return result;
-                } else if (p.length >= 3 && p[2].contains("@")) {
-                    // New format v2: userId|major|email|year|gpa|skills|resumeFileName|resumeStoredName|availableTime|avatarStoredName|taExperience|internshipExperience|updatedAt
-                    result.put("grade", "");
-                    result.put("major", p.length > 1 ? p[1] : "");
-                    result.put("gpa", p.length > 4 ? p[4] : "");
-                    result.put("year", p.length > 3 ? p[3] : "");
-                    result.put("email", p.length > 2 ? p[2] : "");
-                    result.put("skills", p.length > 5 ? p[5] : "");
-                    result.put("resumeFileName", p.length > 6 ? p[6] : "");
-                    if (p.length >= 13) {
-                        result.put("resumeStoredName", p[7]);
-                        result.put("availableTime", p[8]);
-                        result.put("avatarStoredName", p[9]);
-                        result.put("taExperience", p[10]);
-                        String intern = p[11];
-                        result.put("internshipExperience", (intern == null || intern.trim().isEmpty()) ? "No" : intern);
-                        result.put("updatedAt", p[12]);
-                    } else if (p.length == 10) {
-                        // older new-format without internship column
-                        result.put("resumeStoredName", p[5]);
-                        result.put("availableTime", p[6]);
-                        result.put("avatarStoredName", p[7]);
-                        result.put("taExperience", p[8]);
-                        result.put("internshipExperience", "No");
-                        result.put("updatedAt", p[9]);
-                    } else {
-                        // best-effort fallback
-                        result.put("resumeStoredName", p.length > 6 ? p[6] : p.length > 5 ? p[5] : "");
-                        result.put("availableTime", p.length > 7 ? p[7] : p.length > 6 ? p[6] : "");
-                        result.put("avatarStoredName", p.length > 8 ? p[8] : p.length > 7 ? p[7] : "");
-                        result.put("taExperience", p.length > 9 ? p[9] : p.length > 8 ? p[8] : "");
-                        result.put("internshipExperience", "No");
-                        result.put("updatedAt", p.length > 10 ? p[10] : p.length > 9 ? p[9] : "");
-                    }
-                    return result;
+                result.put("grade", p[1]);
+                result.put("major", p[2]);
+                result.put("gpa", p[3]);
+                result.put("email", p[4]);
+                result.put("skills", p[5]);
+                result.put("resumeFileName", p[6]);
+                // 兼容历史字段版本：老数据缺 taExperience/avatar/availableTime 时给默认值。
+                if (p.length >= 12) {
+                    result.put("resumeStoredName", p[7]);
+                    result.put("availableTime", p[8]);
+                    result.put("avatarStoredName", p[9]);
+                    result.put("taExperience", p[10]);
+                    result.put("updatedAt", p[11]);
+                } else if (p.length >= 11) {
+                    result.put("resumeStoredName", p[7]);
+                    result.put("availableTime", p[8]);
+                    result.put("avatarStoredName", p[9]);
+                    result.put("taExperience", "");
+                    result.put("updatedAt", p[10]);
+                } else if (p.length >= 10) {
+                    result.put("resumeStoredName", p[7]);
+                    result.put("availableTime", p[8]);
+                    result.put("avatarStoredName", "");
+                    result.put("taExperience", "");
+                    result.put("updatedAt", p[9]);
                 } else {
-                    // Legacy format: userId|grade|major|gpa|email|skills|resumeFileName|resumeStoredName|availableTime|avatarStoredName|taExperience|updatedAt
-                    result.put("userId", p[0]);
-                    result.put("grade", p.length > 1 ? p[1] : "");
-                    result.put("major", p.length > 2 ? p[2] : "");
-                    result.put("gpa", p.length > 3 ? p[3] : "");
-                    result.put("email", p.length > 4 ? p[4] : "");
-                    result.put("skills", p.length > 5 ? p[5] : "");
-                    result.put("resumeFileName", p.length > 6 ? p[6] : "");
-                    if (p.length >= 12) {
-                        result.put("resumeStoredName", p[7]);
-                        result.put("availableTime", p[8]);
-                        result.put("avatarStoredName", p[9]);
-                        result.put("taExperience", p[10]);
-                        result.put("internshipExperience", "No");
-                        result.put("updatedAt", p[11]);
-                    } else if (p.length >= 11) {
-                        result.put("resumeStoredName", p[7]);
-                        result.put("availableTime", p[8]);
-                        result.put("avatarStoredName", p[9]);
-                        result.put("taExperience", "");
-                        result.put("internshipExperience", "");
-                        result.put("updatedAt", p[10]);
-                    } else if (p.length >= 10) {
-                        result.put("resumeStoredName", p[7]);
-                        result.put("availableTime", p[8]);
-                        result.put("avatarStoredName", "");
-                        result.put("taExperience", "");
-                        result.put("internshipExperience", "");
-                        result.put("updatedAt", p[9]);
-                    } else {
-                        result.put("resumeStoredName", p.length > 6 ? p[6] : "");
-                        result.put("availableTime", "");
-                        result.put("avatarStoredName", "");
-                        result.put("taExperience", "");
-                        result.put("internshipExperience", "");
-                        result.put("updatedAt", p.length > 7 ? p[7] : "");
-                    }
-                    return result;
+                    result.put("resumeStoredName", p[6]);
+                    result.put("availableTime", "");
+                    result.put("avatarStoredName", "");
+                    result.put("taExperience", "");
+                    result.put("updatedAt", p[7]);
                 }
+                return result;
             }
         }
         return null;

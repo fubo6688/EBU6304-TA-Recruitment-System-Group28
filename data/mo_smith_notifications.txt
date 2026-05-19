@@ -4,3 +4,6 @@ ntf1776001000003|application|New Application|A new application needs review.|202
 ntf1776001000004|position|Position Deadline Reminder|Position "Java Programming TA" closes in 2 day(s) (2026-04-14).|2026-04-12 18:20:00|0|deadlineSoon:pos1775647626466:2026-04-14
 ntf1779079014346|application|New Application|A new application needs review.|2026-05-18 12:36:54|1|
 ntf1779089490957|application|New Application|A new application needs review.|2026-05-18 15:31:30|0|
+ntf1779173953877|application|New Application|A new application needs review.|2026-05-19 14:59:13|0|
+ntf1779183309560|application|New Application|A new application needs review.|2026-05-19 17:35:09|0|
+ntf1779186628734|application|New Application|A new application needs review.|2026-05-19 18:30:28|0|
