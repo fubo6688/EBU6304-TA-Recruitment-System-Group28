@@ -27,4 +27,6 @@ app1779089490946|pos1775647626466|Java Programming TA|ta_bob|Bob Li|mo_smith|fir
 app1779090430042|pos1774246502692|Web Development TA|ta_bob|Bob Li|M001|first|pending|2026-05-18|
 app1779091007042|pos1774246224278|Operating Systems TA|ta_bob|Bob Li|M001|first|rejected|2026-05-18|
 app1779091309225|pos1774242667613|Data Structures TA|ta_bob|Bob Li|M001|first|pending|2026-05-18|
-app1779169411781|pos1774242667613|Data Structures TA|ta_david|David Wang|M001|first|pending|2026-05-19|
+app1779173953860|pos1775647626466|Java Programming TA|2023213242|付博|mo_smith|first|pending|2026-05-19|
+app1779183309542|pos1779183265239|software engineer|2023213242|付博|mo_smith|first|pending|2026-05-19|
+app1779186628725|pos1779183265239|software engineer|2023213247|Junyi Yan|mo_smith|first|pending|2026-05-19|

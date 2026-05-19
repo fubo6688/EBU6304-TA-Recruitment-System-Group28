@@ -161,6 +161,33 @@ class API {
     return API.request(`/user/resume-parse${qs}`);
   }
 
+  // 请求后端对指定用户的简历进行 AI 分析（触发一次分析并返回结果）。
+  static analyzeResume(userId = "", positionId = "") {
+    return API.request(`/user/analyze-resume`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody({ userId, positionId })
+    });
+  }
+
+  // 触发后端对已上传简历进行解析，并把结果落盘到 parsed 目录。
+  static parseResume(userId = "") {
+    return API.request(`/user/parse-resume`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: API.formBody({ userId })
+    });
+  }
+
+  // 获取已保存的 AI 分析结果。
+  static getResumeAi(userId = "", positionId = "") {
+    const params = new URLSearchParams();
+    if (userId) params.set("userId", userId);
+    if (positionId) params.set("positionId", positionId);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    return API.request(`/user/resume-ai${qs}`);
+  }
+
   // 打开简历：优先新窗口展示 PDF，失败时抛出后端提示。
   static async openResume(userId) {
     const url = API.getResumePreviewUrl(userId);

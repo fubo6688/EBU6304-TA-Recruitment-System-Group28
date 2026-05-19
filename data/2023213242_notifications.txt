@@ -1,3 +1,5 @@
-ntf1779090993296|position|New Position Published|A position has been published: Operating Systems TA|2026-05-18 15:56:33|0|
-ntf1779091259755|position|New Position Published|A position has been published: Data Structures TA|2026-05-18 16:00:59|0|
-ntf1779169270114|position|New Position Published|A position has been published: Computer Architecture TA|2026-05-19 13:41:10|0|
+ntf1779090993296|position|New Position Published|A position has been published: Operating Systems TA|2026-05-18 15:56:33|1|
+ntf1779091259755|position|New Position Published|A position has been published: Data Structures TA|2026-05-18 16:00:59|1|
+ntf1779173953876|application|Application Submitted|Your application was submitted.|2026-05-19 14:59:13|1|
+ntf1779183265265|position|New Position Published|A position has been published: software engineer|2026-05-19 17:34:25|0|
+ntf1779183309559|application|Application Submitted|Your application was submitted.|2026-05-19 17:35:09|0|

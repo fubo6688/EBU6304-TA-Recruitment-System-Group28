@@ -2,6 +2,8 @@ package com.ta.servlet;
 
 import com.ta.model.User;
 import com.ta.util.DataManager;
+import com.ta.util.ResumeParserClient;
+import com.ta.util.AiResumeAnalysisClient;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
@@ -39,6 +41,8 @@ import java.util.Set;
 @MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 15 * 1024 * 1024)
 public class UserServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
+    private final ResumeParserClient resumeParserClient = new ResumeParserClient();
+    private final AiResumeAnalysisClient aiClient = new AiResumeAnalysisClient();
     // 可查看 TA 资料的角色白名单（本人始终可看）
     private static final Set<String> PROFILE_VIEW_ROLES = new HashSet<>();
 
@@ -173,73 +177,7 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
-        if ("/resume".equalsIgnoreCase(path)) {
-            // 简历下载同样支持跨 ID 映射，并统一以 inline 方式预览 PDF。
-            String targetUserId = value(req.getParameter("userId"));
-            if (targetUserId.isEmpty()) {
-                targetUserId = user.getUserId();
-            }
-
-            if (!canViewProfile(user, targetUserId)) {
-                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                resp.setContentType("application/json;charset=UTF-8");
-                resp.getWriter().print(new JSONObject().put("success", false).put("message", "No permission").toString());
-                return;
-            }
-
-            ResolvedProfile resolved = resolveProfileByAnyId(targetUserId);
-            Map<String, String> profile = resolved.profile;
-            if (profile == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.setContentType("application/json;charset=UTF-8");
-                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Profile not found").toString());
-                return;
-            }
-
-            String storedName = value(profile.get("resumeStoredName"));
-            String originalName = value(profile.get("resumeFileName"));
-            if (storedName.isEmpty()) {
-                storedName = originalName;
-            }
-            if (storedName.isEmpty()) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.setContentType("application/json;charset=UTF-8");
-                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Resume not found").toString());
-                return;
-            }
-
-            Path file = resolveResumeFile(resolved.resolvedUserId, storedName, originalName);
-            if (!Files.exists(file)) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.setContentType("application/json;charset=UTF-8");
-                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Resume file missing").toString());
-                return;
-            }
-
-            String downloadName = originalName.isEmpty() ? storedName : originalName;
-            resp.setContentType("application/pdf");
-            String asciiName = sanitizeFileName(downloadName);
-            String encodedName;
-            try {
-                encodedName = java.net.URLEncoder.encode(downloadName, "UTF-8").replace("+", "%20");
-            } catch (Exception e) {
-                encodedName = asciiName;
-            }
-            // Provide both ASCII filename and RFC5987 encoded UTF-8 filename*
-            resp.setHeader("Content-Disposition",
-                    "inline; filename=\"" + asciiName + "\"; filename*=UTF-8''" + encodedName);
-            resp.setContentLengthLong(Files.size(file));
-
-            try (InputStream in = Files.newInputStream(file); OutputStream os = resp.getOutputStream()) {
-                byte[] buffer = new byte[8192];
-                int len;
-                while ((len = in.read(buffer)) != -1) {
-                    os.write(buffer, 0, len);
-                }
-                os.flush();
-            }
-            return;
-        }
+        
 
         if ("/resume-parse".equalsIgnoreCase(path)) {
             String targetUserId = value(req.getParameter("userId"));
@@ -262,13 +200,93 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
-            // Resume parsing via external parser has been removed.
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            resp.setContentType("application/json;charset=UTF-8");
-            resp.getWriter().print(new JSONObject()
-                    .put("success", false)
-                    .put("message", "Resume parser integration is disabled")
-                    .toString());
+            Path parsedFile = getResumeParsedFile(resolved.resolvedUserId);
+            if (!Files.exists(parsedFile)) {
+                try {
+                    Map<String, String> profile = resolved.profile;
+                    String storedName = value(profile.get("resumeStoredName"));
+                    String originalName = value(profile.get("resumeFileName"));
+                    Path resumeFile = resolveResumeFile(resolved.resolvedUserId, storedName, originalName);
+                    if (!Files.exists(resumeFile)) {
+                        resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        resp.setContentType("application/json;charset=UTF-8");
+                        resp.getWriter().print(new JSONObject().put("success", false).put("message", "Resume not found").toString());
+                        return;
+                    }
+
+                    ResumeParseOutcome outcome = parseResumeIfEnabled(user, resumeFile, originalName, "application/pdf");
+                    if (!outcome.success) {
+                        resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                        resp.setContentType("application/json;charset=UTF-8");
+                        resp.getWriter().print(new JSONObject().put("success", false).put("message", outcome.message).toString());
+                        return;
+                    }
+                } catch (Exception e) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    resp.setContentType("application/json;charset=UTF-8");
+                    resp.getWriter().print(new JSONObject().put("success", false).put("message", "Resume not parsed").toString());
+                    return;
+                }
+            }
+
+            String content = new String(Files.readAllBytes(parsedFile), StandardCharsets.UTF_8);
+            Object parsedValue;
+            try {
+                parsedValue = new JSONTokener(content).nextValue();
+            } catch (Exception ex) {
+                parsedValue = content;
+            }
+
+            JSONObject payload = new JSONObject()
+                    .put("success", true)
+                    .put("parsed", parsedValue);
+            try {
+                payload.put("updatedAt", Files.getLastModifiedTime(parsedFile).toMillis());
+            } catch (IOException ignore) {
+            }
+            resp.getWriter().print(payload.toString());
+            return;
+        }
+        if ("/resume-ai".equalsIgnoreCase(path)) {
+            String targetUserId = value(req.getParameter("userId"));
+            if (targetUserId.isEmpty()) {
+                targetUserId = user.getUserId();
+            }
+            String positionId = value(req.getParameter("positionId"));
+
+            if (!canViewProfile(user, targetUserId)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "No permission").toString());
+                return;
+            }
+
+            try {
+                Path aiFile;
+                if (!positionId.isEmpty()) {
+                    aiFile = dataManager.getDataDirPath().resolve("resume_ai_matches")
+                            .resolve(sanitizeFileName(targetUserId) + "_" + sanitizeFileName(positionId) + ".json");
+                } else {
+                    aiFile = dataManager.getDataDirPath().resolve("resume_ai")
+                            .resolve(sanitizeFileName(targetUserId) + ".json");
+                }
+                if (!Files.exists(aiFile)) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    resp.getWriter().print(new JSONObject().put("success", false).put("message", "AI analysis not found").toString());
+                    return;
+                }
+                String content = new String(Files.readAllBytes(aiFile), StandardCharsets.UTF_8);
+                Object parsedValue;
+                try {
+                    parsedValue = new JSONTokener(content).nextValue();
+                } catch (Exception ex) {
+                    parsedValue = content;
+                }
+                resp.getWriter().print(new JSONObject().put("success", true).put("analysis", parsedValue).toString());
+            } catch (Exception e) {
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Failed to read AI analysis").toString());
+            }
             return;
         }
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
@@ -278,11 +296,10 @@ public class UserServlet extends HttpServlet {
             JSONObject result = toUserJson(user);
             Map<String, String> profile = dataManager.getProfile(user.getUserId());
             if (profile != null) {
+                result.put("grade", profile.get("grade"));
                 result.put("major", profile.get("major"));
-                result.put("year", profile.get("year"));
                 result.put("gpa", profile.get("gpa"));
                 result.put("taExperience", profile.get("taExperience"));
-                result.put("internshipExperience", profile.get("internshipExperience"));
                 result.put("skills", profile.get("skills"));
                 result.put("resumeFileName", profile.get("resumeFileName"));
                 result.put("availableTime", profile.get("availableTime"));
@@ -333,11 +350,10 @@ public class UserServlet extends HttpServlet {
                     : toUserJson(targetUser);
             Map<String, String> profile = resolved.profile;
             if (profile != null) {
+                result.put("grade", profile.get("grade"));
                 result.put("major", profile.get("major"));
-                result.put("year", profile.get("year"));
                 result.put("gpa", profile.get("gpa"));
                 result.put("taExperience", profile.get("taExperience"));
-                result.put("internshipExperience", profile.get("internshipExperience"));
                 result.put("skills", profile.get("skills"));
                 result.put("resumeFileName", profile.get("resumeFileName"));
                 result.put("availableTime", profile.get("availableTime"));
@@ -458,6 +474,149 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
+        if ("/analyze-resume".equalsIgnoreCase(path)) {
+            String targetUserId = value(req.getParameter("userId"));
+            if (targetUserId.isEmpty()) {
+                targetUserId = user.getUserId();
+            }
+            String positionId = value(req.getParameter("positionId"));
+
+            if (!canViewProfile(user, targetUserId)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print(new JSONObject().put("success", false).put("message", "No permission").toString());
+                return;
+            }
+
+            if (positionId.isEmpty()) {
+                out.print(new JSONObject().put("success", false).put("message", "Missing positionId").toString());
+                return;
+            }
+
+            if (!aiClient.isConfigured()) {
+                out.print(new JSONObject().put("success", false).put("message", "AI client not configured").toString());
+                return;
+            }
+
+            Path parsedFile = getResumeParsedFile(targetUserId);
+            if (!Files.exists(parsedFile)) {
+                out.print(new JSONObject().put("success", false).put("message", "Resume not parsed").toString());
+                return;
+            }
+
+            try {
+                String parsedContent = new String(Files.readAllBytes(parsedFile), StandardCharsets.UTF_8);
+                Map<String, String> position = dataManager.getPositionById(positionId);
+                String positionContext = position == null ? "" : (
+                        "Position title: " + value(position.get("title")) + "\n" +
+                        "Department: " + value(position.get("department")) + "\n" +
+                        "Description: " + value(position.get("description")) + "\n" +
+                        "Requirements: " + value(position.get("requirements"))
+                );
+
+                String prompt = "You are a university TA hiring expert. Analyze the parsed resume against the current position information and strictly return a JSON object with fields: name, education, core_skills (array), ta_experience (boolean), matching_score (0-100 numeric), evaluation (short text). The score and evaluation must be based on BOTH the resume and the position requirements.\n\nPosition information:\n" + positionContext + "\n\nParsed resume: " + parsedContent;
+
+                AiResumeAnalysisClient.AnalysisResult result = aiClient.analyzeResume(parsedContent, prompt);
+                if (!result.ok) {
+                    out.print(new JSONObject().put("success", false).put("message", "AI analysis failed: " + result.errorMessage).toString());
+                    return;
+                }
+
+                Path aiDir = dataManager.getDataDirPath().resolve("resume_ai_matches");
+                Files.createDirectories(aiDir);
+                Path aiFile = aiDir.resolve(sanitizeFileName(targetUserId) + "_" + sanitizeFileName(positionId) + ".json");
+                Files.write(aiFile, result.body.getBytes(StandardCharsets.UTF_8));
+
+                Object parsedValue;
+                try {
+                    parsedValue = new JSONTokener(result.body).nextValue();
+                } catch (Exception ex) {
+                    parsedValue = result.body;
+                }
+
+                out.print(new JSONObject().put("success", true).put("analysis", parsedValue).toString());
+                dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "AI_ANALYZE", targetUserId + "@" + positionId, "success");
+                return;
+            } catch (Exception e) {
+                dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "AI_ANALYZE", targetUserId + "@" + positionId + " " + e.getMessage(), "failed");
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print(new JSONObject().put("success", false).put("message", "AI analysis error").toString());
+                return;
+            }
+        }
+
+        if ("/parse-resume".equalsIgnoreCase(path)) {
+            String targetUserId = value(req.getParameter("userId"));
+            if (targetUserId.isEmpty()) {
+                targetUserId = user.getUserId();
+            }
+
+            if (!canViewProfile(user, targetUserId)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print(new JSONObject().put("success", false).put("message", "No permission").toString());
+                return;
+            }
+
+            ResolvedProfile resolved = resolveProfileByAnyId(targetUserId);
+            if (resolved.profile == null) {
+                out.print(new JSONObject().put("success", false).put("message", "Profile not found").toString());
+                return;
+            }
+
+            Path parsedFile = getResumeParsedFile(resolved.resolvedUserId);
+            if (Files.exists(parsedFile)) {
+                try {
+                    String content = new String(Files.readAllBytes(parsedFile), StandardCharsets.UTF_8);
+                    Object parsedValue;
+                    try {
+                        parsedValue = new JSONTokener(content).nextValue();
+                    } catch (Exception ex) {
+                        parsedValue = content;
+                    }
+                    out.print(new JSONObject().put("success", true).put("parsed", parsedValue).put("message", "Resume already parsed").toString());
+                    return;
+                } catch (Exception e) {
+                    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    out.print(new JSONObject().put("success", false).put("message", "Failed to read parsed resume").toString());
+                    return;
+                }
+            }
+
+            String storedName = value(resolved.profile.get("resumeStoredName"));
+            String originalName = value(resolved.profile.get("resumeFileName"));
+            Path resumeFile = resolveResumeFile(resolved.resolvedUserId, storedName, originalName);
+            if (!Files.exists(resumeFile)) {
+                out.print(new JSONObject().put("success", false).put("message", "Resume not found").toString());
+                return;
+            }
+
+            ResumeParseOutcome outcome = parseResumeIfEnabled(user, resumeFile, originalName, "application/pdf");
+            if (!outcome.success) {
+                out.print(new JSONObject().put("success", false).put("message", outcome.message).toString());
+                return;
+            }
+
+            Path generatedFile = getResumeParsedFile(resolved.resolvedUserId);
+            if (!Files.exists(generatedFile)) {
+                out.print(new JSONObject().put("success", false).put("message", "Resume parsed but file was not saved").toString());
+                return;
+            }
+
+            try {
+                String content = new String(Files.readAllBytes(generatedFile), StandardCharsets.UTF_8);
+                Object parsedValue;
+                try {
+                    parsedValue = new JSONTokener(content).nextValue();
+                } catch (Exception ex) {
+                    parsedValue = content;
+                }
+                out.print(new JSONObject().put("success", true).put("parsed", parsedValue).put("message", outcome.message).toString());
+            } catch (Exception e) {
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print(new JSONObject().put("success", false).put("message", "Resume parsed but failed to read result").toString());
+            }
+            return;
+        }
+
         if ("/profile".equalsIgnoreCase(path) || path.isEmpty() || "/".equals(path)) {
             req.setCharacterEncoding("UTF-8");
             // POST /api/user/profile
@@ -465,12 +624,10 @@ public class UserServlet extends HttpServlet {
             // by falling back to old stored values when a field is omitted.
             String userName = value(req.getParameter("userName"));
             String email = value(req.getParameter("email"));
+            String grade = value(req.getParameter("grade"));
             String major = value(req.getParameter("major"));
-            String taExperience = value(req.getParameter("taExperience"));
-            String year = value(req.getParameter("year"));
             String gpa = value(req.getParameter("gpa"));
-            String grade = ""; // legacy placeholder
-            String internshipExperience = value(req.getParameter("internshipExperience"));
+            String taExperience = value(req.getParameter("taExperience"));
             String skills = value(req.getParameter("skills"));
             String availableTime = value(req.getParameter("availableTime"));
             String resumeFileName = value(req.getParameter("resumeFileName"));
@@ -478,19 +635,20 @@ public class UserServlet extends HttpServlet {
             Map<String, String> oldProfile = dataManager.getProfile(user.getUserId());
             String resumeStoredName = oldProfile == null ? "" : value(oldProfile.get("resumeStoredName"));
             String avatarStoredName = oldProfile == null ? "" : value(oldProfile.get("avatarStoredName"));
+            ResumeParseOutcome parseOutcome = null;
 
             if (oldProfile != null) {
+                if (grade.isEmpty()) {
+                    grade = value(oldProfile.get("grade"));
+                }
                 if (major.isEmpty()) {
                     major = value(oldProfile.get("major"));
                 }
-                if (year.isEmpty()) {
-                    year = value(oldProfile.get("year"));
+                if (gpa.isEmpty()) {
+                    gpa = value(oldProfile.get("gpa"));
                 }
                 if (taExperience.isEmpty()) {
                     taExperience = value(oldProfile.get("taExperience"));
-                }
-                if (internshipExperience.isEmpty()) {
-                    internshipExperience = value(oldProfile.get("internshipExperience"));
                 }
                 if (email.isEmpty()) {
                     email = value(oldProfile.get("email"));
@@ -503,9 +661,6 @@ public class UserServlet extends HttpServlet {
                 }
                 if (availableTime.isEmpty()) {
                     availableTime = value(oldProfile.get("availableTime"));
-                }
-                if (gpa.isEmpty()) {
-                    gpa = value(oldProfile.get("gpa"));
                 }
             }
 
@@ -563,6 +718,7 @@ public class UserServlet extends HttpServlet {
 
                         resumeFileName = safeOriginal;
                         resumeStoredName = stored;
+                        parseOutcome = parseResumeIfEnabled(user, target, safeOriginal, part.getContentType());
                     }
                 } catch (Exception e) {
                     out.print(new JSONObject().put("success", false).put("message", "Resume upload failed").toString());
@@ -577,33 +733,18 @@ public class UserServlet extends HttpServlet {
                 user.setEmail(email);
             }
             dataManager.saveUser(user);
-                // Server-side validation: taExperience is required
-                if (taExperience == null || taExperience.trim().isEmpty()) {
-                    out.print(new JSONObject().put("success", false).put("message", "TA experience is required").toString());
-                    return;
-                }
-                if ("postgraduate".equalsIgnoreCase(year) && gpa != null && !gpa.trim().isEmpty()) {
-                    out.print(new JSONObject().put("success", false).put("message", "GPA should not be provided for Postgraduate students").toString());
-                    return;
-                }
-                if (!"postgraduate".equalsIgnoreCase(year) && (gpa == null || gpa.trim().isEmpty())) {
-                    out.print(new JSONObject().put("success", false).put("message", "GPA is required for non-Postgraduate students").toString());
-                    return;
-                }
-                dataManager.saveProfile(
+            dataManager.saveProfile(
                     user.getUserId(),
                     grade,
                     major,
-                    email.isEmpty() ? user.getEmail() : email,
-                    year,
                     gpa,
+                    email.isEmpty() ? user.getEmail() : email,
                     skills,
                     resumeFileName,
                     resumeStoredName,
                     availableTime,
                     avatarStoredName,
-                    taExperience,
-                    internshipExperience == null ? "" : internshipExperience);
+                    taExperience);
             dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "UPDATE_PROFILE", "profile", "success");
 
             HttpSession session = req.getSession(false);
@@ -620,7 +761,10 @@ public class UserServlet extends HttpServlet {
                     .put("taExperience", taExperience)
                     .put("avatarUrl", buildAvatarUrl(req, user.getUserId(), avatarStoredName))
                     .put("user", toUserJson(user));
-                // Resume parsing integration removed; no parseOutcome to report.
+                if (parseOutcome != null && parseOutcome.attempted) {
+                response.put("resumeParsed", parseOutcome.success);
+                response.put("resumeParseMessage", parseOutcome.message);
+                }
                 out.print(response.toString());
             return;
         }
@@ -951,7 +1095,116 @@ public class UserServlet extends HttpServlet {
         return null;
     }
 
-    // External resume parsing integration removed. No helper methods remain here.
+    private ResumeParseOutcome parseResumeIfEnabled(User user, Path resumeFile, String originalName, String contentType) {
+        ResumeParserClient.ParseResult result = resumeParserClient.parse(resumeFile, originalName, contentType);
+        if (result.ok) {
+            String finalJsonBody = result.body;
+            if (finalJsonBody != null && !finalJsonBody.isEmpty()) {
+                try {
+                    saveParsedResult(user.getUserId(), finalJsonBody);
+                    dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(),
+                            "PARSE_RESUME", "stored", "success");
+                    return new ResumeParseOutcome(true, true, "Resume parsed successfully");
+                } catch (IOException e) {
+                    dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(),
+                            "PARSE_RESUME", "store failed", "failed");
+                    return new ResumeParseOutcome(true, false, "Resume parsed but storage failed");
+                }
+            }
+            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(),
+                    "PARSE_RESUME", "empty result", "failed");
+            return new ResumeParseOutcome(true, false, "Resume parsing returned no text");
+        } else {
+            // 请求失败
+            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(),
+                    "PARSE_RESUME", result.errorMessage.isEmpty() ? ("http " + result.statusCode) : result.errorMessage, "failed");
+            return new ResumeParseOutcome(true, false, "Resume parsing failed");
+        }
+    }
+
+    private Path getResumeParsedFile(String userId) {
+        Path parsedDir = dataManager.getDataDirPath().resolve("resume_parsed");
+        return parsedDir.resolve(sanitizeFileName(userId) + ".json");
+    }
+
+    private Path getResumeParseJobFile(String userId) {
+        Path jobDir = dataManager.getDataDirPath().resolve("resume_parsed_jobs");
+        return jobDir.resolve(sanitizeFileName(userId) + ".json");
+    }
+
+    private void saveParsedResult(String userId, String body) throws IOException {
+        Path parsedDir = dataManager.getDataDirPath().resolve("resume_parsed");
+        Files.createDirectories(parsedDir);
+        Path parsedFile = getResumeParsedFile(userId);
+        Files.write(parsedFile, body.getBytes(StandardCharsets.UTF_8),
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    private void saveResumeParseJob(String userId, String statusUrl, String jobId) {
+        try {
+            Path jobDir = dataManager.getDataDirPath().resolve("resume_parsed_jobs");
+            Files.createDirectories(jobDir);
+            JSONObject payload = new JSONObject()
+                    .put("statusUrl", value(statusUrl))
+                    .put("jobId", value(jobId))
+                    .put("createdAt", System.currentTimeMillis());
+            Files.write(getResumeParseJobFile(userId), payload.toString().getBytes(StandardCharsets.UTF_8),
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+            try {
+                dataManager.writeLog(userId, "system", "system", "SAVE_PARSE_JOB", "failed: " + e.getMessage(), "failed");
+            } catch (Exception ignore) {
+            }
+        }
+    }
+
+    private ResumeParseJob loadResumeParseJob(String userId) {
+        Path jobFile = getResumeParseJobFile(userId);
+        if (!Files.exists(jobFile)) {
+            return null;
+        }
+        try {
+            String content = new String(Files.readAllBytes(jobFile), StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(content);
+            String statusUrl = value(json.optString("statusUrl"));
+            if (statusUrl.isEmpty()) {
+                return null;
+            }
+            String jobId = value(json.optString("jobId"));
+            return new ResumeParseJob(statusUrl, jobId);
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
+
+    private void clearResumeParseJob(String userId) {
+        try {
+            Files.deleteIfExists(getResumeParseJobFile(userId));
+        } catch (IOException ignore) {
+        }
+    }
+
+    private static class ResumeParseJob {
+        private final String statusUrl;
+        private final String jobId;
+
+        private ResumeParseJob(String statusUrl, String jobId) {
+            this.statusUrl = statusUrl;
+            this.jobId = jobId;
+        }
+    }
+
+    private static class ResumeParseOutcome {
+        private final boolean attempted;
+        private final boolean success;
+        private final String message;
+
+        private ResumeParseOutcome(boolean attempted, boolean success, String message) {
+            this.attempted = attempted;
+            this.success = success;
+            this.message = message == null ? "" : message;
+        }
+    }
 
     private static class ResolvedProfile {
         private final String resolvedUserId;

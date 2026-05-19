@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
 /**
  * 申请流程 Servlet。
  *
@@ -29,6 +30,61 @@ public class ApplicationServlet extends HttpServlet {
     private static final int MAX_ACTIVE_APPLICATIONS = 5;
     private static final int MAX_APPROVED_APPLICATIONS = 3;
 
+    // 1. 在 ApplicationServlet 顶部引入或实例化 AI 客户端
+private final com.ta.util.AiResumeAnalysisClient aiClient = new com.ta.util.AiResumeAnalysisClient();
+
+/**
+ * MO 查看申请时动态触发：读取解析好的简历文本，结合岗位信息进行 AI 分析并返回结果
+ */
+private JSONObject performAiAnalysisForApplication(String taUserId, String positionId) {
+    if (!aiClient.isConfigured()) {
+        return new JSONObject().put("error", "AI client is not configured");
+    }
+
+    try {
+        // A. 读取 TA 之前已经由解析服务生成好的简历 JSON 文本
+        java.nio.file.Path parsedDir = dataManager.getDataDirPath().resolve("resume_parsed");
+        java.nio.file.Path parsedFile = parsedDir.resolve(taUserId.replaceAll("[\\\\/:*?\"<>|]", "_") + ".json");
+        
+        if (!java.nio.file.Files.exists(parsedFile)) {
+            return new JSONObject().put("message", "TA 简历尚未解析完成");
+        }
+        String parsedResumeJson = new String(java.nio.file.Files.readAllBytes(parsedFile), java.nio.charset.StandardCharsets.UTF_8);
+
+        // B. 获取当前 MO 查看的这个岗位的详细信息，用来做匹配度评估
+        Map<String, String> position = dataManager.getPositionById(positionId);
+        String positionContext = (position != null) 
+            ? "岗位名称: " + position.get("title") + ", 部门: " + position.get("department") + ", 岗位要求: " + position.get("requirements")
+            : "普通 TA 岗位";
+
+        // C. 组装符合你要求的 Prompt 
+        String prompt = "你是一位大学 TA 招聘专家。请根据以下[解析后的简历文本]，以及当前申请的[岗位要求]，"
+                + "进行匹配度分析。请严格返回一个 JSON 对象，必须包含以下字段：\n"
+                + "1. matching_score: 岗位匹配度（0-100的数字）\n"
+                + "2. core_skills: 提取出的核心技能（字符串数组）\n"
+                + "3. evaluation: 你的综合评价与录用建议（简短文本）\n\n"
+                + "[岗位要求]: " + positionContext + "\n\n"
+                + "[解析后的简历文本]: " + parsedResumeJson;
+
+        // D. 调用大模型分析
+        com.ta.util.AiResumeAnalysisClient.AnalysisResult res = aiClient.analyzeResume(parsedResumeJson, prompt);
+        if (res.ok && !res.body.isEmpty()) {
+            // 将 AI 分析结果持久化到单独的目录中，以 "taUserId_positionId.json" 命名，避免跨岗覆盖
+            java.nio.file.Path aiDir = dataManager.getDataDirPath().resolve("resume_ai_matches");
+            java.nio.file.Files.createDirectories(aiDir);
+            java.nio.file.Path aiFile = aiDir.resolve(taUserId.replaceAll("[\\\\/:*?\"<>|]", "_") + "_" + positionId + ".json");
+            
+            java.nio.file.Files.write(aiFile, res.body.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
+            
+            return new JSONObject(res.body);
+        } else {
+            return new JSONObject().put("error", "AI 分析调用失败: " + res.errorMessage);
+        }
+    } catch (Exception e) {
+        return new JSONObject().put("error", "处理异常: " + e.getMessage());
+    }
+}
     /**
      * 处理申请查询类 GET 接口（审核列表、我的申请）。
      */
@@ -69,8 +125,35 @@ public class ApplicationServlet extends HttpServlet {
 
             apps.removeIf(a -> "canceled".equalsIgnoreCase(value(a.get("status"))));
 
-            out.print(new JSONObject().put("success", true).put("applications", new JSONArray(apps)).toString());
-            return;
+// 仅回传已缓存的 AI 分析结果，不再在列表加载时自动触发分析。
+List<Map<String, Object>> enrichedApps = new ArrayList<>();
+for (Map<String, String> app : apps) {
+    Map<String, Object> item = new java.util.LinkedHashMap<>(app);
+    String taUserId = value(app.get("userId"));
+    String posId = value(app.get("positionId"));
+
+    if (!taUserId.isEmpty() && !posId.isEmpty()) {
+        java.nio.file.Path aiFile = dataManager.getDataDirPath()
+                .resolve("resume_ai_matches")
+                .resolve(taUserId.replaceAll("[\\\\/:*?\"<>|]", "_") + "_" + posId + ".json");
+
+        JSONObject aiResultJson = null;
+        if (java.nio.file.Files.exists(aiFile)) {
+            try {
+                String cacheContent = new String(java.nio.file.Files.readAllBytes(aiFile), java.nio.charset.StandardCharsets.UTF_8);
+                aiResultJson = new JSONObject(cacheContent);
+            } catch (Exception ignore) {
+            }
+        }
+        item.put("aiAnalysis", aiResultJson);
+    } else {
+        item.put("aiAnalysis", null);
+    }
+    enrichedApps.add(item);
+}
+
+out.print(new JSONObject().put("success", true).put("applications", new JSONArray(enrichedApps)).toString());
+return;
         }
 
         if ("/my-list".equalsIgnoreCase(path)) {
@@ -144,7 +227,7 @@ public class ApplicationServlet extends HttpServlet {
             if (!isProfileCompleteForApply(profile)) {
                 out.print(new JSONObject()
                         .put("success", false)
-                        .put("message", "Please complete your profile (major, email, skills, available time, resume) before applying")
+                        .put("message", "Please complete your profile (grade, major, email, skills, available time, resume) before applying")
                         .toString());
                 return;
             }
@@ -473,17 +556,20 @@ public class ApplicationServlet extends HttpServlet {
             return false;
         }
 
+        String grade = value(profile.get("grade"));
         String major = value(profile.get("major"));
         String email = value(profile.get("email"));
         String skills = value(profile.get("skills"));
         String availableTime = value(profile.get("availableTime"));
         String resumeFileName = value(profile.get("resumeFileName"));
         String resumeStoredName = value(profile.get("resumeStoredName"));
-        return !major.isEmpty()
-            && !email.isEmpty()
-            && !skills.isEmpty()
-            && !availableTime.isEmpty()
-            && (!resumeFileName.isEmpty() || !resumeStoredName.isEmpty());
+
+        return !grade.isEmpty()
+                && !major.isEmpty()
+                && !email.isEmpty()
+                && !skills.isEmpty()
+                && !availableTime.isEmpty()
+                && (!resumeFileName.isEmpty() || !resumeStoredName.isEmpty());
     }
 
     /**
