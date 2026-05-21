@@ -28,8 +28,55 @@ public class PositionServletProjectTest {
 
             PositionServlet servlet = new PositionServlet();
 
+                JSONObject notLoggedIn = new JSONObject(invokeGet(servlet, "/list", null, Map.of()).body());
+                assertFalse(notLoggedIn.getBoolean("success"), "anonymous requests should be rejected");
+                assertEquals("Not logged in", notLoggedIn.getString("message"), "not logged in message should match");
+
             JSONArray list = new JSONArray(invokeGet(servlet, "/list", "ta002", Map.of()).body());
             assertTrue(list.length() >= 2, "TA should see project positions in the list endpoint");
+
+                JSONObject unsupportedGet = new JSONObject(invokeGet(servlet, "/unknown", "ta002", Map.of()).body());
+                assertFalse(unsupportedGet.getBoolean("success"), "unsupported GET endpoint should fail");
+                assertEquals("Unsupported endpoint", unsupportedGet.getString("message"), "unsupported GET message should match");
+
+                LoginServletProjectTest.TestResponse createForbidden = invokePost(servlet, "/create", "ta002", Map.of(
+                    "title", "Forbidden TA",
+                    "department", "CS",
+                    "salary", "1000",
+                    "description", "No permission",
+                    "requirements", "Java",
+                    "openings", "1",
+                    "deadline", "2026-12-31"
+                ));
+                JSONObject createForbiddenJson = new JSONObject(createForbidden.body());
+                assertFalse(createForbiddenJson.getBoolean("success"), "TA should not be able to create positions");
+                assertEquals("No permission", createForbiddenJson.getString("message"), "create forbidden message should match");
+
+                LoginServletProjectTest.TestResponse createMissingTitle = invokePost(servlet, "/create", "mo001", Map.of(
+                    "title", "",
+                    "department", "CS",
+                    "salary", "1000",
+                    "description", "Missing title",
+                    "requirements", "Java",
+                    "openings", "1",
+                    "deadline", "2026-12-31"
+                ));
+                JSONObject createMissingTitleJson = new JSONObject(createMissingTitle.body());
+                assertFalse(createMissingTitleJson.getBoolean("success"), "create should reject empty title");
+                assertEquals("Title is required", createMissingTitleJson.getString("message"), "missing title message should match");
+
+                LoginServletProjectTest.TestResponse createBadDeadline = invokePost(servlet, "/create", "mo001", Map.of(
+                    "title", "Bad Deadline",
+                    "department", "CS",
+                    "salary", "1000",
+                    "description", "Bad deadline",
+                    "requirements", "Java",
+                    "openings", "1",
+                    "deadline", "2000-01-01"
+                ));
+                JSONObject createBadDeadlineJson = new JSONObject(createBadDeadline.body());
+                assertFalse(createBadDeadlineJson.getBoolean("success"), "create should reject past deadline");
+                assertEquals("Deadline cannot be earlier than today", createBadDeadlineJson.getString("message"), "deadline validation message should match");
 
             LoginServletProjectTest.TestResponse createResponse = invokePost(servlet, "/create", "mo001", Map.of(
                     "title", "Software Testing TA",
@@ -44,6 +91,10 @@ public class PositionServletProjectTest {
             assertTrue(createJson.getBoolean("success"), "MO should be able to create a position");
             String createdPositionId = createJson.getJSONObject("position").getString("id");
 
+                JSONObject unsupportedPost = new JSONObject(invokePost(servlet, "/unknown", "mo001", Map.of()).body());
+                assertFalse(unsupportedPost.getBoolean("success"), "unsupported POST endpoint should fail");
+                assertEquals("Unsupported endpoint", unsupportedPost.getString("message"), "unsupported POST message should match");
+
             LoginServletProjectTest.TestResponse updateResponse = invokePost(servlet, "/update", "mo001", Map.of(
                     "positionId", createdPositionId,
                     "title", "Software Testing Assistant",
@@ -53,6 +104,21 @@ public class PositionServletProjectTest {
             JSONObject updateJson = new JSONObject(updateResponse.body());
             assertTrue(updateJson.getBoolean("success"), "MO should be able to update own position");
             assertEquals("Software Testing Assistant", updateJson.getJSONObject("position").getString("title"), "updated title should be returned");
+
+                LoginServletProjectTest.TestResponse updateMissingId = invokePost(servlet, "/update", "mo001", Map.of(
+                    "title", "Missing ID"
+                ));
+                JSONObject updateMissingIdJson = new JSONObject(updateMissingId.body());
+                assertFalse(updateMissingIdJson.getBoolean("success"), "update should reject missing positionId");
+                assertEquals("Missing positionId", updateMissingIdJson.getString("message"), "missing positionId message should match");
+
+                LoginServletProjectTest.TestResponse invalidStatus = invokePost(servlet, "/status", "mo001", Map.of(
+                    "positionId", createdPositionId,
+                    "status", "paused"
+                ));
+                JSONObject invalidStatusJson = new JSONObject(invalidStatus.body());
+                assertFalse(invalidStatusJson.getBoolean("success"), "status should reject invalid values");
+                assertEquals("Invalid status", invalidStatusJson.getString("message"), "invalid status message should match");
 
             LoginServletProjectTest.TestResponse statusResponse = invokePost(servlet, "/status", "mo001", Map.of(
                     "positionId", createdPositionId,
@@ -100,6 +166,12 @@ public class PositionServletProjectTest {
 
     private static void assertTrue(boolean condition, String message) {
         if (!condition) {
+            throw new AssertionError(message);
+        }
+    }
+
+    private static void assertFalse(boolean condition, String message) {
+        if (condition) {
             throw new AssertionError(message);
         }
     }
