@@ -25,6 +25,17 @@ import org.apache.pdfbox.text.PDFTextStripper;
 
 @SuppressWarnings("deprecation")
 public class ResumeParserClient {
+    /**
+     * Local resume parsing client.
+     *
+     * <p>Uses Apache PDFBox to extract text from PDF files and builds a
+     * structured JSON representation. The `parse(Path, String, String)` API
+     * returns a {@code ParseResult} used by servlets to obtain parsed text and
+     * page information for downstream AI analysis or display.</p>
+     *
+     * <p>Parsing is performed locally (no external service). Debug logs are
+     * appended to `data/resume_parser_debug.log` on error to aid troubleshooting.</p>
+     */
     public boolean isConfigured() {
         return true;
     }

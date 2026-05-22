@@ -10,10 +10,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 截止提醒定时任务监听器。
+ * Deadline reminder scheduler listener.
  *
- * <p>在应用启动时创建后台调度器，定期执行岗位截止提醒扫描，
- * 与前端访问解耦，避免“没人打开岗位页就不触发提醒”的问题。</p>
+ * <p>Creates a background scheduled executor on application startup to
+ * periodically run position deadline reminder scans. This decouples reminders
+ * from front-end requests so notifications are sent even when no one visits
+ * the positions pages.</p>
  */
 public class DeadlineReminderSchedulerListener implements ServletContextListener {
     private static final long DEFAULT_INTERVAL_MINUTES = 60L;

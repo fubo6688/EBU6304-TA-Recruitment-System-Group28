@@ -20,16 +20,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 管理员后台聚合接口。
+ * Admin aggregation servlet.
  *
- * <p>提供 dashboard、positions、ta-workload 等只读管理视图数据，
- * 并在入口处统一校验会话与 Admin 角色。</p>
+ * <p>Provides read-only administration endpoints such as dashboard,
+ * positions and TA workload summaries. This servlet enforces session
+ * validation and Admin role checks at the entry points.</p>
  */
 public class AdminServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
     /**
-     * 处理管理员 GET 接口：dashboard、positions、ta-workload。
+     * Handles admin GET endpoints: dashboard, positions, ta-workload and export.
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -240,7 +241,9 @@ public class AdminServlet extends HttpServlet {
     }
 
     /**
-     * 统一 Admin 权限校验：未登录/停用/非管理员均拦截。
+     * Validates that the current session belongs to an active Admin user.
+     *
+     * @return User when validation passes; null otherwise (and response is set)
      */
     private User requireAdmin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);

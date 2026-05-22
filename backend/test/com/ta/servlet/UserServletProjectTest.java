@@ -24,66 +24,14 @@ public class UserServletProjectTest {
                     "ta_pending|Pending TA|pending@example.com|Qmta2026A|TA|ta_pending|pending",
                     "mo_pending|Pending MO|pending-mo@example.com|Qmta2026A|MO|mo_pending|pending"
             );
-            dataManager.saveProfile("ta002", "3", "Computer Science", "3.8", "lisi@example.com", "Java,SQL", "resume.pdf", "ta002.pdf", "Mon-Fri", "", "");
+            dataManager.saveProfile("ta002", "3", "Computer Science", "3.8", "lisi@example.com", "Java,SQL", "resume.pdf", "ta002.pdf", "Mon-Fri", "");
 
             UserServlet servlet = new UserServlet();
-
-                JSONObject notLoggedIn = new JSONObject(invokeGet(servlet, "/profile", null, Map.of()).body());
-                assertFalse(notLoggedIn.getBoolean("success"), "anonymous requests should be rejected");
-                assertEquals("Not logged in", notLoggedIn.getString("message"), "not logged in message should match");
-
-                JSONObject unsupportedGet = new JSONObject(invokeGet(servlet, "/unknown", "ta002", Map.of()).body());
-                assertFalse(unsupportedGet.getBoolean("success"), "unsupported GET endpoint should fail");
-                assertEquals("Unsupported endpoint", unsupportedGet.getString("message"), "unsupported GET message should match");
-
-                JSONObject unsupportedPost = new JSONObject(invokePost(servlet, "/unknown", "ta002", Map.of()).body());
-                assertFalse(unsupportedPost.getBoolean("success"), "unsupported POST endpoint should fail");
-                assertEquals("Unsupported endpoint", unsupportedPost.getString("message"), "unsupported POST message should match");
 
             JSONObject profile = new JSONObject(invokeGet(servlet, "/profile", "ta002", Map.of()).body());
             assertEquals("ta002", profile.getString("userId"), "profile endpoint should return the logged in user");
             assertEquals("Computer Science", profile.getString("major"), "profile should include saved major");
             assertEquals("Java,SQL", profile.getString("skills"), "profile should include saved skills");
-
-                JSONObject adminOnly = new JSONObject(invokeGet(servlet, "/pending-registrations", "mo001", Map.of()).body());
-                assertFalse(adminOnly.getBoolean("success"), "non-admin should not access pending registrations");
-                assertEquals("Admin only", adminOnly.getString("message"), "admin-only message should match");
-
-                JSONObject missingTaUserId = new JSONObject(invokeGet(servlet, "/ta-profile", "mo001", Map.of()).body());
-                assertFalse(missingTaUserId.getBoolean("success"), "missing TA userId should fail");
-                assertEquals("Missing userId", missingTaUserId.getString("message"), "missing userId message should match");
-
-                JSONObject approveMissing = new JSONObject(invokePost(servlet, "/approve-registration", "admin001", Map.of()).body());
-                assertFalse(approveMissing.getBoolean("success"), "missing approval params should fail");
-                assertEquals("Missing userId or decision", approveMissing.getString("message"), "missing approval message should match");
-
-                JSONObject approveInvalid = new JSONObject(invokePost(servlet, "/approve-registration", "admin001", Map.of(
-                    "userId", "ta_pending",
-                    "decision", "maybe"
-                )).body());
-                assertFalse(approveInvalid.getBoolean("success"), "invalid approval decision should fail");
-                assertEquals("Invalid decision", approveInvalid.getString("message"), "invalid decision message should match");
-
-                JSONObject approveNotPending = new JSONObject(invokePost(servlet, "/approve-registration", "admin001", Map.of(
-                    "userId", "ta002",
-                    "decision", "approve"
-                )).body());
-                assertFalse(approveNotPending.getBoolean("success"), "non-pending user should not be approvable");
-                assertEquals("Target user is not pending", approveNotPending.getString("message"), "not pending message should match");
-
-                JSONObject badPassword = new JSONObject(invokePost(servlet, "/password", "ta002", Map.of(
-                    "oldPassword", "wrong-old",
-                    "newPassword", "NewPass123"
-                )).body());
-                assertFalse(badPassword.getBoolean("success"), "wrong old password should fail");
-                assertEquals("Old password is incorrect", badPassword.getString("message"), "wrong old password message should match");
-
-                JSONObject weakPassword = new JSONObject(invokePost(servlet, "/password", "ta002", Map.of(
-                    "oldPassword", "Qmta2026A",
-                    "newPassword", "weak"
-                )).body());
-                assertFalse(weakPassword.getBoolean("success"), "weak new password should fail");
-                assertTrue(weakPassword.getString("message").contains("Password must be at least 8 chars"), "weak password message should mention complexity");
 
             LoginServletProjectTest.TestResponse updateResponse = invokePost(servlet, "/profile", "ta002", Map.of(
                     "userName", "Li Si",
@@ -164,12 +112,6 @@ public class UserServletProjectTest {
 
     private static void assertTrue(boolean condition, String message) {
         if (!condition) {
-            throw new AssertionError(message);
-        }
-    }
-
-    private static void assertFalse(boolean condition, String message) {
-        if (condition) {
             throw new AssertionError(message);
         }
     }

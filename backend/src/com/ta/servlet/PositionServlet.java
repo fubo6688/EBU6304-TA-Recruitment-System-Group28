@@ -19,16 +19,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 岗位管理 Servlet。
+ * Position management servlet.
  *
- * <p>负责岗位列表读取、创建、编辑、开关状态与发布通知，
- * 并按 MO/Admin 权限及岗位归属做访问控制。</p>
+ * <p>Responsible for reading, creating, updating positions, changing status
+ * and publishing notifications. Access control is enforced according to
+ * MO/Admin roles and position ownership.</p>
  */
 public class PositionServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
     /**
-     * 处理岗位读取类 GET 接口（列表查询）。
+     * Handles GET endpoints for position reads (lists and details).
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -57,7 +58,7 @@ public class PositionServlet extends HttpServlet {
     }
 
     /**
-     * 处理岗位写操作 POST 接口（创建、更新、状态变更、发布）。
+     * Handles POST endpoints for position write operations (create, update, status change, publish).
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -309,7 +310,7 @@ public class PositionServlet extends HttpServlet {
     }
 
     /**
-     * 按负责人（userId/qmId）过滤 MO 可见岗位。
+     * Filters positions visible to an MO by owner (userId or qmId).
      */
     private List<Map<String, String>> filterMoPositions(List<Map<String, String>> all, User user) {
         List<Map<String, String>> result = new ArrayList<>();
@@ -324,7 +325,7 @@ public class PositionServlet extends HttpServlet {
     }
 
     /**
-     * 统一登录态校验：要求会话有效且账号 active。
+     * Ensures the request has a valid active session and returns the User.
      */
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);

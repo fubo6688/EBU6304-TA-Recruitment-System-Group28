@@ -3,9 +3,11 @@ package com.ta.model;
 import java.io.Serializable;
 
 /**
- * 用户实体模型。
+ * User domain model.
  *
- * <p>既用于会话态与业务逻辑传递，也用于 users.txt 的文本持久化反序列化。</p>
+ * <p>Represents a user account used across the application for session
+ * handling and business logic. This model is also serialized/deserialized
+ * to/from the pipe-separated `users.txt` storage format.</p>
  */
 public class User implements Serializable {
     // 用户唯一账号（登录主键）。
@@ -20,12 +22,19 @@ public class User implements Serializable {
     private String status; // active, inactive
 
     /**
-     * 无参构造：供反射与序列化框架使用。
+     * No-arg constructor used by frameworks and deserialization.
      */
     public User() {}
 
     /**
-     * 全字段构造：创建用户基础实体。
+     * Full constructor to create a User instance.
+     *
+     * @param userId  unique login identifier
+     * @param userName display name
+     * @param email email address
+     * @param password password (stored in current implementation as plain text)
+     * @param role user role (TA, MO, Admin)
+     * @param qmId business mapping id (e.g. student/staff number)
      */
     public User(String userId, String userName, String email, String password, String role, String qmId) {
         this.userId = userId;
@@ -38,77 +47,110 @@ public class User implements Serializable {
     }
 
     /**
-     * 获取登录账号 ID。
+     * Returns the login account id.
+     *
+     * @return userId
      */
     public String getUserId() { return userId; }
 
     /**
-     * 设置登录账号 ID。
+     * Sets the login account id.
+     *
+     * @param userId login id
      */
     public void setUserId(String userId) { this.userId = userId; }
 
     /**
-     * 获取用户显示名称。
+     * Returns the display name.
+     *
+     * @return userName
      */
     public String getUserName() { return userName; }
 
     /**
-     * 设置用户显示名称。
+     * Sets the display name.
+     *
+     * @param userName display name
      */
     public void setUserName(String userName) { this.userName = userName; }
 
     /**
-     * 获取邮箱地址。
+     * Returns the email address.
+     *
+     * @return email
      */
     public String getEmail() { return email; }
 
     /**
-     * 设置邮箱地址。
+     * Sets the email address.
+     *
+     * @param email email address
      */
     public void setEmail(String email) { this.email = email; }
 
     /**
-     * 获取登录密码（明文存储，当前实现用于本地课程项目）。
+     * Returns the password.
+     *
+     * <p>Note: in this project passwords are stored in plain text for
+     * simplicity; do not use this approach in production.</p>
+     *
+     * @return password
      */
     public String getPassword() { return password; }
 
     /**
-     * 设置登录密码。
+     * Sets the password.
+     *
+     * @param password plaintext password
      */
     public void setPassword(String password) { this.password = password; }
 
     /**
-     * 获取角色（TA/MO/Admin）。
+     * Returns the role (TA / MO / Admin).
+     *
+     * @return role
      */
     public String getRole() { return role; }
 
     /**
-     * 设置角色。
+     * Sets the role.
+     *
+     * @param role role string
      */
     public void setRole(String role) { this.role = role; }
 
     /**
-     * 获取业务映射 ID（qmId）。
+     * Returns the business mapping id (qmId).
+     *
+     * @return qmId
      */
     public String getQmId() { return qmId; }
 
     /**
-     * 设置业务映射 ID（qmId）。
+     * Sets the business mapping id (qmId).
+     *
+     * @param qmId mapping id
      */
     public void setQmId(String qmId) { this.qmId = qmId; }
 
     /**
-     * 获取账号状态（active/inactive/pending 等）。
+     * Returns the account status (e.g. active, inactive, pending).
+     *
+     * @return status
      */
     public String getStatus() { return status; }
 
     /**
-     * 设置账号状态。
+     * Sets the account status.
+     *
+     * @param status new status
      */
     public void setStatus(String status) { this.status = status; }
 
     /**
-     * 将用户对象序列化为 users.txt 管道分隔文本。
+     * Serializes the user object into the pipe-separated line format used by users.txt.
+     *
+     * @return pipe-separated representation
      */
     @Override
     public String toString() {
@@ -117,7 +159,10 @@ public class User implements Serializable {
     }
 
     /**
-     * 从 users.txt 单行文本反序列化用户对象。
+     * Deserializes a User from a single pipe-separated line as stored in users.txt.
+     *
+     * @param line input line
+     * @return User instance or null if parsing fails
      */
     public static User fromString(String line) {
         // 兼容 UTF-8 BOM 污染，避免账号字段首字符异常导致查找失败。
@@ -133,7 +178,7 @@ public class User implements Serializable {
     }
 
     /**
-     * 清理字段中的 BOM 与首尾空白。
+     * Cleans a field value by removing BOM and trimming whitespace.
      */
     private static String clean(String value) {
         return value == null ? "" : value.replace("\uFEFF", "").trim();
