@@ -132,7 +132,6 @@ This section summarizes all currently implemented and testable features in this 
 
 1. Text-file data persistence (under workspace `data/`):
    - users, positions, applications, profiles, logs, notification files.
-   - `profiles.txt` now uses the extended row order: `userId|grade|major|year|gpa|email|skills|resumeFileName|resumeStoredName|availableTime|avatarStoredName|taExperience|internshipExperience|updatedAt`.
 2. Position counters are maintained by backend logic:
    - `appliedCount` and `acceptedCount` are updated during submit/review/cancel flows.
 3. Notification persistence:
@@ -168,354 +167,214 @@ This section summarizes all currently implemented and testable features in this 
 |- register.html
 |- index.html
 |- profile.html
-|- ta-profile.html
-|- ta-positions.html
-|- ta-applications.html
-|- mo-positions.html
-|- mo-notifications.html
-|- mo-review.html
-|- admin-dashboard.html
-|- admin-account-status.html
-|- css/
-|- js/
-|  |- script.js
-|  |- api.js
-|- backend/
-|  |- src/com/ta/
-|  |- WEB-INF/
-|  |- data/
-|- WEB-INF/
-|- start-dev.ps1 / start-dev.bat
-|- stop-dev.ps1 / stop-dev.bat
-|- restart-dev.ps1 / restart-dev.bat
+# TA Recruitment System (Group 28)
+
+Comprehensive TA recruitment web application (Sprint 2). Frontend uses static HTML/CSS/JavaScript; backend is implemented with Java Servlet APIs and simple file-based persistence for demo and evaluation purposes.
+
+## Overview
+
+This project provides a lightweight system for publishing TA positions, submitting and reviewing applications, and administering TA/MO accounts. It is designed for classroom demonstrations and local testing with scripted build/deploy helpers for Tomcat.
+
+Key capabilities:
+- Role-aware authentication (TA, MO, Admin) with session enforcement
+- TA profile wizard, resume upload, and application flows
+- MO position lifecycle: create, publish, open/close, review applications
+- Admin dashboard and account status management (activate/deactivate)
+- File-backed persistence under `data/` and notification logging
+
+## Contents
+
+1. Project layout
+2. Features
+3. Prerequisites
+4. Quick start (scripted)
+5. Manual deployment (legacy)
+6. API summary
+7. Data files
+8. Test accounts
+9. Running tests
+10. Troubleshooting
+11. License
+
+## Project layout
+
+Important files and folders:
+
 ```
+README.md
+*.html, *.jsp
+css/
+js/ (script.js, api.js)
+data/ (runtime data files)
+backend/ (backend source, build scripts and WEB-INF)
+WEB-INF/ (runtime WEB-INF for deployment)
+start-dev.bat, stop-dev.bat, restart-dev.bat, sync-webinf.bat
+```
+
+Backend short layout:
+
+```
+backend/
+  ├─ src/com/ta/         (Java servlet sources)
+  ├─ WEB-INF/
+  ├─ data/
+  ├─ build.bat
+  └─ deploy.bat
+```
+
+## Features
+
+- Authentication, registration and role detection
+- Password policy and server-side lockout on repeated failed logins
+- TA profile wizard with step recovery and resume handling
+- Position management for MOs (create/edit/publish/open/close)
+- Application submission by TA, review by MO/Admin with feedback
+- Notification persistence and deadline reminder scheduler
+- Admin dashboard and TA/MO account status management
 
 ## Prerequisites
 
-1. Windows PowerShell 5.1+
-2. JDK 8+ (JDK 17+ recommended)
-3. Apache Tomcat 9+ (Tomcat 11 supported in this repository)
-4. Environment variable `CATALINA_HOME` recommended (auto-discovery is also supported)
+- Windows PowerShell 5.1+
+- JDK 8+ (JDK 17+ recommended)
+- Apache Tomcat 9+ (Tomcat 11 supported)
+- Optional: `CATALINA_HOME` environment variable
 
-## Quick Start
+## Quick start (scripted)
 
-Run from repository root:
+From the repository root:
 
 ```powershell
 .\start-dev.bat
 ```
 
-What this does:
-1. Compiles backend Java sources
-2. Syncs runtime `WEB-INF`
-3. Deploys project to Tomcat `webapps/ta-system` and `webapps/MyRecruitmentSystem`
-4. Starts Tomcat if not already running
-5. Opens the login page in browser
-
-Note:
-1. This branch keeps only the backend script build/deploy workflow.
-2. Do not use Maven commands in this branch.
+This will:
+- Compile backend Java sources
+- Sync runtime `WEB-INF`
+- Deploy to Tomcat contexts `ta-system` and `MyRecruitmentSystem`
+- Start Tomcat if not already running and open the login page
 
 Default URL:
 
-```text
 http://localhost:8080/ta-system/login.html
-```
 
-Compatibility URL (legacy bookmark, now redirected to new login page):
+Compatibility (legacy):
 
-```text
 http://localhost:8080/MyRecruitmentSystem/login.jsp
-```
 
-Recommendation:
-1. Prefer `ta-system` URL for daily testing.
-2. If you open `MyRecruitmentSystem/login.jsp`, it will redirect to `login.html` in the same context.
+Notes: use the scripted workflow in this branch (Maven build path removed).
 
-## Legacy Manual Startup (Drag to Tomcat)
+## Manual deployment (legacy)
 
-If you want the original manual startup workflow, use the following steps.
-
-### Step 1: Build backend classes
-
-From repository root:
+1. Build backend classes:
 
 ```powershell
-cd .\backend
+cd backend
 .\build.bat
 cd ..
 ```
 
-### Step 2: Sync root WEB-INF
-
-From repository root:
+2. Sync WEB-INF:
 
 ```powershell
 .\sync-webinf.bat
 ```
 
-This copies compiled classes and `web.xml` into root `WEB-INF`, which is needed for direct Tomcat webapp deployment.
+3. Copy project files into a Tomcat app folder `webapps/ta-system` (or `MyRecruitmentSystem`).
 
-### Step 3: Drag/copy project to Tomcat webapps
+4. Start Tomcat:
 
-1. Open Tomcat `webapps` folder.
-2. Create or replace one app folder:
-   - `ta-system` (recommended)
-   - or `MyRecruitmentSystem` (legacy URL compatibility)
-3. Copy project web files into that folder:
-   - `*.html`, `*.jsp`, `css/`, `js/`, `WEB-INF/`
-
-### Step 4: Start Tomcat manually
-
-1. Run Tomcat startup script:
-   - `CATALINA_HOME\bin\startup.bat`
-2. Open login page in browser:
-   - `http://localhost:8080/ta-system/login.html`
-   - or `http://localhost:8080/MyRecruitmentSystem/login.html`
-
-### Optional: Keep runtime data in workspace
-
-To avoid data writing to unexpected locations, set environment variable before starting Tomcat:
-
-```powershell
-setx TA_DATA_DIR "D:\MyRecruitmentSystem\data"
+```
+%CATALINA_HOME%\bin\startup.bat
 ```
 
-Then restart Tomcat.
+## API summary
 
-## Stop / Restart
+Frontend resolves API base from current URL (example): `http://localhost:8080/ta-system/api`.
 
-Stop service:
+Primary endpoints:
+- `/api/login` (POST login/register, GET logout)
+- `/api/user/*` (profile, password, resume, admin user list)
+- `/api/position/*` (list/create/update/status/publish)
+- `/api/application/*` (submit/my-list/review)
+- `/api/notification/*` (list/read/read-all)
+- `/api/admin/*` (dashboard, positions, ta-workload)
 
-```powershell
-.\stop-dev.bat
-```
+See `js/api.js` and frontend pages for details on request payloads and expected responses.
 
-Force stop (if port is occupied):
+## Data files
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\stop-dev.ps1 -ForceKill
-```
+Data persisted under `data/` (text files):
 
-Restart service:
+- `users.txt`, `positions.txt`, `applications.txt`, `profiles.txt`, `logs.txt`
+- `data/resumes/` — uploaded PDF resumes (named `<userId>.pdf`)
 
-```powershell
-.\restart-dev.bat
-```
+To pin runtime data to a particular location, set `TA_DATA_DIR` environment variable before starting Tomcat.
 
-Restart with options (no browser + force cleanup):
+## Test accounts
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\restart-dev.ps1 -NoBrowser -ForceKill
-```
+Latest project test accounts:
 
-## Test Accounts
+- `ta002` / `Qmta2026A` (TA) - profile, password change, application submission, login success/lockout checks
+- `ta_bob` / `Qmta2026A` (TA) - login lockout, publish notifications, admin workload coverage
+- `mo001` / `Qmta2026A` (MO) - position create/update/status/publish, application review, TA profile viewing
+- `admin001` / `Qmta2026A` (Admin) - pending registrations, dashboard, positions, TA workload
 
-The system reads user credentials from `users.txt` only.
-`users.csv` has been removed to avoid accidental misuse.
+The tests create their own temporary `ta.data.dir` values, so you do not need to edit `data/users.txt` before running them. If login problems occur in the app itself, try `restart-dev.bat` to reload runtime data.
 
-Validated from `data/users.txt`.
+## Running tests
 
-| Username | Password | Role |
-|---|---|---|
-| ta002 | Ta002SecureA1 | TA |
-| ta001 | Aa123321 | TA |
-| 2023213247 | Ta2023213247A1B | TA |
-| mo001 | Mo001SecureA1 | MO |
-| admin001 | Admin001SafeA1 | Admin |
-| admin_user | AdminUserSafeA1 | Admin |
-| admin_02 | Admin02SafeA1 | Admin |
-| mo_smith | MoSmithSafeA1 | MO |
-| mo_jones | MoJonesSafeA1 | MO |
-| mo_wang | MoWangSafeA1 | MO |
-| ta_alice | TaAliceSafeA1 | TA |
-| ta_bob | TaBobSafeA1 | TA |
-| ta_charlie | TaCharlieSafeA1 | TA |
-| ta_david | TaDavidSafeA1 | TA |
-| ta_emma | TaEmmaSafeA1 | TA |
-
-Notes:
-1. Passwords are diversified per account for security testing and all satisfy the password policy.
-2. If an account still cannot log in, restart service with `./restart-dev.bat` so runtime data is reloaded.
-
-## Test Files
-
-This repository keeps only the final servlet test files under `backend/test/`.
-Please do not add extra test files unless they are required by a new feature.
-
-Current retained tests:
-1. `backend/test/com/ta/servlet/LoginServletProjectTest.java`
-2. `backend/test/com/ta/servlet/UserServletProjectTest.java`
-3. `backend/test/com/ta/servlet/PositionServletProjectTest.java`
-4. `backend/test/com/ta/servlet/ApplicationServletProjectTest.java`
-5. `backend/test/com/ta/servlet/AdminServletProjectTest.java`
-
-Run them from the repository root after compiling the backend:
+Project tests are under `backend/test/`. After compiling the backend and test sources, run all current project test classes:
 
 ```powershell
 $tests = @(
+   'com.ta.util.DataManagerProjectTest',
+   'com.ta.servlet.CORSFilterProjectTest',
    'com.ta.servlet.LoginServletProjectTest',
    'com.ta.servlet.UserServletProjectTest',
    'com.ta.servlet.PositionServletProjectTest',
    'com.ta.servlet.ApplicationServletProjectTest',
-   'com.ta.servlet.AdminServletProjectTest'
+   'com.ta.servlet.AdminServletProjectTest',
+   'com.ta.servlet.DeadlineReminderSchedulerListenerProjectTest'
 )
 
-foreach ($test in $tests) {
-   java -cp 'backend\test-bin;backend\WEB-INF\classes;backend\WEB-INF\lib\*' $test
+foreach ($t in $tests) {
+  java -cp 'backend\test-bin;backend\WEB-INF\classes;backend\WEB-INF\lib\*' $t
 }
 ```
 
-## Backend API Base
+Suggested flow:
 
-By default the frontend resolves API base from current URL:
-
-```text
-http://localhost:8080/ta-system/api
-```
-
-Main endpoint groups:
-1. `/api/login`
-2. `/api/user/*`
-3. `/api/position/*`
-4. `/api/application/*`
-5. `/api/admin/*`
-
-Detailed Sprint 2 API endpoints:
-
-Authentication:
-1. `POST /api/login`
-2. `GET /api/login?action=logout`
-3. `POST /api/login` with `action=register` (TA/MO self-registration, direct activation)
-
-User:
-1. `GET /api/user/profile`
-2. `POST /api/user/profile`
-3. `POST /api/user/password`
-4. `GET /api/user/ta-profile`
-5. `GET /api/user/resume`
-6. `GET /api/user/managed-users` (Admin only, active/inactive TA/MO list)
-7. `POST /api/user/account-status` (Admin only, status=`active|inactive|deactive|reactive`)
-
-Notification:
-1. `GET /api/notification/list`
-2. `POST /api/notification/read`
-3. `POST /api/notification/read-all`
-
-Admin account status page behavior:
-1. Location: `admin-account-status.html` in Admin sidebar.
-2. TA and MO accounts are displayed in separate areas.
-3. Button action toggles between De-active and Re-active based on current status.
-
-Position:
-1. `GET /api/position/list`
-2. `POST /api/position/create`
-3. `POST /api/position/update`
-4. `POST /api/position/status` (open/closed, includes reopen)
-5. `POST /api/position/publish` (publish notice + TA notifications)
-
-Application:
-1. `GET /api/application/review-list`
-2. `GET /api/application/my-list`
-3. `POST /api/application/submit`
-4. `POST /api/application/review` (MO/Admin accept or reject)
-
-Admin:
-1. `GET /api/admin/dashboard`
-2. `GET /api/admin/positions`
-3. `GET /api/admin/ta-workload`
-
-## Registration and Password Policy
-
-1. TA and MO users can register on the login page.
-2. Registration email must end with `@bupt.cn` or `@qmul.ac.uk`.
-3. New registrations are activated immediately after registration success.
-4. Registration no longer requires TA-only fields in register page (skills/available time).
-5. Registration uniqueness guard:
-   - Backend rejects registration when another account already has the same `role + qmId`.
-   - This prevents alias/duplicate accounts for the same person.
-6. Password complexity (registration and password change):
-   - At least 8 characters
-   - Must contain uppercase + lowercase + digit
-   - Letters and digits only (no symbols)
-
-## Deadline Reminder Scheduler
-
-1. Deadline reminders now run as an independent backend timed task (`DeadlineReminderSchedulerListener`).
-2. Default scan interval is every 60 minutes.
-3. Optional runtime system properties:
-   - `ta.deadline.reminder.interval.minutes`
-   - `ta.deadline.reminder.initial.delay.seconds`
-
-## Backend Build and Deployment Details
-
-Backend directory layout:
-
-```text
-backend/
-|- src/com/ta/
-|  |- model/
-|  |- servlet/
-|  |- util/
-|- WEB-INF/
-|  |- web.xml
-|  |- classes/
-|  |- lib/
-|- data/
-|- build.bat
-|- deploy.bat
-```
-
-Build backend classes only (optional):
-
-```powershell
-cd .\backend
-.\build.bat
-```
-
-Manual compile command (optional):
-
-```powershell
-javac -encoding UTF-8 -cp "WEB-INF\lib\*" -d WEB-INF\classes src\com\ta\model\*.java src\com\ta\util\*.java src\com\ta\servlet\*.java
-```
-
-Runtime data files:
-1. `data/users.txt`
-2. `data/positions.txt`
-3. `data/applications.txt`
-4. `data/profiles.txt`
-5. `data/logs.txt`
-6. `data/resumes/*.pdf` (TA resume files, fixed name: `userId.pdf`)
-
-## Sprint 2 Demonstration Path
-
-Use this order during demo/viva:
-1. Login as TA -> open `ta-profile.html`
-2. Complete TA profile and upload resume
-3. Login as MO -> open `mo-positions.html`
-4. Post and publish a new position
-5. Login as TA -> browse positions and apply
-6. Login as TA -> open `ta-applications.html` and check status is pending
-7. Login as MO -> open `mo-review.html` and Accept/Reject applicants
-8. Login as Admin -> open `admin-dashboard.html`
-9. Login as Admin -> open `admin-account-status.html` and test De-active/Re-active on TA/MO accounts
+1. Compile the backend classes and copy the test class files into `backend/test-bin`.
+2. Run `DataManagerProjectTest` and `CORSFilterProjectTest` first to verify the base utility and filter behavior.
+3. Run the servlet tests in the order above to cover login, profile, position, application, and admin flows.
+4. Finish with `DeadlineReminderSchedulerListenerProjectTest` to verify scheduler startup and shutdown behavior.
 
 ## Troubleshooting
 
-1. Port 8080 occupied:
-   - Run `stop-dev.ps1 -ForceKill` then `start-dev.bat`
-2. 404 under `/ta-system`:
-   - Re-run `start-dev.bat`
-   - Check Tomcat `webapps/ta-system` exists
-3. Login/API failures:
-   - Verify Tomcat is running
-   - Verify dataset files exist in `data`
-   - Restart via `restart-dev.bat` so `TA_DATA_DIR` is applied correctly
-4. Build errors:
-   - Ensure `backend/WEB-INF/lib/json-20240303.jar` exists
-5. CORS/session issues:
-   - Use deployed URL under Tomcat, not direct local file open (`file://`)
+- Port 8080 occupied: run `stop-dev.ps1 -ForceKill` then `start-dev.bat`.
+- 404 under `/ta-system`: re-run `start-dev.bat` and verify `webapps/ta-system` exists.
+- Login/API failures: ensure Tomcat is running and `data/` files exist; use `restart-dev.bat`.
+- Build errors: verify required jars in `backend/WEB-INF/lib` (e.g. `json-*.jar`).
+- CORS/session issues: access pages via Tomcat URL, do not open HTML directly with `file://`.
+
+## Deadline reminder scheduler
+
+Implemented as `DeadlineReminderSchedulerListener`. Defaults to 60-minute scans; tuning via system properties:
+
+- `ta.deadline.reminder.interval.minutes`
+- `ta.deadline.reminder.initial.delay.seconds`
+
+## Security notes
+
+- Password policy: min 8 chars, uppercase+lowercase+digit, letters and digits only.
+- Failed login lockout: 3 failed attempts -> 60s lock enforced server-side.
+
+## Contributing
+
+- Use provided scripts for development and demos. Keep runtime `data/` inside the workspace to preserve test data between redeploys.
+
+If you'd like, I can add an additional developer doc mapping frontend pages to API calls.
 
 ## License
 
-See `LICENSE`.
+See the `LICENSE` file for licensing details.
