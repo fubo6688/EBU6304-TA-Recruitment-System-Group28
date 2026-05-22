@@ -8,4 +8,5 @@ ta_charlie|Postgraduate|Data Science|3.88|ta_charlie@bupt.cn|Python,SQL,Machine 
 ta_david|Year 4|Cybersecurity|3.30|ta_david@bupt.cn|Linux,C++,Teaching Experience|david_resume.pdf|david_resume.pdf|Mon 9:00-12:00;Fri 9:00-12:00||No|2026-04-12 18:10:00
 ta_emma|Year 1|Information Systems|3.70|ta_emma@bupt.cn|JavaScript,SQL,Communication|emma_resume.pdf|emma_resume.pdf|Tue 9:00-12:00;Thu 13:00-17:00||No|2026-04-12 18:10:00
 2023213247|Postgraduate|Artificial Intelligence|3.92|jp2023213247@qmul.ac.uk|Python,Docker,Algorithms|闫俊亦简历-18866718402.pdf|2023213247.pdf|Mon 13:00-17:00;Wed 13:00-17:00||Yes|2026-05-19 18:30:11
-2023213242|Year 2|Computer Science and Technology|3.9|1499053486@qq.com|Python,Java,JavaScript|闫俊亦简历-18866718402.pdf|2023213242.pdf|Mon 9:00-12:00;Thu 13:00-17:00;Sun 13:00-17:00;Fri 18:00-20:00||No|2026-05-19 17:08:06
+2023213242|Year 2|Computer Science and Technology|3.9|1499053486@qq.com|Python,Java,JavaScript|闫俊亦简历-18866718402.pdf|2023213242.pdf|Mon 9:00-12:00;Thu 13:00-17:00;Sun 13:00-17:00;Fri 18:00-20:00||No|2026-05-21 12:50:29
+20232132||Software Engineering||junjun@bupt.cn|Java,JavaScript|闫俊亦简历-18866718402.pdf|20232132.pdf|Mon 9:00-12:00;Wed 9:00-12:00;Fri 9:00-12:00;Fri 13:00-17:00||Yes|2026-05-21 13:23:52

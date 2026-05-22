@@ -35,9 +35,9 @@ import java.util.Set;
 /**
  * 用户域 Servlet。
  *
- * <p>处理个人资料读取/更新、头像与简历上传下载、改密、
- * 以及管理员的注册审批与账号启停等管理操作。</p>
+ * <p>处理个人资料读取/更新、头像与简历上传下载、改密、以及管理员的注册审批与账号启停等管理操作。</p>
  */
+
 @MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 15 * 1024 * 1024)
 public class UserServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
@@ -64,27 +64,6 @@ public class UserServlet extends HttpServlet {
         }
 
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
-        if ("/pending-registrations".equalsIgnoreCase(path)) {
-            if (!isAdmin(user)) {
-                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Admin only").toString());
-                return;
-            }
-
-            JSONArray items = new JSONArray();
-            for (User item : dataManager.getAllUsers()) {
-                if (!"pending".equalsIgnoreCase(item.getStatus())) {
-                    continue;
-                }
-                if (!"TA".equalsIgnoreCase(item.getRole()) && !"MO".equalsIgnoreCase(item.getRole())) {
-                    continue;
-                }
-                items.put(toUserJson(item));
-            }
-
-            resp.getWriter().print(new JSONObject().put("success", true).put("users", items).toString());
-            return;
-        }
 
         if ("/managed-users".equalsIgnoreCase(path)) {
             if (!isAdmin(user)) {
@@ -369,6 +348,54 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
+        if ("/resume".equalsIgnoreCase(path)) {
+            // 简历预览：与头像读取保持一致的权限模型，返回 PDF 供浏览器内联打开。
+            String targetUserId = value(req.getParameter("userId"));
+            if (targetUserId.isEmpty()) {
+                targetUserId = user.getUserId();
+            }
+
+            if (!canViewProfile(user, targetUserId)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "No permission").toString());
+                return;
+            }
+
+            ResolvedProfile resolved = resolveProfileByAnyId(targetUserId);
+            Map<String, String> profile = resolved.profile;
+            if (profile == null) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Profile not found").toString());
+                return;
+            }
+
+            String storedName = value(profile.get("resumeStoredName"));
+            String originalName = value(profile.get("resumeFileName"));
+            Path file = resolveResumeFile(resolved.resolvedUserId, storedName, originalName);
+            if (!Files.exists(file) || !Files.isRegularFile(file)) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().print(new JSONObject().put("success", false).put("message", "Resume not found").toString());
+                return;
+            }
+
+            resp.setContentType("application/pdf");
+            resp.setHeader("Content-Disposition", "inline; filename=\"" + sanitizeFileName(originalName.isEmpty() ? resolved.resolvedUserId + ".pdf" : originalName) + "\"");
+            resp.setContentLengthLong(Files.size(file));
+
+            try (InputStream in = Files.newInputStream(file); OutputStream os = resp.getOutputStream()) {
+                byte[] buffer = new byte[8192];
+                int len;
+                while ((len = in.read(buffer)) != -1) {
+                    os.write(buffer, 0, len);
+                }
+                os.flush();
+            }
+            return;
+        }
+
         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         resp.getWriter().print(new JSONObject().put("success", false).put("message", "Unsupported endpoint").toString());
     }
@@ -387,55 +414,8 @@ public class UserServlet extends HttpServlet {
         }
 
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
-        if ("/approve-registration".equalsIgnoreCase(path)) {
-            if (!isAdmin(user)) {
-                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                out.print(new JSONObject().put("success", false).put("message", "Admin only").toString());
-                return;
-            }
-
-            String targetUserId = value(req.getParameter("userId"));
-            String decision = value(req.getParameter("decision"));
-            if (targetUserId.isEmpty() || decision.isEmpty()) {
-                out.print(new JSONObject().put("success", false).put("message", "Missing userId or decision").toString());
-                return;
-            }
-
-            User target = dataManager.getUserById(targetUserId);
-            if (target == null) {
-                out.print(new JSONObject().put("success", false).put("message", "Target user not found").toString());
-                return;
-            }
-            // 注册审批仅处理 pending 账号，避免覆盖既有 active/inactive 状态。
-            if (!"pending".equalsIgnoreCase(target.getStatus())) {
-                out.print(new JSONObject().put("success", false).put("message", "Target user is not pending").toString());
-                return;
-            }
-
-            String nextStatus;
-            if ("approve".equalsIgnoreCase(decision) || "approved".equalsIgnoreCase(decision)) {
-                nextStatus = "active";
-            } else if ("reject".equalsIgnoreCase(decision) || "rejected".equalsIgnoreCase(decision)) {
-                nextStatus = "inactive";
-            } else {
-                out.print(new JSONObject().put("success", false).put("message", "Invalid decision").toString());
-                return;
-            }
-
-            target.setStatus(nextStatus);
-            dataManager.saveUser(target);
-            dataManager.writeLog(user.getUserId(), user.getUserName(), user.getRole(), "APPROVE_REGISTRATION", targetUserId + " -> " + nextStatus, "success");
-            out.print(new JSONObject().put("success", true).put("message", "Registration updated").put("status", nextStatus).toString());
-            return;
-        }
 
         if ("/account-status".equalsIgnoreCase(path)) {
-            if (!isAdmin(user)) {
-                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                out.print(new JSONObject().put("success", false).put("message", "Admin only").toString());
-                return;
-            }
-
             // Admin 手动启停账号入口（de-active / re-active）。
             String targetUserId = value(req.getParameter("userId"));
             String requestedStatus = value(req.getParameter("status"));

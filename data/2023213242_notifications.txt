@@ -3,3 +3,5 @@ ntf1779091259755|position|New Position Published|A position has been published: 
 ntf1779173953876|application|Application Submitted|Your application was submitted.|2026-05-19 14:59:13|1|
 ntf1779183265265|position|New Position Published|A position has been published: software engineer|2026-05-19 17:34:25|0|
 ntf1779183309559|application|Application Submitted|Your application was submitted.|2026-05-19 17:35:09|0|
+ntf1779339091038|application|Application Result|Your application has been accepted|2026-05-21 12:51:31|0|
+ntf1779341202304|position|New Position Published|A position has been published: java|2026-05-21 13:26:42|0|

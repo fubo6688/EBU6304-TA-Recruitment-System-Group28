@@ -19,7 +19,7 @@ app1775983241924|pos1775823635943|Network Security TA|ta001|luming|mo_wang|first
 app1776000000001|pos1775822811757|Agile Development TA|ta_bob|Bob Li|mo_jones|first|pending|2026-04-12|
 app1776000000002|pos1775978622722|Machine Learning TA|ta_bob|Bob Li|mo_smith|second|rejected|2026-04-12|Skill match is not strong enough
 app1776000000003|pos1775823635943|Network Security TA|ta_charlie|Charlie Brown|mo_wang|first|approved|2026-04-12|Excellent profile fit
-app1776000000004|pos1775978622722|Machine Learning TA|ta_david|David Wang|mo_smith|first|pending|2026-04-12|
+app1776000000004|pos1775978622722|Machine Learning TA|ta_david|David Wang|mo_smith|first|rejected|2026-04-12|
 app1776000000005|pos1775647626466|Java Programming TA|ta_alice|Alice Zhang|mo_smith|first|rejected|2026-04-08|Position capacity is limited
 app1776000000006|pos1774242667613|Data Structures TA|ta002|李四|M001|first|approved|2026-03-23|审核通过
 app1779079014340|pos1775924484337|Data Science TA|ta_bob|Bob Li|mo_smith|first|pending|2026-05-18|
@@ -28,5 +28,6 @@ app1779090430042|pos1774246502692|Web Development TA|ta_bob|Bob Li|M001|first|pe
 app1779091007042|pos1774246224278|Operating Systems TA|ta_bob|Bob Li|M001|first|rejected|2026-05-18|
 app1779091309225|pos1774242667613|Data Structures TA|ta_bob|Bob Li|M001|first|pending|2026-05-18|
 app1779173953860|pos1775647626466|Java Programming TA|2023213242|付博|mo_smith|first|pending|2026-05-19|
-app1779183309542|pos1779183265239|software engineer|2023213242|付博|mo_smith|first|pending|2026-05-19|
-app1779186628725|pos1779183265239|software engineer|2023213247|Junyi Yan|mo_smith|first|pending|2026-05-19|
+app1779183309542|pos1779183265239|software engineer|2023213242|付博|mo_smith|first|approved|2026-05-19|
+app1779186628725|pos1779183265239|software engineer|2023213247|Junyi Yan|mo_smith|first|approved|2026-05-19|00
+app1779341046130|pos1775647626466|Java Programming TA|20232132|junjun|mo_smith|first|pending|2026-05-21|

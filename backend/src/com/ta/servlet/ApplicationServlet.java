@@ -57,14 +57,10 @@ private JSONObject performAiAnalysisForApplication(String taUserId, String posit
             ? "岗位名称: " + position.get("title") + ", 部门: " + position.get("department") + ", 岗位要求: " + position.get("requirements")
             : "普通 TA 岗位";
 
-        // C. 组装符合你要求的 Prompt 
-        String prompt = "你是一位大学 TA 招聘专家。请根据以下[解析后的简历文本]，以及当前申请的[岗位要求]，"
-                + "进行匹配度分析。请严格返回一个 JSON 对象，必须包含以下字段：\n"
-                + "1. matching_score: 岗位匹配度（0-100的数字）\n"
-                + "2. core_skills: 提取出的核心技能（字符串数组）\n"
-                + "3. evaluation: 你的综合评价与录用建议（简短文本）\n\n"
-                + "[岗位要求]: " + positionContext + "\n\n"
-                + "[解析后的简历文本]: " + parsedResumeJson;
+        // C. 组装简短的分析要求，简历正文由 AiResumeAnalysisClient 统一注入，避免重复发送。
+        String prompt = "你是一位大学 TA 招聘专家。请结合岗位要求进行匹配度分析，并严格返回 JSON。"
+            + "输出字段必须只有这三个：matching_score（0-100数字）、core_skills（字符串数组）、evaluation（简短文本，尽量不超过 80 字）。\n\n"
+            + "[岗位要求]: " + positionContext;
 
         // D. 调用大模型分析
         com.ta.util.AiResumeAnalysisClient.AnalysisResult res = aiClient.analyzeResume(parsedResumeJson, prompt);
@@ -227,7 +223,7 @@ return;
             if (!isProfileCompleteForApply(profile)) {
                 out.print(new JSONObject()
                         .put("success", false)
-                        .put("message", "Please complete your profile (grade, major, email, skills, available time, resume) before applying")
+                        .put("message", "Please complete your profile (major, email, skills, available time, resume) before applying")
                         .toString());
                 return;
             }
@@ -556,7 +552,6 @@ return;
             return false;
         }
 
-        String grade = value(profile.get("grade"));
         String major = value(profile.get("major"));
         String email = value(profile.get("email"));
         String skills = value(profile.get("skills"));
@@ -564,8 +559,7 @@ return;
         String resumeFileName = value(profile.get("resumeFileName"));
         String resumeStoredName = value(profile.get("resumeStoredName"));
 
-        return !grade.isEmpty()
-                && !major.isEmpty()
+        return !major.isEmpty()
                 && !email.isEmpty()
                 && !skills.isEmpty()
                 && !availableTime.isEmpty()

@@ -18,6 +18,7 @@ public class AiResumeAnalysisClient {
     private static final String ENV_API_KEY = "TA_AI_API_KEY";
     private static final String ENV_MODEL = "TA_AI_MODEL";
     private static final String ENV_TIMEOUT_MS = "TA_AI_TIMEOUT_MS";
+    private static final String ENV_MAX_OUTPUT_TOKENS = "TA_AI_MAX_OUTPUT_TOKENS";
     private static final String ENV_AUTH_HEADER = "TA_AI_AUTH_HEADER";
     private static final String ENV_AUTH_SCHEME = "TA_AI_AUTH_SCHEME";
 
@@ -58,6 +59,7 @@ public class AiResumeAnalysisClient {
                 JSONObject payload = new JSONObject()
                         .put("model", modelTry)
                         .put("temperature", 0.2)
+                    .put("max_tokens", config.maxOutputTokens)
                         .put("response_format", new JSONObject().put("type", "json_object"))
                         .put("messages", new JSONArray()
                                 .put(new JSONObject().put("role", "system").put("content", buildSystemPrompt()))
@@ -131,8 +133,8 @@ public class AiResumeAnalysisClient {
                 + "core_skills (核心技能数组)\n"
                 + "ta_experience (是否有助教或教学相关经验，true/false)\n"
                 + "matching_score (岗位匹配度打分，0-100)\n"
-                + "evaluation (简短的优缺点评价)\n\n"
-                + "只返回 JSON，不要输出 Markdown、解释或额外文本。";
+            + "evaluation (简短的优缺点评价，尽量控制在 80 字以内)\n\n"
+            + "只返回 JSON，不要输出 Markdown、解释、重复内容或额外文本。";
     }
 
     private static String buildUserPrompt(String resumeJsonBody, String analysisDemand) {
@@ -304,9 +306,10 @@ public class AiResumeAnalysisClient {
         // 非核心非敏感参数允许保留兜底逻辑
         String authHeader = firstNonEmpty(env(ENV_AUTH_HEADER), "Authorization");
         String authScheme = firstNonEmpty(env(ENV_AUTH_SCHEME), "Bearer");
-        int timeoutMs = parseInt(firstNonEmpty(env(ENV_TIMEOUT_MS), "20000"), 20000);
+        int timeoutMs = parseInt(firstNonEmpty(env(ENV_TIMEOUT_MS), "60000"), 60000);
+        int maxOutputTokens = parseInt(firstNonEmpty(env(ENV_MAX_OUTPUT_TOKENS), "384"), 384);
 
-        return new Config(normalizeBaseUrl(baseUrl), apiKey, model, timeoutMs, authHeader, authScheme);
+        return new Config(normalizeBaseUrl(baseUrl), apiKey, model, timeoutMs, maxOutputTokens, authHeader, authScheme);
     }
 
     private static String firstNonEmpty(String... values) {
@@ -359,14 +362,16 @@ public class AiResumeAnalysisClient {
         private final String apiKey;
         private final String model;
         private final int timeoutMs;
+        private final int maxOutputTokens;
         private final String authHeader;
         private final String authScheme;
 
-        private Config(String baseUrl, String apiKey, String model, int timeoutMs, String authHeader, String authScheme) {
+        private Config(String baseUrl, String apiKey, String model, int timeoutMs, int maxOutputTokens, String authHeader, String authScheme) {
             this.baseUrl = baseUrl;
             this.apiKey = apiKey;
             this.model = model;
             this.timeoutMs = timeoutMs;
+            this.maxOutputTokens = maxOutputTokens;
             this.authHeader = authHeader;
             this.authScheme = authScheme;
         }
