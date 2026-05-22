@@ -12,10 +12,13 @@ import java.util.stream.Collectors;
 import com.ta.model.User;
 
 /**
- * 数据访问与文本持久化网关。
+ * Data access and plain-text persistence gateway.
  *
- * <p>该类统一管理 users/positions/applications/profiles/logs/notifications 的读写，
- * 并提供面向 Servlet 的聚合查询能力（例如管理员仪表盘与 TA workload 统计）。</p>
+ * <p>This class centralizes read/write operations for users, positions,
+ * applications, profiles, logs and notifications. It exposes convenience
+ * aggregation methods used by servlets (for example admin dashboard and
+ * TA workload summaries) and implements a simple file-based storage
+ * model using pipe-separated text files under the configured data directory.</p>
  */
 public class DataManager {
     // 统一数据目录（用户、岗位、申请、日志、资料）入口。
@@ -31,7 +34,8 @@ public class DataManager {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     /**
-     * 构造时解析最终数据目录，并确保基础数据文件存在。
+     * Constructs the DataManager, resolves the runtime data directory and
+     * ensures required files exist (creates defaults when needed).
      */
     public DataManager() {
         // 启动时解析 data 目录并确保基础文件可用。
@@ -155,7 +159,9 @@ public class DataManager {
     }
 
     /**
-     * 返回当前实例使用的运行时数据目录路径。
+     * Returns the resolved runtime data directory path used by this instance.
+     *
+     * @return data directory path
      */
     public Path getDataDirPath() {
         return dataDir;
@@ -199,7 +205,7 @@ public class DataManager {
     }
 
     /**
-     * 返回当前时间字符串（yyyy-MM-dd HH:mm:ss）。
+     * Returns current datetime string in yyyy-MM-dd HH:mm:ss format.
      */
     private String nowDateTime() {
         synchronized (DATE_TIME_FORMAT) {
@@ -208,7 +214,7 @@ public class DataManager {
     }
 
     /**
-     * 返回当天日期字符串（yyyy-MM-dd）。
+     * Returns today's date string in yyyy-MM-dd format.
      */
     private String todayDate() {
         synchronized (DATE_FORMAT) {
@@ -217,14 +223,19 @@ public class DataManager {
     }
 
     /**
-     * 基于前缀生成简单时间戳主键。
+     * Generates a simple timestamp-based id with the given prefix.
+     *
+     * @param prefix id prefix
+     * @return generated id
      */
     private String nextId(String prefix) {
         return prefix + System.currentTimeMillis();
     }
 
     /**
-     * 读取全部用户记录。
+     * Reads all user records from storage.
+     *
+     * @return list of User
      */
     public synchronized List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
@@ -241,7 +252,10 @@ public class DataManager {
     }
 
     /**
-     * 按 userId（忽略大小写）查询单个用户。
+     * Finds a User by userId (case-insensitive).
+     *
+     * @param userId id to lookup
+     * @return User or null
      */
     public synchronized User getUserById(String userId) {
         return getAllUsers().stream()
@@ -251,7 +265,11 @@ public class DataManager {
     }
 
     /**
-     * 执行登录凭据校验，仅 active 账号允许通过。
+     * Validates login credentials; only active accounts are allowed.
+     *
+     * @param userId login id
+     * @param password password
+     * @return User if valid and active; null otherwise
      */
     public synchronized User validateLogin(String userId, String password) {
         // 登录校验与账号状态绑定，inactive/pending 不可直接登录。
@@ -263,7 +281,9 @@ public class DataManager {
     }
 
     /**
-     * 保存单个用户（按 userId 覆盖旧记录）。
+     * Saves a single user record, overwriting existing entry by userId.
+     *
+     * @param user user to save
      */
     public synchronized void saveUser(User user) {
         List<User> users = getAllUsers();
@@ -273,7 +293,7 @@ public class DataManager {
     }
 
     /**
-     * 将用户集合整体持久化到 users.txt。
+     * Persists the given collection of users to users.txt.
      */
     private synchronized void saveAllUsers(List<User> users) {
         List<String> lines = users.stream().map(User::toString).collect(Collectors.toList());

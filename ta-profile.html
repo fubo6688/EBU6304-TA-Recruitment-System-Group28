@@ -361,7 +361,6 @@
         <div class="form-section active" data-section="1">
           <h2 class="form-title">Basic Information</h2>
           <div class="form-two-col">
-
             <div class="form-group">
               <label class="form-label required">Major</label>
               <select class="form-control" id="major" required>
@@ -374,42 +373,17 @@
                 <option value="Information Systems">Information Systems</option>
               </select>
             </div>
-
             <div class="form-group">
               <label class="form-label required">Contact Email</label>
               <input type="email" class="form-control" id="email" placeholder="Enter email" required>
             </div>
             <div class="form-group">
-              <label class="form-label required">Year</label>
-              <select class="form-control" id="yearSelect">
-                <option value="">-- Select Year --</option>
-                <option value="year1">Year 1</option>
-                <option value="year2">Year 2</option>
-                <option value="year3">Year 3</option>
-                <option value="year4">Year 4</option>
-                <option value="postgraduate">Postgraduate</option>
+              <label class="form-label">TA Experience (optional)</label>
+              <select class="form-control" id="taExperience">
+                <option value="">-- Select --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
               </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label required">Have you worked as a TA before?</label>
-              <div style="display:flex;gap:12px;align-items:center;">
-                <label><input type="radio" name="taExperience" value="Yes" id="taExpYes"> Yes</label>
-                <label><input type="radio" name="taExperience" value="No" id="taExpNo"> No</label>
-                <label style="color:var(--gray-500);font-size:12px;margin-left:8px;">(required)</label>
-              </div>
-            </div>
-            <div class="form-group" id="gpaGroup" style="display:block;">
-              <label class="form-label required">GPA</label>
-              <input type="text" id="gpaInput" class="form-control" placeholder="e.g. 3.80">
-              <div style="font-size:12px;color:var(--gray-500);margin-top:6px;">GPA is required for non-Postgraduate students and hidden for Postgraduate students.</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Have you had internship experience?</label>
-              <div style="display:flex;gap:12px;align-items:center;">
-                <label><input type="radio" name="internshipExperience" value="Yes" id="internYes"> Yes</label>
-                <label><input type="radio" name="internshipExperience" value="No" id="internNo"> No</label>
-                <label style="color:var(--gray-500);font-size:12px;margin-left:8px;">(optional)</label>
-              </div>
             </div>
           </div>
           <div class="form-controls">
@@ -527,10 +501,6 @@
               <span class="confirm-value" id="confirmTaExperience">-</span>
             </div>
             <div class="confirm-row">
-              <span class="confirm-label">Internship</span>
-              <span class="confirm-value" id="confirmInternship">-</span>
-            </div>
-            <div class="confirm-row">
               <span class="confirm-label">Mail</span>
               <span class="confirm-value" id="confirmEmail">-</span>
             </div>
@@ -550,6 +520,7 @@
 
           <div class="form-controls">
             <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+            <button type="button" class="btn btn-outline" onclick="parseResume()">Parse Resume</button>
             <button type="button" class="btn btn-primary btn-lg" onclick="submitProfile()">Submit and Save Profile</button>
           </div>
         </div>
@@ -590,10 +561,7 @@
     // In-memory wizard state; submitted as multipart form in submitProfile().
     let profileData = {
       major: '',
-      year: '',
       taExperience: '',
-      internshipExperience: '',
-      gpa: '',
       email: '',
       skills: [],
       availableTime: [],
@@ -627,37 +595,21 @@
     // 功能：校验当前输入或步骤是否合法。
     function validateCurrentStep() {
       // Wizard-level gate:
-      // Step 1 must have identity/academic fields, Step 2 must have at least
+      // Step 1 must have identity fields, Step 2 must have at least
       // one skill + one time slot, Step 3 must have an uploaded or existing resume.
       // This mirrors the feature acceptance criteria before data is submitted.
-        if (currentStep === 1) {
+      if (currentStep === 1) {
         const major = document.getElementById('major').value;
+        const taExperience = document.getElementById('taExperience').value;
         const email = document.getElementById('email').value;
-        const year = document.getElementById('yearSelect').value;
-        const taExperience = (document.getElementById('taExpYes') && document.getElementById('taExpYes').checked) ? 'Yes' : ((document.getElementById('taExpNo') && document.getElementById('taExpNo').checked) ? 'No' : '');
-        const internshipExperience = (document.getElementById('internYes') && document.getElementById('internYes').checked) ? 'Yes' : ((document.getElementById('internNo') && document.getElementById('internNo').checked) ? 'No' : '');
-        const gpa = (document.getElementById('gpaInput') && document.getElementById('gpaInput').value) ? document.getElementById('gpaInput').value.trim() : '';
 
-        if (!major || !email || !taExperience) {
-          taSystem.showMessage('Please complete all required fields (major, email, TA experience)', 'danger');
-          return false;
-        }
-
-        // GPA rules: postgraduate must not provide GPA; other years must provide it.
-        if (year === 'postgraduate' && gpa) {
-          taSystem.showMessage('GPA should not be provided for Postgraduate students', 'danger');
-          return false;
-        }
-        if (year && year !== 'postgraduate' && !gpa) {
-          taSystem.showMessage('Please provide GPA for non-Postgraduate students', 'danger');
+        if (!major || !email) {
+          taSystem.showMessage('Please complete all required fields', 'danger');
           return false;
         }
 
         profileData.major = major;
-        profileData.year = year;
         profileData.taExperience = taExperience;
-        profileData.internshipExperience = internshipExperience;
-        profileData.gpa = gpa;
         profileData.email = email;
       } else if (currentStep === 2) {
         if (profileData.skills.length === 0) {
@@ -806,61 +758,100 @@
       // Render step-4 summary from current wizard state before final submit.
       document.getElementById('confirmMajor').textContent = profileData.major;
       document.getElementById('confirmTaExperience').textContent = profileData.taExperience || '-';
-      document.getElementById('confirmMajor').textContent = profileData.major + (profileData.year ? (' (' + profileData.year + ')') : '');
-      // show gpa only when set
-      if (profileData.gpa) {
-        const row = document.createElement('div');
-        row.className = 'confirm-row';
-        row.innerHTML = `<span class="confirm-label">GPA</span><span class="confirm-value">${profileData.gpa}</span>`;
-        document.querySelector('.confirm-card').appendChild(row);
-      }
-      document.getElementById('confirmInternship').textContent = profileData.internshipExperience || '-';
       document.getElementById('confirmEmail').textContent = profileData.email;
       document.getElementById('confirmSkills').textContent = profileData.skills.length ? profileData.skills.join(', ') : '-';
       document.getElementById('confirmAvailableTime').textContent = profileData.availableTime.length ? profileData.availableTime.join('; ') : '-';
       document.getElementById('confirmResume').textContent = profileData.resume ? profileData.resume.name : (profileData.existingResumeName || '-');
     }
 
-    // 功能：提交个人档案信息到后端。
-    async function submitProfile() {
+    // 功能：构建提交给后端的个人档案数据。
+    function buildProfileFormData() {
+      // Keep all field names aligned with UserServlet:/profile.
+      const form = new FormData();
+      form.append('userName', localStorage.getItem('userName') || '');
+      form.append('email', profileData.email || '');
+      form.append('major', profileData.major || '');
+      form.append('taExperience', profileData.taExperience || '');
+      form.append('skills', (profileData.skills || []).join(','));
+      form.append('availableTime', (profileData.availableTime || []).join(';'));
+      form.append('resumeFileName', profileData.resume ? profileData.resume.name : (profileData.existingResumeName || ''));
+      if (profileData.resume) {
+        form.append('resumeFile', profileData.resume);
+      }
+      return form;
+    }
+
+    // 功能：保存个人档案信息到后端。
+    async function saveProfile(showSuccessMessage) {
       if (!validateCurrentStep()) {
-        return;
+        return null;
       }
 
       try {
-        // Field names in FormData intentionally match UserServlet:/profile params
-        // so both normal fields and multipart file can be processed in one request.
-        // This is the single write path for TA profile create/update.
-        const form = new FormData();
-        form.append('userName', localStorage.getItem('userName') || '');
-        form.append('email', profileData.email || '');
-        form.append('major', profileData.major || '');
-        form.append('taExperience', profileData.taExperience || '');
-        form.append('year', profileData.year || '');
-        form.append('gpa', profileData.gpa || '');
-        form.append('internshipExperience', profileData.internshipExperience || '');
-        form.append('skills', (profileData.skills || []).join(','));
-        form.append('availableTime', (profileData.availableTime || []).join(';'));
-        form.append('resumeFileName', profileData.resume ? profileData.resume.name : (profileData.existingResumeName || ''));
-        if (profileData.resume) {
-          form.append('resumeFile', profileData.resume);
-        }
-
-        const result = await uploadProfileRequest(form);
+        const result = await uploadProfileRequest(buildProfileFormData());
         if (result.success) {
-          // Use backend-confirmed filename as source of truth after save.
-          // This keeps "view/edit profile" stable across refreshes and revisits.
           profileData.existingResumeName = result.resumeFileName || profileData.existingResumeName;
           profileData.resume = null;
           currentStep = 4;
           updateStepView();
           populateConfirmData();
-          taSystem.showMessage('Profile saved successfully. Your information remains on this page.', 'success');
+          if (showSuccessMessage) {
+            taSystem.showMessage('Profile saved successfully. Your information remains on this page.', 'success');
+          }
         } else {
           taSystem.showMessage(result.message || 'Save failed', 'danger');
         }
+        return result;
       } catch (error) {
         taSystem.showMessage(error.message || 'Save failed', 'danger');
+        return null;
+      }
+    }
+
+    // 功能：提交个人档案信息到后端。
+    async function submitProfile() {
+      const saved = await saveProfile(true);
+      if (!saved || !saved.success) return;
+
+      // 保存成功后同时触发简历解析（与页面上的 Parse Resume 按钮行为一致）
+      const userId = localStorage.getItem('userId') || '';
+      if (!userId) {
+        return;
+      }
+      await parseResumeInternal(userId, true);
+    }
+
+    // 功能：手动触发简历解析，并将结果保存到后端固定目录。
+    async function parseResume() {
+      const saved = await saveProfile(false);
+      if (!saved || !saved.success) {
+        return;
+      }
+
+      const userId = localStorage.getItem('userId') || '';
+      if (!userId) {
+        taSystem.showMessage('Missing user id', 'danger');
+        return;
+      }
+
+      await parseResumeInternal(userId, true);
+    }
+
+    // 内部：执行简历解析并处理消息显示
+    async function parseResumeInternal(userId, showMessages) {
+      try {
+        if (showMessages) taSystem.showMessage('Parsing resume...', 'info');
+        const result = await API.parseResume(userId);
+        if (result && result.success) {
+          if (showMessages) taSystem.showMessage('Resume parsed successfully', 'success');
+          return result;
+        } else {
+          if (showMessages) taSystem.showMessage((result && result.message) || 'Resume parse failed', 'danger');
+          return result;
+        }
+      } catch (error) {
+        if (showMessages) taSystem.showMessage(error.message || 'Resume parse failed', 'danger');
+        return { success: false, message: error && error.message };
       }
     }
 
@@ -985,34 +976,16 @@
 
         profileData.major = profile.major || '';
         profileData.taExperience = profile.taExperience || '';
-        profileData.internshipExperience = profile.internshipExperience || '';
         profileData.email = profile.email || '';
-        profileData.year = profile.year || '';
-        profileData.gpa = profile.gpa || '';
         profileData.skills = (profile.skills || '').split(',').map((s) => s.trim()).filter(Boolean);
         profileData.existingResumeName = profile.resumeFileName || '';
+
         ensureSelectOption('major', profileData.major);
-        // set radio buttons for taExperience
-        if (profileData.taExperience === 'Yes') {
-          const yes = document.getElementById('taExpYes'); if (yes) yes.checked = true;
-        } else if (profileData.taExperience === 'No') {
-          const no = document.getElementById('taExpNo'); if (no) no.checked = true;
-        }
-        // restore internship radio
-        if (profile.internshipExperience === 'Yes') {
-          const iy = document.getElementById('internYes'); if (iy) iy.checked = true;
-        } else if (profile.internshipExperience === 'No') {
-          const inno = document.getElementById('internNo'); if (inno) inno.checked = true;
-        }
+        ensureSelectOption('taExperience', profileData.taExperience);
+
         document.getElementById('major').value = profileData.major;
+        document.getElementById('taExperience').value = profileData.taExperience;
         document.getElementById('email').value = profileData.email;
-        document.getElementById('email').value = profileData.email;
-        if (profileData.year) {
-          const y = document.getElementById('yearSelect'); if (y) y.value = profileData.year;
-        }
-        if (profileData.gpa) {
-          const g = document.getElementById('gpaInput'); if (g) g.value = profileData.gpa;
-        }
 
         document.querySelectorAll('.skill-tag').forEach((el) => {
           const selected = profileData.skills.includes(el.textContent.trim());
@@ -1053,27 +1026,6 @@
       }
       initTimeCells();
       await loadExistingProfile();
-      // Toggle GPA input when year changes (disallow GPA for postgraduate)
-      const yearEl = document.getElementById('yearSelect');
-      const gpaInput = document.getElementById('gpaInput');
-      const gpaGroup = document.getElementById('gpaGroup');
-      if (yearEl && gpaInput && gpaGroup) {
-        yearEl.addEventListener('change', () => {
-          if (yearEl.value === 'postgraduate') {
-            gpaInput.value = '';
-            gpaInput.disabled = true;
-            gpaGroup.style.display = 'none';
-          } else {
-            gpaInput.disabled = false;
-            gpaGroup.style.display = 'block';
-          }
-        });
-        if (yearEl.value === 'postgraduate') {
-          gpaInput.value = '';
-          gpaInput.disabled = true;
-          gpaGroup.style.display = 'none';
-        }
-      }
     });
 
   </script>

@@ -327,13 +327,7 @@
               <button class="filter-btn" data-group="score" data-value="low">Low</button>
             </div>
           </div>
-          <div class="filter-group">
-            <span style="font-size: 12px; color: var(--gray-500);">Application priority:</span>
-            <div class="filter-options">
-              <button class="filter-btn active" data-group="priority" data-value="all">All</button>
-              <button class="filter-btn" data-group="priority" data-value="first">First Choice</button>
-            </div>
-          </div>
+          
           <input id="applicantKeyword" type="text" class="form-control keyword-input" placeholder="Search applicant / skill / status">
           <button class="btn btn-sm btn-secondary" id="clearReviewFiltersBtn">Clear</button>
         </div>
@@ -354,9 +348,9 @@
     let currentPositionId = '';
     let allPositions = [];
     let applicantProfileMap = {};
+    let applicantAnalysisMap = {};
     let currentApplications = [];
     let currentScoreFilter = 'all';
-    let currentPriorityFilter = 'all';
 
     // 功能：标准化状态值，避免大小写与空值影响判断。
     function normalizeStatus(status) {
@@ -432,6 +426,7 @@
 
       const summaryCandidates = [];
       collectByKeyPattern(data, /summary|objective|profile/i, summaryCandidates);
+      collectByKeyPattern(data, /text|content|body/i, summaryCandidates);
       const summaryText = findFirstMeaningfulText(summaryCandidates);
 
       const educationCandidates = [];
@@ -507,69 +502,107 @@
         .filter((s) => s.length >= 2);
     }
 
+    function uniqueTokens(tokens) {
+      const seen = new Set();
+      return (tokens || []).filter((token) => {
+        const key = normalizeText(token);
+        if (!key || seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      });
+    }
+
     // 功能：获取当前选中岗位对象。
     function getCurrentPosition() {
       return allPositions.find((p) => p.id === currentPositionId) || null;
     }
 
-    // 功能：标准化申请优先级。
-    function normalizePriority(priority) {
-      const p = normalizeText(priority || 'first');
-      if (p.includes('first')) return 'first';
-      if (p.includes('second')) return 'second';
-      if (p.includes('third')) return 'third';
-      return p || 'first';
+    
+
+    function computeMatchInfo(app) {
+      const analysis = applicantAnalysisMap[app.userId]?.analysis || null;
+      if (!analysis) {
+        return {
+          score: null,
+          matched: [],
+          hasAnalysis: false
+        };
+      }
+
+      const scoreValue = analysis.matching_score !== undefined && analysis.matching_score !== null
+        ? Number(analysis.matching_score)
+        : null;
+      const matched = Array.isArray(analysis.core_skills)
+        ? uniqueTokens(analysis.core_skills.map((item) => String(item || '')))
+        : [];
+
+      return {
+        score: Number.isFinite(scoreValue) ? Math.max(0, Math.min(100, scoreValue)) : null,
+        matched,
+        hasAnalysis: true
+      };
     }
 
-    // 功能：计算申请与岗位要求的匹配信息。
-    function computeMatchInfo(app) {
-      const position = getCurrentPosition();
-      const requirementTokens = splitTokens(position && position.requirements);
-      const skillTokens = splitTokens(applicantProfileMap[app.userId]?.profile?.skills || '');
-
-      const matched = [];
-      skillTokens.forEach((skill) => {
-        if (requirementTokens.some((req) => req.includes(skill) || skill.includes(req))) {
-          if (!matched.includes(skill)) {
-            matched.push(skill);
-          }
-        }
-      });
-
-      // Compute deterministic score using same weighting as TA browse:
-      // skills 85%, TA experience 15%, small internship +3, dept-major +5 bonus.
-      const skillMatchRatio = matched.length / Math.max(1, skillTokens.length);
-      const profile = applicantProfileMap[app.userId] ? applicantProfileMap[app.userId].profile : {};
-      const taFlag = (profile && profile.taExperience === 'Yes') ? 1 : 0;
-      let score = Math.round(0.85 * (skillMatchRatio * 100) + 0.15 * (taFlag * 100));
-      if (profile && profile.internshipExperience === 'Yes') {
-        score = Math.min(100, score + 3);
+    // 功能：从 AI analysis 对象直接计算匹配信息（score, matched, hasAnalysis）
+    function computeMatchInfoFromAnalysis(analysis) {
+      if (!analysis) {
+        return { score: null, matched: [], hasAnalysis: false };
       }
-      const dept = normalizeText(getCurrentPosition() && getCurrentPosition().department);
-      const profileMajor = normalizeText(profile && profile.major || '');
-      if (profileMajor && dept && (dept.includes(profileMajor) || profileMajor.includes(dept))) {
-        score = Math.min(100, score + 5);
+
+      // 如果是字符串（未结构化文本），视为有分析但无具体分数/技能
+      if (typeof analysis === 'string') {
+        return { score: null, matched: [], hasAnalysis: true };
+      }
+
+      // 尝试从常见字段读取分数
+      let scoreValue = null;
+      if (analysis.matching_score !== undefined && analysis.matching_score !== null) {
+        scoreValue = Number(analysis.matching_score);
+      } else if (analysis.score !== undefined && analysis.score !== null) {
+        scoreValue = Number(analysis.score);
+      } else if (analysis.match_score !== undefined && analysis.match_score !== null) {
+        scoreValue = Number(analysis.match_score);
+      }
+
+      // 收集技能：优先使用 core_skills 数组，否则尝试从任意字段中抽取包含 skill 的键值
+      let matched = [];
+      if (Array.isArray(analysis.core_skills)) {
+        matched = uniqueTokens(analysis.core_skills.map((it) => String(it || '')));
+      } else {
+        try {
+          const extracted = extractSkillsFromParsed(analysis || {});
+          matched = uniqueTokens(extracted || []);
+        } catch (e) {
+          matched = [];
+        }
       }
 
       return {
-        score: Math.max(0, Math.min(100, score)),
-        matched
+        score: Number.isFinite(Number(scoreValue)) ? Math.max(0, Math.min(100, Number(scoreValue))) : null,
+        matched,
+        hasAnalysis: true
       };
+    }
+
+    function formatMatchScore(score) {
+      return Number.isFinite(Number(score)) ? `${Math.round(Number(score))}%` : '无';
+    }
+
+    function scoreSortValue(score) {
+      return Number.isFinite(Number(score)) ? Number(score) : -1;
     }
 
     // 功能：判断匹配分数是否命中筛选分段。
     function isScoreMatched(score, scoreFilter) {
+      if (!Number.isFinite(Number(score))) {
+        return scoreFilter === 'all';
+      }
       if (scoreFilter === 'high') return score >= 80;
       if (scoreFilter === 'middle') return score >= 50 && score < 80;
       if (scoreFilter === 'low') return score < 50;
       return true;
-    }
-
-    // 功能：根据分数给出建议文本。
-    function getMatchSuggestion(score) {
-      if (score >= 80) return { label: 'Strong fit — recommend invite', level: 'high' };
-      if (score >= 50) return { label: 'Moderate fit — consider interview', level: 'middle' };
-      return { label: 'Low fit — not recommended', level: 'low' };
     }
 
     // 功能：应用当前筛选条件并刷新申请列表。
@@ -580,8 +613,7 @@
         const match = computeMatchInfo(app);
         return {
           app,
-          match,
-          priority: normalizePriority(app.priority)
+          match
         };
       });
 
@@ -590,9 +622,7 @@
           return false;
         }
 
-        if (currentPriorityFilter !== 'all' && item.priority !== currentPriorityFilter) {
-          return false;
-        }
+        
 
         if (!keyword) {
           return true;
@@ -607,14 +637,13 @@
           profile.major,
           profile.skills,
           statusText(item.app.status),
-          item.priority,
           item.match.matched.join(' '),
-          String(item.match.score)
+          formatMatchScore(item.match.score)
         ].map((x) => normalizeText(x)).join(' ');
 
         return searchable.includes(keyword);
-      }).sort((a, b) => b.match.score - a.match.score)
-        .map((item) => ({ ...item.app, _match: item.match, _priority: item.priority }));
+      }).sort((a, b) => scoreSortValue(b.match.score) - scoreSortValue(a.match.score))
+        .map((item) => ({ ...item.app, _match: item.match }));
 
       renderApplicants(filtered);
     }
@@ -635,19 +664,9 @@
         const lockReject = s === 'rejected' || s === 'canceled';
         const profile = applicantProfileMap[app.userId]?.profile || {};
         const match = app._match || computeMatchInfo(app);
-        const priority = app._priority || normalizePriority(app.priority);
         const matchedSkills = match.matched.length
           ? match.matched.map((skill) => `<span class="skills-badge highlighted">${escapeHtml(skill)}</span>`).join('')
-          : '<span style="font-size:12px;color:var(--gray-500);">No direct skill overlap</span>';
-
-        let priorityBadge = `<span class="applicant-priority">${escapeHtml(priority)}</span>`;
-        if (priority === 'first') {
-          priorityBadge = '<span class="applicant-priority">First Choice</span>';
-        } else if (priority === 'second') {
-          priorityBadge = '<span class="applicant-priority" style="background-color: #dbeafe; color: #1e40af;">Second Choice</span>';
-        } else if (priority === 'third') {
-          priorityBadge = '<span class="applicant-priority" style="background-color: #fee2e2; color: var(--danger-color);">Third Choice</span>';
-        }
+          : '<span style="font-size:12px;color:var(--gray-500);">无</span>';
 
         return `
         <div class="applicant-card">
@@ -656,13 +675,11 @@
               <div class="applicant-name">${escapeHtml(app.userName || app.userId)}</div>
               <div class="applicant-major">QM ID: ${escapeHtml(app.userId || '')} · ${escapeHtml(profile.major || 'Major not provided')}</div>
             </div>
-            ${priorityBadge}
           </div>
           <div class="applicant-body">
             <div class="match-row"><span class="match-label">Position:</span><span class="match-value">${escapeHtml(app.positionTitle || '')}</span></div>
             <div class="match-row"><span class="match-label">Status:</span><span class="match-value">${escapeHtml(statusText(app.status))}</span></div>
-            <div class="match-row"><span class="match-label">Match Score:</span><span class="match-score">${match.score}%</span></div>
-            <div class="match-row"><span class="match-label">Suggestion:</span><span class="match-value">${escapeHtml(getMatchSuggestion(match.score).label)}</span></div>
+            <div class="match-row"><span class="match-label">Match Score:</span><span class="match-score">${formatMatchScore(match.score)}</span></div>
             <div class="match-row"><span class="match-label">Matched:</span><div>${matchedSkills}</div></div>
             <div class="match-row"><span class="match-label">Feedback:</span><span class="match-value">${escapeHtml(app.feedback || 'No feedback yet')}</span></div>
             <div class="match-row"><span class="match-label">Skills:</span><span class="match-value">${escapeHtml((profile.skills || '').toString().trim() || 'Not provided')}</span></div>
@@ -694,6 +711,22 @@
       }));
     }
 
+    // 功能：预加载每个申请人的 AI 简历分析，用于显示真实匹配度。
+    async function preloadApplicantAnalyses(apps) {
+      const ids = [...new Set((apps || []).map((a) => a.userId).filter(Boolean))];
+      applicantAnalysisMap = {};
+
+      await Promise.all(ids.map(async (id) => {
+        try {
+          const result = await API.getResumeAi(id, currentPositionId);
+          if (result && result.success && result.analysis) {
+            applicantAnalysisMap[id] = result;
+          }
+        } catch (error) {
+        }
+      }));
+    }
+
     // 功能：加载相关数据并更新页面。
     async function loadApplications() {
       try {
@@ -702,6 +735,7 @@
         const apps = Array.isArray(list) ? list : [];
         currentApplications = apps;
         await preloadApplicantProfiles(apps);
+        await preloadApplicantAnalyses(apps);
         applyApplicantFilters();
       } catch (error) {
         taSystem.showMessage(error.message || 'Failed to load applications', 'danger');
@@ -747,20 +781,30 @@
           <div><strong>Name:</strong> ${p.userName || ''}</div>
           <div><strong>QM ID:</strong> ${p.userId || ''}</div>
           <div><strong>Major:</strong> ${p.major || ''}</div>
-          <div><strong>Internship:</strong> ${p.internshipExperience || ''}</div>
           <div><strong>Email:</strong> ${p.email || ''}</div>
           <div style="grid-column:1 / span 2;"><strong>Skills:</strong> ${p.skills || ''}</div>
           <div style="grid-column:1 / span 2;"><strong>Available Time:</strong> ${p.availableTime || ''}</div>
           <div style="grid-column:1 / span 2;"><strong>Resume:</strong> ${p.resumeFileName ? `<a href="#" onclick="openResume('${userId}'); return false;">${p.resumeFileName}</a>` : '<span style="color: var(--gray-500);">No resume uploaded</span>'}</div>
           <div style="grid-column:1 / span 2; border-top: 1px solid var(--gray-200); padding-top: 12px;">
-            <strong>Resume Summary (AI)</strong>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <strong>Resume Summary (Parsed)</strong>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn btn-sm btn-primary" onclick="runResumeAnalysis('${userId}')">Run AI Analysis</button>
+                <button class="btn btn-sm btn-outline" onclick="loadResumeAnalysis('${userId}')">Refresh AI Result</button>
+              </div>
+            </div>
             <div id="resumeSummaryBox" style="margin-top: 8px; font-size: 13px; color: var(--gray-600);">Loading...</div>
+            <div style="margin-top: 14px; border-top: 1px solid var(--gray-200); padding-top: 12px;">
+              <strong>AI Analysis Result</strong>
+              <div id="resumeAiBox" style="margin-top: 8px; font-size: 13px; color: var(--gray-600);">Not analyzed yet.</div>
+            </div>
           </div>
         </div>
       `;
 
       taSystem.openModal('applicantProfileModal');
       loadResumeSummary(userId);
+      loadResumeAnalysis(userId);
     }
 
     async function loadResumeSummary(userId) {
@@ -777,26 +821,20 @@
           return;
         }
 
-        const summary = buildResumeSummary(result.parsed);
+          const summary = buildResumeSummary(result.parsed);
         if (!summary) {
           box.textContent = 'Resume summary is unavailable.';
           return;
         }
 
-        const skillsText = summary.skills.length ? summary.skills.map((s) => escapeHtml(s)).join(' · ') : 'Not detected';
-        const eduText = summary.education.length ? summary.education.map((s) => escapeHtml(s)).join(' · ') : 'Not detected';
-        const expText = summary.experience.length ? summary.experience.map((s) => escapeHtml(s)).join(' · ') : 'Not detected';
         const summaryText = summary.summaryText ? escapeHtml(summary.summaryText) : 'Not detected';
 
         box.innerHTML = `
           <div><strong>Summary:</strong> ${summaryText}</div>
-          <div style="margin-top:6px;"><strong>Skills:</strong> ${skillsText}</div>
-          <div style="margin-top:6px;"><strong>Education:</strong> ${eduText}</div>
-          <div style="margin-top:6px;"><strong>Experience:</strong> ${expText}</div>
         `;
       } catch (error) {
-        if (error && (error.status === 404 || /Resume parser is not configured/i.test(error.message || ''))) {
-          box.textContent = 'Resume parser is not configured.';
+        if (error && error.status === 404) {
+          box.textContent = 'No parsed resume data yet.';
           return;
         }
         if (error && (error.status === 404 || /Resume not parsed/i.test(error.message || ''))) {
@@ -808,6 +846,87 @@
           return;
         }
         box.textContent = 'Failed to load resume summary.';
+      }
+    }
+
+    function renderResumeAnalysis(analysis) {
+      if (!analysis) {
+        return 'No AI analysis available.';
+      }
+
+      if (typeof analysis === 'string') {
+        return `<pre style="white-space:pre-wrap; margin:0; font-family:inherit;">${escapeHtml(analysis)}</pre>`;
+      }
+
+      const skills = Array.isArray(analysis.core_skills) ? analysis.core_skills : [];
+      const education = analysis.education || '';
+      const matchInfo = computeMatchInfoFromAnalysis(analysis);
+      const experience = analysis.ta_experience;
+      const evaluation = analysis.evaluation || '';
+      const name = analysis.name || '';
+
+      return `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px;">
+          <div><strong>Name:</strong> ${escapeHtml(String(name))}</div>
+          <div><strong>Matching Score:</strong> ${escapeHtml(formatMatchScore(matchInfo.score))}</div>
+          <div><strong>Education:</strong> ${escapeHtml(String(education))}</div>
+          <div><strong>TA Experience:</strong> ${escapeHtml(String(experience))}</div>
+          <div style="grid-column:1 / span 2;"><strong>Core Skills:</strong> ${skills.length ? skills.map((item) => escapeHtml(String(item))).join(' · ') : 'Not detected'}</div>
+          <div style="grid-column:1 / span 2;"><strong>Evaluation:</strong> ${escapeHtml(String(evaluation))}</div>
+        </div>
+      `;
+    }
+
+    async function loadResumeAnalysis(userId) {
+      const box = document.getElementById('resumeAiBox');
+      if (!box) return;
+
+      box.textContent = 'Loading...';
+      try {
+        const result = await API.getResumeAi(userId, currentPositionId);
+        if (!result || !result.success) {
+          box.textContent = (result && result.message) ? result.message : 'No AI analysis available.';
+          return;
+        }
+        box.innerHTML = renderResumeAnalysis(result.analysis);
+      } catch (error) {
+        if (error && (error.status === 404 || /AI analysis not found/i.test(error.message || ''))) {
+          box.textContent = 'No AI analysis available.';
+          return;
+        }
+        if (error && error.status === 401) {
+          box.textContent = 'Session expired. Please sign in again.';
+          return;
+        }
+        box.textContent = 'Failed to load AI analysis.';
+      }
+    }
+
+    async function runResumeAnalysis(userId) {
+      const box = document.getElementById('resumeAiBox');
+      if (box) {
+        box.textContent = 'Running AI analysis...';
+      }
+
+      try {
+        const result = await API.analyzeResume(userId, currentPositionId);
+        if (result && result.success) {
+          if (box) {
+            box.innerHTML = renderResumeAnalysis(result.analysis);
+          }
+          taSystem.showMessage('AI analysis completed', 'success');
+          return;
+        }
+
+        if (box) {
+          box.textContent = (result && result.message) ? result.message : 'AI analysis failed.';
+        }
+        taSystem.showMessage((result && result.message) || 'AI analysis failed', 'danger');
+      } catch (error) {
+        if (box) {
+          box.textContent = error.message || 'AI analysis failed.';
+        }
+        taSystem.showMessage(error.message || 'AI analysis failed', 'danger');
       }
     }
 
@@ -893,9 +1012,6 @@
         if (group === 'score') {
           currentScoreFilter = value;
           setActiveFilterButton('score', value);
-        } else if (group === 'priority') {
-          currentPriorityFilter = value;
-          setActiveFilterButton('priority', value);
         }
         applyApplicantFilters();
       });
@@ -903,11 +1019,9 @@
       document.getElementById('applicantKeyword')?.addEventListener('input', applyApplicantFilters);
       document.getElementById('clearReviewFiltersBtn')?.addEventListener('click', () => {
         currentScoreFilter = 'all';
-        currentPriorityFilter = 'all';
         const input = document.getElementById('applicantKeyword');
         if (input) input.value = '';
         setActiveFilterButton('score', 'all');
-        setActiveFilterButton('priority', 'all');
         applyApplicantFilters();
       });
 

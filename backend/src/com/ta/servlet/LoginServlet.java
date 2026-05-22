@@ -16,10 +16,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 认证入口 Servlet。
+ * Authentication entrypoint servlet.
  *
- * <p>负责登录、登出、会话查询、角色提示与 TA/MO 自注册，
- * 并内置失败锁定与注册唯一性约束（role + qmId）。</p>
+ * <p>Handles login, logout, session inspection, role hints and TA/MO self-registration.
+ * Includes simple lockout policy on repeated failed attempts and uniqueness
+ * checks for registration (role + qmId).</p>
  */
 public class LoginServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
@@ -34,7 +35,10 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 处理会话查询、角色提示与登出请求。
+     * Handles session queries, role hints and logout requests (GET).
+     *
+     * @param req HTTP request
+     * @param resp HTTP response
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -102,7 +106,10 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 处理登录与注册提交。
+     * Handles login, register and forgot-password submissions (POST).
+     *
+     * @param req HTTP request
+     * @param resp HTTP response
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -202,7 +209,7 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 处理 TA/MO 自注册流程。
+     * Handles TA/MO self-registration flow.
      */
     private void handleRegister(HttpServletRequest req, PrintWriter out) {
         String userId = value(req.getParameter("userId"));
@@ -268,7 +275,7 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 处理忘记密码找回流程。
+     * Handles forgot-password flow and verification.
      */
     private void handleForgotPassword(HttpServletRequest req, PrintWriter out) {
         String userId = value(req.getParameter("userId"));
@@ -337,7 +344,10 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 校验密码复杂度是否满足策略。
+     * Checks whether the provided password satisfies complexity rules.
+     *
+     * @param password candidate password
+     * @return true if complex enough
      */
     private boolean isPasswordComplex(String password) {
         if (password == null) {
@@ -347,7 +357,7 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 注册邮箱域名白名单校验。
+     * Validates that the registration email is allowed by domain whitelist.
      */
     private boolean isAllowedRegisterEmail(String email) {
         String value = value(email).toLowerCase(Locale.ROOT);
@@ -355,7 +365,8 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 检查是否已存在同 role + qmId 的账号，避免同人多账号。
+     * Checks whether another account exists with the same role and qmId to
+     * prevent duplicate accounts for the same person.
      */
     private boolean existsSameRoleAndQmId(String role, String qmId) {
         String normalizedRole = value(role).toUpperCase(Locale.ROOT);
@@ -375,7 +386,7 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 检查邮箱是否已被其他账号使用，忽略大小写。
+     * Returns true if the email is already used by another account (case-insensitive).
      */
     private boolean existsEmail(String email) {
         String normalizedEmail = value(email).toLowerCase(Locale.ROOT);
@@ -392,7 +403,7 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 将用户实体转为前端使用的标准 JSON 结构。
+     * Converts a User entity to a JSON object suitable for frontend consumption.
      */
     private JSONObject toUserJson(User user) {
         return new JSONObject()
@@ -406,21 +417,21 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 空值安全取值并去首尾空白。
+     * Null-safe trimming helper.
      */
     private String value(String s) {
         return s == null ? "" : s.trim();
     }
 
     /**
-     * 归一化登录锁定键（按账号小写）。
+     * Normalizes lock key for login attempts (lowercase userId).
      */
     private String normalizeLockKey(String userId) {
         return value(userId).toLowerCase(Locale.ROOT);
     }
 
     /**
-     * 查询账号剩余锁定秒数；锁到期后会顺便清理内存态。
+     * Returns remaining lock seconds for an account; cleans up expired state.
      */
     private long getRemainingLockSeconds(String lockKey) {
         if (lockKey.isEmpty()) {
@@ -447,7 +458,7 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 记录一次登录失败并在达到阈值后写入锁定时窗。
+     * Records a failed login attempt and sets a lock window when threshold is reached.
      */
     private void registerFailedAttempt(String lockKey) {
         if (lockKey.isEmpty()) {
@@ -471,7 +482,7 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * 清空指定账号的失败与锁定状态。
+     * Clears the failed attempt and lock state for the given account key.
      */
     private void clearFailedAttempts(String lockKey) {
         if (lockKey.isEmpty()) {

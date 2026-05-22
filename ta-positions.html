@@ -600,8 +600,6 @@
     let profileCompleteForApply = false;
     let taSkills = [];
     let profileMajor = '';
-    let profileTaExperience = false;
-    let profileInternshipExperience = false;
     let positionMatchMap = new Map();
     const profileApplyHint = 'Please complete your profile (basic information, skills & availability, resume) before applying';
 
@@ -633,34 +631,6 @@
     // 功能：判断是否具备指定状态。
     function hasApplied(positionId) {
       return !!positionId && appliedPositionIds.has(String(positionId));
-    }
-
-    // Mark position as applied in UI (modal + list) without refetching from server.
-    function markPositionApplied(positionId) {
-      const id = String(positionId || '');
-      if (!id) return;
-      appliedPositionIds.add(id);
-      // Update inline apply buttons
-      document.querySelectorAll('.btn-apply-now').forEach((btn) => {
-        try {
-          const onclick = btn.getAttribute('onclick') || '';
-          if (onclick.includes(`applyPosition('${id}')`) || onclick.includes(`applyPosition("${id}")`)) {
-            btn.textContent = 'Applied';
-            btn.disabled = true;
-          }
-        } catch (e) {}
-      });
-      // Update modal button if open
-      const applyInModal = document.querySelector('#detailModal .modal-footer .btn-primary');
-      if (applyInModal) {
-        try {
-          const pid = String(selectedPositionId || '');
-          if (pid === id) {
-            applyInModal.textContent = 'Applied';
-            applyInModal.disabled = true;
-          }
-        } catch (e) {}
-      }
     }
 
     // 功能：按当前登录 TA 隔离收藏数据存储键。
@@ -859,19 +829,10 @@
         }
       });
 
-      // Compute deterministic score: skills weighted 85%, TA experience weighted 15%.
-      const skillMatchRatio = matched.length / Math.max(1, taSkills.length);
-      const taFlag = profileTaExperience ? 1 : 0;
-      let score = Math.round(0.85 * (skillMatchRatio * 100) + 0.15 * (taFlag * 100));
-      // Small bonus for internship experience
-      if (profileInternshipExperience) {
-        score = Math.min(100, score + 3);
-      }
-
-      // Small bonus for department-major alignment (capped at 100).
+      let score = Math.round((matched.length / Math.max(1, taSkills.length)) * 100);
       const dept = normalizeText(position && position.department);
       if (profileMajor && dept && (dept.includes(profileMajor) || profileMajor.includes(dept))) {
-        score = Math.min(100, score + 5);
+        score = Math.min(100, score + 10);
       }
 
       return { score, matched };
@@ -1228,13 +1189,10 @@
       try {
         const result = await API.submitApplication(positionId, 'first');
         if (result.success) {
-            appliedPositionIds.add(String(positionId));
-            taSystem.showMessage('Application has been submitted', 'success');
-            // Optimistically update UI without refetching everything to avoid short freeze.
-            renderPositions(currentPositions);
-            // Update modal apply button if open.
-            markPositionApplied(positionId);
-          } else {
+          appliedPositionIds.add(String(positionId));
+          taSystem.showMessage('Application has been submitted', 'success');
+          await loadPositions();
+        } else {
           taSystem.showMessage(result.message || 'Submission failed', 'danger');
         }
       } catch (error) {
@@ -1245,10 +1203,11 @@
     // 功能：加载岗位数据并更新页面。
     async function loadPositions() {
       try {
-        const [list, myAppsResult, profileResult] = await Promise.all([
+        const [list, myAppsResult, profileResult, resumeParsedResult] = await Promise.all([
           API.getPositions(),
           API.getMyApplications().catch(() => ({ applications: [] })),
-          API.getProfile().catch(() => null)
+          API.getProfile().catch(() => null),
+          API.getResumeParsed().catch(() => null)
         ]);
 
         profileCompleteForApply = isProfileComplete(profileResult);
@@ -1256,9 +1215,10 @@
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean);
-        const mergedSkills = profileSkills;
-        profileTaExperience = !!(profileResult && String(profileResult.taExperience || '').toLowerCase().startsWith('y'));
-        profileInternshipExperience = !!(profileResult && String(profileResult.internshipExperience || '').toLowerCase().startsWith('y'));
+        const parsedSkills = (resumeParsedResult && resumeParsedResult.success)
+          ? extractSkillsFromParsed(resumeParsedResult.parsed)
+          : [];
+        const mergedSkills = [...profileSkills, ...parsedSkills];
         const skillSet = new Set();
         taSkills = mergedSkills.filter((skill) => {
           const key = normalizeText(skill);

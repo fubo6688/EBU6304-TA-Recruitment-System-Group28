@@ -18,15 +18,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 通知中心接口。
+ * Notification center servlet.
  *
- * <p>提供通知列表读取与已读状态变更能力，供 TA/MO 页面复用。</p>
+ * <p>Provides endpoints for reading notification lists and marking
+ * notifications as read. Used by TA and MO pages.</p>
  */
 public class NotificationServlet extends HttpServlet {
     private final DataManager dataManager = new DataManager();
 
     /**
-     * 处理通知读取接口（/list）。
+     * Handles notification read endpoints (list).
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -72,7 +73,7 @@ public class NotificationServlet extends HttpServlet {
     }
 
     /**
-     * 处理通知写操作接口（/read、/read-all）。
+     * Handles notification write operations (/read, /read-all).
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -114,7 +115,7 @@ public class NotificationServlet extends HttpServlet {
     }
 
     /**
-     * 统一登录态校验：要求会话有效且账号 active。
+     * Ensures the request has a valid active session and returns the User.
      */
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) {
         HttpSession session = req.getSession(false);
