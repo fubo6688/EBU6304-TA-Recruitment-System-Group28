@@ -68,7 +68,7 @@ public class LoginServletProjectTest {
                     "role", "TA"
             )));
             assertFalse(invalidAttempt1.getBoolean("success"), "invalid password should fail");
-            assertEquals(2, invalidAttempt1.getInt("attemptsRemaining"), "first failure should leave two attempts");
+            assertEquals("Invalid account or password", invalidAttempt1.getString("message"), "first failure should return the standard invalid login message");
 
             invokePost(servlet, request(Map.of(
                     "userId", "ta_bob",
@@ -83,6 +83,7 @@ public class LoginServletProjectTest {
             )));
             assertFalse(locked.getBoolean("success"), "third wrong password should lock the account");
             assertTrue(locked.getBoolean("locked"), "response should mark the account as locked");
+                assertTrue(locked.has("remainingSeconds"), "locked response should include remainingSeconds");
 
             System.out.println("LoginServletProjectTest passed.");
         } finally {
