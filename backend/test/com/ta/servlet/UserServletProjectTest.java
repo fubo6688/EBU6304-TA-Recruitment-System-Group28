@@ -24,7 +24,7 @@ public class UserServletProjectTest {
                     "ta_pending|Pending TA|pending@example.com|Qmta2026A|TA|ta_pending|pending",
                     "mo_pending|Pending MO|pending-mo@example.com|Qmta2026A|MO|mo_pending|pending"
             );
-            dataManager.saveProfile("ta002", "3", "Computer Science", "3.8", "lisi@example.com", "Java,SQL", "resume.pdf", "ta002.pdf", "Mon-Fri", "");
+            dataManager.saveProfile("ta002", "3", "Computer Science", "3.8", "lisi@example.com", "Java,SQL", "resume.pdf", "ta002.pdf", "Mon-Fri", "", "");
 
             UserServlet servlet = new UserServlet();
 
@@ -61,18 +61,18 @@ public class UserServletProjectTest {
             assertTrue(passwordJson.getBoolean("success"), "password change should succeed");
             assertEquals("NewPass123", new DataManager().getUserById("ta002").getPassword(), "new password should persist");
 
-            JSONObject pendingRegistrations = new JSONObject(invokeGet(servlet, "/pending-registrations", "admin001", Map.of()).body());
-            assertTrue(pendingRegistrations.getBoolean("success"), "admin should see pending registrations");
-            JSONArray users = pendingRegistrations.getJSONArray("users");
-            assertTrue(users.length() >= 2, "pending registrations should include TA and MO accounts");
+                JSONObject managedUsers = new JSONObject(invokeGet(servlet, "/managed-users", "admin001", Map.of()).body());
+                assertTrue(managedUsers.getBoolean("success"), "admin should see managed users");
+                JSONArray users = managedUsers.getJSONArray("users");
+                assertEquals(3, users.length(), "managed users should include active accounts only");
 
-            LoginServletProjectTest.TestResponse approveResponse = invokePost(servlet, "/approve-registration", "admin001", Map.of(
-                    "userId", "ta_pending",
-                    "decision", "approve"
-            ));
-            JSONObject approveJson = new JSONObject(approveResponse.body());
-            assertTrue(approveJson.getBoolean("success"), "admin approval should succeed");
-            assertEquals("active", new DataManager().getUserById("ta_pending").getStatus(), "approved registration should become active");
+                LoginServletProjectTest.TestResponse deactivateResponse = invokePost(servlet, "/account-status", "admin001", Map.of(
+                    "userId", "ta002",
+                    "status", "inactive"
+                ));
+                JSONObject deactivateJson = new JSONObject(deactivateResponse.body());
+                assertTrue(deactivateJson.getBoolean("success"), "admin should be able to deactivate an account");
+                assertEquals("inactive", new DataManager().getUserById("ta002").getStatus(), "deactivated account should persist");
 
             JSONObject taProfile = new JSONObject(invokeGet(servlet, "/ta-profile", "mo001", Map.of("userId", "ta002")).body());
             assertTrue(taProfile.getBoolean("success"), "MO should be able to view TA profile");

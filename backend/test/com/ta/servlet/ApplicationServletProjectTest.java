@@ -24,6 +24,7 @@ public class ApplicationServletProjectTest {
             Map<String, String> openPosition = dataManager.createPosition("Java TA", "CS", "1000", "Teach Java", "Java", "M001", "2", "2026-12-31");
             Map<String, String> closedPosition = dataManager.createPosition("DB TA", "CS", "1000", "Teach DB", "SQL", "M001", "1", "2026-12-31");
             dataManager.updatePositionStatus(closedPosition.get("id"), "closed");
+            dataManager.saveProfile("ta002", "3", "Computer Science", "3.8", "lisi@example.com", "Java,SQL", "resume.pdf", "resume-stored.pdf", "Mon-Fri", "", "1 year");
 
             ApplicationServlet servlet = new ApplicationServlet();
 
