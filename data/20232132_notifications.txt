@@ -1,0 +1,2 @@
+ntf1779341046150|application|Application Submitted|Your application was submitted.|2026-05-21 13:24:06|1|
+ntf1779341202305|position|New Position Published|A position has been published: java|2026-05-21 13:26:42|0|
