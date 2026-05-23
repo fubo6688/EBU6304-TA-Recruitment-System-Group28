@@ -5,5 +5,6 @@ ntf1775835763247|application|Application Result|Your application has been accept
 ntf1776001400001|application|Application Submitted|Your application was submitted.|2026-04-12 12:00:00|0
 ntf1779090993292|position|New Position Published|A position has been published: Operating Systems TA|2026-05-18 15:56:33|0|
 ntf1779091259748|position|New Position Published|A position has been published: Data Structures TA|2026-05-18 16:00:59|0|
-ntf1779169270107|position|New Position Published|A position has been published: Computer Architecture TA|2026-05-19 13:41:10|0|
-ntf1779169411787|application|Application Submitted|Your application was submitted.|2026-05-19 13:43:31|0|
+ntf1779183265262|position|New Position Published|A position has been published: software engineer|2026-05-19 17:34:25|0|
+ntf1779341202298|position|New Position Published|A position has been published: java|2026-05-21 13:26:42|0|
+ntf1779341299916|application|Application Result|Your application has been rejected|2026-05-21 13:28:19|0|
